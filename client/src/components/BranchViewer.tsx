@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { GitBranch, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
 
 interface Branch {
   code: string;
@@ -23,7 +24,26 @@ interface BranchViewerProps {
   isCovered?: boolean;
 }
 
-export function BranchViewer({ mainCode, mainDescription, branches, isCovered = true }: BranchViewerProps) {
+export function BranchViewer({ mainCode, mainDescription, branches, isCovered: initialCovered = true }: BranchViewerProps) {
+  const [isCovered, setIsCovered] = useState(initialCovered);
+
+  useEffect(() => {
+    // تحميل حالة التغطية من ملف JSON
+    const loadCoverageStatus = async () => {
+      try {
+        const response = await fetch('/data/coverage_status.json');
+        const data = await response.json();
+        const isNonCovered = data.non_covered.includes(mainCode);
+        setIsCovered(!isNonCovered);
+      } catch (error) {
+        console.error('Error loading coverage status:', error);
+        setIsCovered(initialCovered);
+      }
+    };
+
+    loadCoverageStatus();
+  }, [mainCode, initialCovered]);
+
   if (!branches || branches.length === 0) return null;
 
   return (
@@ -39,7 +59,7 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered = 
           }`}
         >
           <GitBranch className="h-3.5 w-3.5" />
-          {branches.length} Branches {!isCovered && <span className="text-red-500 font-bold">!</span>}
+          {branches.length} Branches
         </Button>
       </DialogTrigger>
       <DialogContent className={`sm:max-w-[600px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl shadow-xl ${
@@ -61,7 +81,9 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered = 
             </Badge>
               <div className="flex items-center gap-2">
               <DialogTitle className="text-xl text-slate-800 font-semibold tracking-tight">ICD-10 Hierarchy</DialogTitle>
-              {!isCovered && <Badge className="bg-red-100 text-red-700 border-red-300 font-bold text-xs">NOT COVERED</Badge>}
+              <Badge className={isCovered ? 'bg-emerald-100 text-emerald-700 border-emerald-300 font-bold text-xs' : 'bg-red-100 text-red-700 border-red-300 font-bold text-xs'}>
+                {isCovered ? 'COVERED' : 'NOT COVERED'}
+              </Badge>
             </div>
             </div>
             <DialogDescription className="text-slate-600 text-base leading-relaxed">
