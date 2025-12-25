@@ -10,13 +10,14 @@ interface DetailedRowProps {
 export function DetailedRow({ data, treeData }: DetailedRowProps) {
   const mainCode = data.icd10_codes.split(',')[0].trim().substring(0, 3);
   const treeNode = treeData?.find((node: any) => node.code === mainCode);
+  const isCovered = treeNode && treeNode.branches && treeNode.branches.length > 0;
 
   return (
     <TableRow className="hover:bg-sky-50/30 transition-colors group">
       <TableCell className="font-medium text-slate-900">
         <div className="flex flex-col">
           <span className="font-bold group-hover:text-sky-700 transition-colors">{data.trade_name}</span>
-          <span className="text-xs text-slate-500 font-normal">{data.scientific_name}</span>
+          <span className="text-xs text-slate-500 font-normal">Trade Name: {data.scientific_name}</span>
         </div>
       </TableCell>
       <TableCell className="text-slate-700 max-w-xs truncate" title={data.indication}>
@@ -31,7 +32,8 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
             <BranchViewer 
               mainCode={treeNode.code} 
               mainDescription={treeNode.description} 
-              branches={treeNode.branches} 
+              branches={treeNode.branches}
+              isCovered={isCovered}
             />
           )}
         </div>

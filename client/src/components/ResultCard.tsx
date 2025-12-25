@@ -12,6 +12,7 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
   // استخراج الكود الرئيسي (أول 3 أحرف) للبحث في الشجرة
   const mainCode = data.icd10_codes.split(',')[0].trim().substring(0, 3);
   const treeNode = treeData?.find((node: any) => node.code === mainCode);
+  const isCovered = treeNode && treeNode.branches && treeNode.branches.length > 0;
   
   return (
     <Card className="group overflow-hidden border-slate-200 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/50 transition-all duration-300">
@@ -22,8 +23,8 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
               {data.trade_name}
             </CardTitle>
             <div className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600">Generic</span>
-              {data.scientific_name}
+              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600">Trade Name</span>
+              <span className="text-slate-700 font-semibold">{data.scientific_name}</span>
             </div>
           </div>
           <Badge variant="secondary" className="font-mono text-xs bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100">
@@ -51,7 +52,8 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
             <BranchViewer 
               mainCode={treeNode.code} 
               mainDescription={treeNode.description} 
-              branches={treeNode.branches} 
+              branches={treeNode.branches}
+              isCovered={isCovered}
             />
           )}
         </div>

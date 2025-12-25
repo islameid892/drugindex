@@ -20,9 +20,10 @@ interface BranchViewerProps {
   mainCode: string;
   mainDescription: string;
   branches: Branch[];
+  isCovered?: boolean;
 }
 
-export function BranchViewer({ mainCode, mainDescription, branches }: BranchViewerProps) {
+export function BranchViewer({ mainCode, mainDescription, branches, isCovered = true }: BranchViewerProps) {
   if (!branches || branches.length === 0) return null;
 
   return (
@@ -31,20 +32,37 @@ export function BranchViewer({ mainCode, mainDescription, branches }: BranchView
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-1.5 text-xs font-medium text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-colors"
+          className={`gap-1.5 text-xs font-medium transition-colors ${
+            isCovered 
+              ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' 
+              : 'text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300'
+          }`}
         >
           <GitBranch className="h-3.5 w-3.5" />
-          {branches.length} Branches
+          {branches.length} Branches {!isCovered && <span className="text-red-500 font-bold">!</span>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl border-emerald-100 shadow-xl">
-        <div className="p-6 bg-gradient-to-b from-emerald-50/50 to-transparent border-b border-emerald-100/50">
+      <DialogContent className={`sm:max-w-[600px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl shadow-xl ${
+        isCovered ? 'border-emerald-100' : 'border-red-100'
+      }`}>
+        <div className={`p-6 bg-gradient-to-b border-b transition-colors ${
+          isCovered 
+            ? 'from-emerald-50/50 to-transparent border-emerald-100/50' 
+            : 'from-red-50/50 to-transparent border-red-100/50'
+        }`}>
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <Badge variant="outline" className="bg-white text-emerald-700 border-emerald-200 font-mono text-sm px-2 py-0.5 shadow-sm">
-                {mainCode}
-              </Badge>
+            <Badge variant="outline" className={`bg-white font-mono text-sm px-2 py-0.5 shadow-sm ${
+              isCovered 
+                ? 'text-emerald-700 border-emerald-200' 
+                : 'text-red-700 border-red-200'
+            }`}>
+              {mainCode}
+            </Badge>
+              <div className="flex items-center gap-2">
               <DialogTitle className="text-xl text-slate-800 font-semibold tracking-tight">ICD-10 Hierarchy</DialogTitle>
+              {!isCovered && <Badge className="bg-red-100 text-red-700 border-red-300 font-bold text-xs">NOT COVERED</Badge>}
+            </div>
             </div>
             <DialogDescription className="text-slate-600 text-base leading-relaxed">
               {mainDescription}
@@ -57,18 +75,34 @@ export function BranchViewer({ mainCode, mainDescription, branches }: BranchView
             {branches.map((branch) => (
               <div 
                 key={branch.code} 
-                className="group flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-100/50 transition-all duration-200"
+                className={`group flex items-start gap-3 p-3 rounded-lg border bg-white transition-all duration-200 ${
+                  isCovered
+                    ? 'border-slate-200 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-100/50'
+                    : 'border-red-200 hover:border-red-400 hover:shadow-md hover:shadow-red-100/50 bg-red-50/30'
+                }`}
               >
                 <div className="mt-0.5 flex-shrink-0">
-                  <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight className={`h-4 w-4 transition-colors ${
+                    isCovered
+                      ? 'text-slate-400 group-hover:text-emerald-500'
+                      : 'text-red-400 group-hover:text-red-600'
+                  }`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-sm font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                    <span className={`font-mono text-sm font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      isCovered
+                        ? 'text-slate-700 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-700'
+                        : 'text-red-700 bg-red-100 group-hover:bg-red-200 group-hover:text-red-800'
+                    }`}>
                       {branch.code}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 leading-snug group-hover:text-slate-900 transition-colors">
+                  <p className={`text-sm leading-snug transition-colors ${
+                    isCovered
+                      ? 'text-slate-600 group-hover:text-slate-900'
+                      : 'text-red-600 group-hover:text-red-900'
+                  }`}>
                     {branch.description}
                   </p>
                 </div>
