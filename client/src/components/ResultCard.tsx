@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BranchViewer } from "./BranchViewer";
-import { cn } from "@/lib/utils";
+import { useCoverageStatus } from "@/hooks/useCoverageStatus";
 
 interface ResultCardProps {
   data: any;
@@ -12,11 +12,31 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
   // استخراج الكود الرئيسي (أول 3 أحرف) للبحث في الشجرة
   const mainCode = data.icd10_codes.split(',')[0].trim().substring(0, 3);
   const treeNode = treeData?.find((node: any) => node.code === mainCode);
-  const isCovered = treeNode && treeNode.branches && treeNode.branches.length > 0;
+  
+  // استخدام الـ hook للتحقق من حالة التغطية
+  const { isCovered } = useCoverageStatus(data.icd10_codes);
+  
+  const cardBorderClass = isCovered 
+    ? 'border-slate-200 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/50' 
+    : 'border-red-200 hover:border-red-400 hover:shadow-lg hover:shadow-red-100/50';
+    
+  const headerBgClass = isCovered 
+    ? 'bg-slate-50/50 border-slate-100' 
+    : 'bg-red-50/50 border-red-100';
+    
+  const indicationClass = isCovered 
+    ? 'text-slate-700 bg-slate-50 border-slate-100' 
+    : 'text-red-700 bg-red-50/50 border-red-200';
+    
+  const badgeClass = isCovered 
+    ? 'text-slate-700 border-slate-300 bg-white' 
+    : 'text-red-700 border-red-300 bg-red-50';
+    
+  const dividerClass = isCovered ? 'border-slate-100' : 'border-red-200';
   
   return (
-    <Card className="group overflow-hidden border-slate-200 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/50 transition-all duration-300">
-      <CardHeader className="pb-3 bg-slate-50/50 border-b border-slate-100">
+    <Card className={`group overflow-hidden transition-all duration-300 ${cardBorderClass}`}>
+      <CardHeader className={`pb-3 border-b transition-colors ${headerBgClass}`}>
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-1.5">
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
@@ -27,23 +47,23 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
               <span className="text-slate-700 font-semibold">{data.scientific_name}</span>
             </div>
           </div>
-          <Badge variant="secondary" className="font-mono text-xs bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100">
-            {data.atc_codes}
+          <Badge className={`font-mono text-xs ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
+            {isCovered ? 'COVERED' : 'NOT COVERED'}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
         <div>
           <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Indication</h4>
-          <p className="text-sm text-slate-700 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <p className={`text-sm font-medium leading-relaxed p-2.5 rounded-lg border transition-colors ${indicationClass}`}>
             {data.indication}
           </p>
         </div>
         
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-2">
+        <div className={`flex items-center justify-between pt-2 mt-2 border-t transition-colors ${dividerClass}`}>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">ICD-10</span>
-            <Badge variant="outline" className="font-mono font-bold text-slate-700 border-slate-300 bg-white">
+            <Badge variant="outline" className={`font-mono font-bold ${badgeClass}`}>
               {data.icd10_codes}
             </Badge>
           </div>
