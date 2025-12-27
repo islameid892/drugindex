@@ -33,7 +33,8 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
       try {
         const response = await fetch('/data/coverage_status.json');
         const data = await response.json();
-        const isNonCovered = data.non_covered.includes(mainCode);
+        const mainCodeOnly = mainCode.split('.')[0];
+        const isNonCovered = data.non_covered.includes(mainCode) || data.non_covered.includes(mainCodeOnly);
         setIsCovered(!isNonCovered);
       } catch (error) {
         console.error('Error loading coverage status:', error);
@@ -62,7 +63,7 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
           {branches.length} Branches
         </Button>
       </DialogTrigger>
-      <DialogContent className={`sm:max-w-[700px] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl shadow-xl ${
+      <DialogContent className={`sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl shadow-xl ${
         isCovered ? 'border-emerald-100' : 'border-red-100'
       }`}>
         <div className={`p-6 bg-gradient-to-b border-b transition-colors flex-shrink-0 ${
@@ -92,8 +93,8 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
           </DialogHeader>
         </div>
         
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full w-full p-6 bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-6 bg-slate-50/30">
             <div className="space-y-3 pr-4">
               {branches.map((branch) => (
                 <div 
@@ -132,7 +133,7 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
         
         <div className="p-4 border-t bg-slate-50 text-xs text-center text-slate-400 flex-shrink-0">

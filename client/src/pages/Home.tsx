@@ -72,9 +72,9 @@ export default function Home() {
                 <Stethoscope className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">ICD-10 Search Engine</h1>
-                <p className="text-xs text-slate-500 font-medium">Medical Coding & Drug Reference</p>
-                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
+                <h1 className="text-xl font-bold text-slate-900 tracking-tight" style={{fontSize: '25px'}}>ICD-10 Search Engine</h1>
+                <p className="text-xs text-slate-500 font-medium" style={{fontSize: '15px'}}>Medical Coding & Drug Reference</p>
+                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent" style={{fontSize: '13px', textDecoration: 'underline'}}>Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
             
