@@ -164,10 +164,10 @@ export default function Home() {
                 <Table>
                   <TableHeader className="bg-slate-50">
                     <TableRow>
-                      <TableHead className="w-[30%]">Medication</TableHead>
+                      <TableHead className="w-[30%]">Scientific Name</TableHead>
                       <TableHead className="w-[30%]">Indication</TableHead>
                       <TableHead className="w-[25%]">ICD-10 Code</TableHead>
-                      <TableHead className="w-[15%]">ATC Code</TableHead>
+                      <TableHead className="w-[15%]">Coverage Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

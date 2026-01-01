@@ -28,8 +28,8 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
     <TableRow className={`transition-colors group ${rowHoverClass}`}>
       <TableCell className="font-medium text-slate-900">
         <div className="flex flex-col">
-          <span className="font-bold group-hover:text-sky-700 transition-colors">{data.trade_name}</span>
-          <span className="text-xs text-slate-500 font-normal">Trade Name: {data.scientific_name}</span>
+          <span className="font-bold group-hover:text-sky-700 transition-colors">{data.scientific_name}</span>
+          <span className="text-xs text-slate-500 font-normal">Trade Name: {data.trade_name}</span>
         </div>
       </TableCell>
       <TableCell className={`max-w-xs truncate transition-colors ${indicationClass}`} title={data.indication}>

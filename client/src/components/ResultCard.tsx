@@ -40,11 +40,11 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-1.5">
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
-              {data.trade_name}
+              {data.scientific_name}
             </CardTitle>
             <div className="text-sm font-medium text-slate-500 flex items-center gap-2">
               <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600">Trade Name</span>
-              <span className="text-slate-700 font-semibold">{data.scientific_name}</span>
+              <span className="text-slate-700 font-semibold">{data.trade_name}</span>
             </div>
           </div>
           <Badge className={`font-mono text-xs ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
