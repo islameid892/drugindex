@@ -9,9 +9,18 @@ interface ResultCardProps {
 }
 
 export function ResultCard({ data, treeData }: ResultCardProps) {
-  // استخراج الكود الرئيسي (أول 3 أحرف) للبحث في الشجرة
-  const mainCode = data.icd10_codes.split(',')[0].trim().substring(0, 3);
-  const treeNode = treeData?.find((node: any) => node.code === mainCode);
+  // استخراج جميع الأكواد الرئيسية (أول 3 أحرف) للبحث في الشجرة
+  const allCodes = data.icd10_codes.split(',').map((code: string) => ({
+    fullCode: code.trim(),
+    mainCode: code.trim().substring(0, 3)
+  }));
+  
+  const treeNodes = allCodes
+    .map((codeObj: any) => ({
+      ...codeObj,
+      node: treeData?.find((node: any) => node.code === codeObj.mainCode)
+    }))
+    .filter((item: any) => item.node);
   
   // استخدام الـ hook للتحقق من حالة التغطية
   const { isCovered } = useCoverageStatus(data.icd10_codes);
@@ -68,14 +77,18 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
             </Badge>
           </div>
           
-          {treeNode && (
-            <BranchViewer 
-              mainCode={treeNode.code} 
-              mainDescription={treeNode.description} 
-              branches={treeNode.branches}
-              isCovered={isCovered}
-            />
-          )}
+          {/* عرض أزرار Branches لكل الأكواد */}
+          <div className="flex gap-2 flex-wrap justify-end">
+            {treeNodes.map((item: any, index: number) => (
+              <BranchViewer 
+                key={`${item.mainCode}-${index}`}
+                mainCode={item.node.code} 
+                mainDescription={item.node.description} 
+                branches={item.node.branches}
+                isCovered={isCovered}
+              />
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
