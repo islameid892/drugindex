@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { ResultCard } from "@/components/ResultCard";
 import { DetailedRow } from "@/components/DetailedRow";
+import BrowseModal from "@/components/BrowseModal";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,6 +16,7 @@ export default function Home() {
   const [treeData, setTreeData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
+  const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' }>({ isOpen: false, type: 'drugs' });
 
   // تحميل البيانات
   useEffect(() => {
@@ -182,32 +184,49 @@ export default function Home() {
         )}
         
         {!query && !loading && (
-          <div className="text-center py-20 opacity-50">
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto text-slate-300">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Pill className="h-6 w-6" />
+          <div className="text-center py-20">
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+              <button
+                onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
+                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                  <Pill className="h-6 w-6 text-sky-600" />
                 </div>
-                <span className="text-sm font-medium">Search Drugs</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Activity className="h-6 w-6" />
+                <span className="text-sm font-medium text-slate-700 group-hover:text-sky-600 transition-colors">Search Drugs</span>
+              </button>
+              <button
+                onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
+                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <Activity className="h-6 w-6 text-emerald-600" />
                 </div>
-                <span className="text-sm font-medium">Find Conditions</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Database className="h-6 w-6" />
+                <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">Find Conditions</span>
+              </button>
+              <button
+                onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
+                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <Database className="h-6 w-6 text-purple-600" />
                 </div>
-                <span className="text-sm font-medium">Browse Codes</span>
-              </div>
+                <span className="text-sm font-medium text-slate-700 group-hover:text-purple-600 transition-colors">Browse Codes</span>
+              </button>
             </div>
           </div>
         )}
+        
+        {/* Browse Modal */}
+        <BrowseModal
+          isOpen={browseModal.isOpen}
+          onClose={() => setBrowseModal({ ...browseModal, isOpen: false })}
+          type={browseModal.type}
+          data={mainData}
+        />
       </main>
     </div>
   );
 }
 
-import { Search } from "lucide-react";
+
