@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { ResultCard } from "@/components/ResultCard";
 import { DetailedRow } from "@/components/DetailedRow";
@@ -50,17 +50,33 @@ export default function Home() {
     loadData();
   }, []);
 
-  // تصفية النتائج
+  // تصفية النتائج مع إظهار البيانات المرتبطة
   const filteredData = useMemo(() => {
     if (!query) return [];
     
-    const lowerQuery = query.toLowerCase();
-    return mainData.filter(item => 
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // البحث عن الأدوية والحالات والأكواد المطابقة
+    const matchedMedications = mainData.filter(item => 
       item.trade_name.toLowerCase().includes(lowerQuery) ||
-      item.scientific_name.toLowerCase().includes(lowerQuery) ||
-      item.indication.toLowerCase().includes(lowerQuery) ||
+      item.scientific_name.toLowerCase().includes(lowerQuery)
+    );
+    
+    const matchedConditions = mainData.filter(item =>
+      item.indication.toLowerCase().includes(lowerQuery)
+    );
+    
+    const matchedCodes = mainData.filter(item =>
       item.icd10_codes.toLowerCase().includes(lowerQuery)
-    ).slice(0, 100); // تحديد عدد النتائج لتحسين الأداء
+    );
+    
+    // دمج النتائج وإزالة التكرارات
+    const allMatched = [...matchedMedications, ...matchedConditions, ...matchedCodes];
+    const uniqueMatched = Array.from(
+      new Map(allMatched.map(item => [item.trade_name + item.indication + item.icd10_codes, item])).values()
+    );
+    
+    return uniqueMatched.slice(0, 100); // تحديد عدد النتائج لتحسين الأداء
   }, [query, mainData]);
 
   return (
@@ -228,5 +244,4 @@ export default function Home() {
     </div>
   );
 }
-
 
