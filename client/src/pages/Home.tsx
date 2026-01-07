@@ -5,7 +5,7 @@ import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -80,94 +80,145 @@ export default function Home() {
   }, [query, mainData]);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Header Section */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 shadow-sm">
         <div className="container py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-sky-500 p-2 rounded-lg shadow-lg shadow-sky-500/20">
+              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2.5 rounded-xl shadow-lg shadow-sky-500/30">
                 <Stethoscope className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight" style={{fontSize: '25px'}}>ICD-10 Search Engine</h1>
-                <p className="text-xs text-slate-500 font-medium" style={{fontSize: '15px'}}>Medical Coding & Drug Reference</p>
-                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent" style={{fontSize: '13px', textDecoration: 'underline'}}>Created By Pharmacist: Islam Mostafa Eid</p>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">ICD-10 Search Engine</h1>
+                <p className="text-sm text-slate-500 font-medium">Medical Coding & Drug Reference</p>
+                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 text-xs font-medium text-slate-500 hidden md:flex">
-              <div className="flex items-center gap-1.5">
-                <Pill className="h-3.5 w-3.5 text-sky-500" />
-                <span>{stats.medications.toLocaleString()} Meds</span>
+            <div className="flex items-center gap-4 text-xs font-medium text-slate-600 hidden md:flex">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50">
+                <Pill className="h-4 w-4 text-sky-600" />
+                <span className="font-semibold text-sky-900">{stats.medications.toLocaleString()}</span>
+                <span className="text-sky-700">Meds</span>
               </div>
-              <div className="w-px h-3 bg-slate-300" />
-              <div className="flex items-center gap-1.5">
-                <Activity className="h-3.5 w-3.5 text-emerald-500" />
-                <span>{stats.conditions.toLocaleString()} Conditions</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50">
+                <Activity className="h-4 w-4 text-emerald-600" />
+                <span className="font-semibold text-emerald-900">{stats.conditions.toLocaleString()}</span>
+                <span className="text-emerald-700">Conditions</span>
               </div>
-              <div className="w-px h-3 bg-slate-300" />
-              <div className="flex items-center gap-1.5">
-                <Database className="h-3.5 w-3.5 text-purple-500" />
-                <span>{stats.codes.toLocaleString()} Codes</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50">
+                <Database className="h-4 w-4 text-purple-600" />
+                <span className="font-semibold text-purple-900">{stats.codes.toLocaleString()}</span>
+                <span className="text-purple-700">Codes</span>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container py-8 space-y-8">
-        {/* Search Section */}
-        <div className="flex flex-col items-center space-y-6 max-w-3xl mx-auto w-full">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Find Codes & Medications</h2>
-            <p className="text-slate-500 max-w-lg mx-auto">
-              Search by scientific name, trade name, indication, or ICD-10 code.
-            </p>
-          </div>
-          
-          <SearchBar 
-            value={query} 
-            onChange={setQuery} 
-            placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
-          />
-          
-          {/* View Toggle */}
-          {filteredData.length > 0 && (
-            <div className="flex items-center justify-between w-full pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-sky-100 text-sky-700 hover:bg-sky-200 transition-colors">
-                  {filteredData.length} Results Found
-                </Badge>
+      <main className="flex-1 container py-12 space-y-12">
+        {/* Hero Section */}
+        {!query && !loading && (
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 border border-sky-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
+            {/* Background Image */}
+            <div 
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage: "url('/images/hero-background.png')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+            
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-sky-50/40" />
+            
+            {/* Content */}
+            <div className="relative px-6 py-16 md:px-12 md:py-20 text-center space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-sky-200 shadow-sm">
+                <Sparkles className="h-4 w-4 text-sky-600" />
+                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database</span>
               </div>
               
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
-                <TabsList className="grid w-full grid-cols-2 h-9 bg-slate-100 p-1">
-                  <TabsTrigger value="aggregated" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-sm">
-                    <LayoutGrid className="h-3.5 w-3.5" /> Cards
-                  </TabsTrigger>
-                  <TabsTrigger value="detailed" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-sm">
-                    <List className="h-3.5 w-3.5" /> List
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="space-y-3">
+                <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
+                  Find Codes & Medications
+                </h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                  Search by scientific name, trade name, indication, or ICD-10 code. Get instant access to comprehensive medical coding information.
+                </p>
+              </div>
+              
+              {/* Search Bar in Hero */}
+              <div className="max-w-2xl mx-auto pt-4">
+                <SearchBar 
+                  value={query} 
+                  onChange={setQuery} 
+                  placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
+                />
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Search Section */}
+        {query && (
+          <div className="flex flex-col items-center space-y-6 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Search Results</h2>
+              <p className="text-slate-500">
+                Showing results for <span className="font-semibold text-sky-600">"{query}"</span>
+              </p>
+            </div>
+            
+            <SearchBar 
+              value={query} 
+              onChange={setQuery} 
+              placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
+            />
+            
+            {/* View Toggle */}
+            {filteredData.length > 0 && (
+              <div className="flex items-center justify-between w-full pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700 transition-all shadow-md">
+                    {filteredData.length} Results Found
+                  </Badge>
+                </div>
+                
+                <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
+                  <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-100 p-1 rounded-lg">
+                    <TabsTrigger value="aggregated" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-md transition-all">
+                      <LayoutGrid className="h-4 w-4" /> Cards
+                    </TabsTrigger>
+                    <TabsTrigger value="detailed" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-md transition-all">
+                      <List className="h-4 w-4" /> List
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Results Section */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Loader2 className="h-10 w-10 animate-spin mb-4 text-sky-500" />
-            <p>Loading medical database...</p>
+          <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-emerald-500/20 rounded-full blur-xl" />
+              <Loader2 className="h-12 w-12 animate-spin text-sky-500 relative" />
+            </div>
+            <p className="mt-6 text-lg font-medium">Loading medical database...</p>
+            <p className="text-sm text-slate-400 mt-2">This may take a moment</p>
           </div>
         ) : query && filteredData.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
-            <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="h-8 w-8 text-slate-300" />
+          <div className="text-center py-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-200 to-slate-300 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+              <Search className="h-8 w-8 text-slate-500" />
             </div>
-            <h3 className="text-lg font-medium text-slate-900">No results found</h3>
-            <p className="text-slate-500 mt-1">Try adjusting your search terms or check for typos.</p>
+            <h3 className="text-lg font-semibold text-slate-900">No results found</h3>
+            <p className="text-slate-600 mt-2 max-w-md mx-auto">Try adjusting your search terms or check for typos. You can also browse by drugs, conditions, or codes.</p>
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
@@ -178,14 +229,14 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-lg">
                 <Table>
-                  <TableHeader className="bg-slate-50">
+                  <TableHeader className="bg-gradient-to-r from-sky-50 to-emerald-50 border-b border-slate-200">
                     <TableRow>
-                      <TableHead className="w-[30%]">Scientific Name</TableHead>
-                      <TableHead className="w-[30%]">Indication</TableHead>
-                      <TableHead className="w-[25%]">ICD-10 Code</TableHead>
-                      <TableHead className="w-[15%]">Coverage Status</TableHead>
+                      <TableHead className="w-[30%] font-semibold text-slate-700">Scientific Name</TableHead>
+                      <TableHead className="w-[30%] font-semibold text-slate-700">Indication</TableHead>
+                      <TableHead className="w-[25%] font-semibold text-slate-700">ICD-10 Code</TableHead>
+                      <TableHead className="w-[15%] font-semibold text-slate-700">Coverage Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -200,34 +251,80 @@ export default function Home() {
         )}
         
         {!query && !loading && (
-          <div className="text-center py-20">
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+          <div className="py-12">
+            <div className="text-center mb-12">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Browse by Category</h3>
+              <p className="text-slate-600">Quick access to drugs, conditions, and codes</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {/* Search Drugs Card */}
               <button
                 onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
-                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-sky-300"
               >
-                <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
-                  <Pill className="h-6 w-6 text-sky-600" />
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                    <Pill className="h-7 w-7 text-white" />
+                  </div>
+                  
+                  <div className="text-left">
+                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Search Drugs</h4>
+                    <p className="text-sm text-slate-600 mt-1">Browse all medications alphabetically</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sky-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Explore <ChevronRight className="h-4 w-4" />
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-slate-700 group-hover:text-sky-600 transition-colors">Search Drugs</span>
               </button>
+
+              {/* Find Conditions Card */}
               <button
                 onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
-                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-emerald-300"
               >
-                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                  <Activity className="h-6 w-6 text-emerald-600" />
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                    <Activity className="h-7 w-7 text-white" />
+                  </div>
+                  
+                  <div className="text-left">
+                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Find Conditions</h4>
+                    <p className="text-sm text-slate-600 mt-1">Discover medical conditions and diagnoses</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Explore <ChevronRight className="h-4 w-4" />
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">Find Conditions</span>
               </button>
+
+              {/* Browse Codes Card */}
               <button
                 onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
-                className="flex flex-col items-center gap-2 hover:opacity-100 transition-opacity opacity-60 hover:opacity-100 group"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-purple-300"
               >
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                  <Database className="h-6 w-6 text-purple-600" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                    <Database className="h-7 w-7 text-white" />
+                  </div>
+                  
+                  <div className="text-left">
+                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Browse Codes</h4>
+                    <p className="text-sm text-slate-600 mt-1">View all ICD-10 codes and classifications</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Explore <ChevronRight className="h-4 w-4" />
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-slate-700 group-hover:text-purple-600 transition-colors">Browse Codes</span>
               </button>
             </div>
           </div>
@@ -244,4 +341,3 @@ export default function Home() {
     </div>
   );
 }
-
