@@ -1,15 +1,25 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useRef, useEffect } from "react";
 
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
-export function SearchBar({ value, onChange, className, placeholder = "Search by code, name, or indication..." }: SearchBarProps) {
+export function SearchBar({ value, onChange, className, placeholder = "Search by code, name, or indication...", autoFocus = false }: SearchBarProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
   return (
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       <div className="relative group">
@@ -17,6 +27,7 @@ export function SearchBar({ value, onChange, className, placeholder = "Search by
           <Search className="h-5 w-5" />
         </div>
         <Input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}

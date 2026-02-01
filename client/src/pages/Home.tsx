@@ -5,9 +5,11 @@ import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+
+const ITEMS_PER_PAGE = 20;
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -17,6 +19,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' }>({ isOpen: false, type: 'drugs' });
+  const [currentPage, setCurrentPage] = useState(1);
 
   // تحميل البيانات
   useEffect(() => {
@@ -50,6 +53,11 @@ export default function Home() {
     loadData();
   }, []);
 
+  // إعادة تعيين الصفحة عند تغيير البحث
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
+
   // تصفية النتائج مع إظهار البيانات المرتبطة
   const filteredData = useMemo(() => {
     if (!query) return [];
@@ -76,8 +84,17 @@ export default function Home() {
       new Map(allMatched.map(item => [item.trade_name + item.indication + item.icd10_codes, item])).values()
     );
     
-    return uniqueMatched.slice(0, 100); // تحديد عدد النتائج لتحسين الأداء
+    return uniqueMatched;
   }, [query, mainData]);
+
+  // حساب البيانات المعروضة حسب الصفحة
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage]);
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
@@ -156,6 +173,7 @@ export default function Home() {
                   value={query} 
                   onChange={setQuery} 
                   placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
+                  autoFocus={false}
                 />
               </div>
             </div>
@@ -176,6 +194,7 @@ export default function Home() {
               value={query} 
               onChange={setQuery} 
               placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
+              autoFocus={true}
             />
             
             {/* View Toggle */}
@@ -221,10 +240,10 @@ export default function Home() {
             <p className="text-slate-600 mt-2 max-w-md mx-auto">Try adjusting your search terms or check for typos. You can also browse by drugs, conditions, or codes.</p>
           </div>
         ) : (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-500 space-y-6">
             {viewMode === "aggregated" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredData.map((item, idx) => (
+                {paginatedData.map((item, idx) => (
                   <ResultCard key={idx} data={item} treeData={treeData} />
                 ))}
               </div>
@@ -240,11 +259,56 @@ export default function Home() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {paginatedData.map((item, idx) => (
                       <DetailedRow key={idx} data={item} treeData={treeData} />
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 py-6">
+                <Button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <Button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      className={currentPage === page ? "bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700" : ""}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                <div className="ml-4 text-sm text-slate-600">
+                  Page <span className="font-semibold">{currentPage}</span> of <span className="font-semibold">{totalPages}</span>
+                </div>
               </div>
             )}
           </div>
