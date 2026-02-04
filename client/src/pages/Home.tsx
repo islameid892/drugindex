@@ -117,6 +117,7 @@ export default function Home() {
               </div>
             </div>
             
+            {/* Desktop Stats and Favorites */}
             <div className="flex items-center gap-3 text-xs font-medium text-slate-600 hidden md:flex">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50">
                 <Pill className="h-4 w-4 text-sky-600" />
@@ -143,6 +144,16 @@ export default function Home() {
                 </a>
               </Link>
             </div>
+
+            {/* Mobile Favorites Button */}
+            <Link href="/favorites">
+              <a>
+                <Button variant="outline" size="sm" className="md:hidden gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
+                  <Heart className="h-4 w-4" />
+                  <span className="font-semibold">{favorites.length}</span>
+                </Button>
+              </a>
+            </Link>
           </div>
         </div>
       </header>
