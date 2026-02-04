@@ -1,7 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { BranchViewer } from "./BranchViewer";
 import { useCoverageStatus } from "@/hooks/useCoverageStatus";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { Heart } from "lucide-react";
 
 interface ResultCardProps {
   data: any;
@@ -25,6 +28,27 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
   // استخدام الـ hook للتحقق من حالة التغطية
   const { isCovered } = useCoverageStatus(data.icd10_codes);
   
+  // استخدام الـ hook للمفضلة
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const favoriteId = `${data.scientific_name}-${data.indication}-${data.icd10_codes}`;
+  const isFav = isFavorite(favoriteId);
+  
+  const handleToggleFavorite = () => {
+    if (isFav) {
+      removeFavorite(favoriteId);
+    } else {
+      addFavorite({
+        id: favoriteId,
+        scientific_name: data.scientific_name,
+        trade_name: data.trade_name,
+        indication: data.indication,
+        icd10_codes: data.icd10_codes,
+        atc_codes: data.atc_codes,
+        addedAt: Date.now()
+      });
+    }
+  };
+  
   const cardBorderClass = isCovered 
     ? 'border-slate-200 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100/50' 
     : 'border-red-200 hover:border-red-400 hover:shadow-lg hover:shadow-red-100/50';
@@ -47,7 +71,7 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
     <Card className={`group overflow-hidden transition-all duration-300 ${cardBorderClass}`}>
       <CardHeader className={`pb-3 border-b transition-colors ${headerBgClass}`}>
         <div className="flex justify-between items-start gap-4">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 flex-1">
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
               {data.scientific_name}
             </CardTitle>
@@ -56,9 +80,24 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
               <span className="text-slate-700 font-semibold">{data.trade_name}</span>
             </div>
           </div>
-          <Badge className={`font-mono text-xs ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
-            {isCovered ? 'COVERED' : 'NOT COVERED'}
-          </Badge>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleToggleFavorite}
+              variant="ghost"
+              size="sm"
+              className={`transition-all ${
+                isFav
+                  ? 'text-red-500 hover:text-red-600 hover:bg-red-50'
+                  : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+              }`}
+              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart className={`h-5 w-5 ${isFav ? 'fill-current' : ''}`} />
+            </Button>
+            <Badge className={`font-mono text-xs ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
+              {isCovered ? 'COVERED' : 'NOT COVERED'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">

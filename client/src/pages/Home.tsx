@@ -5,9 +5,11 @@ import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { Link } from "wouter";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -20,6 +22,7 @@ export default function Home() {
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' }>({ isOpen: false, type: 'drugs' });
   const [currentPage, setCurrentPage] = useState(1);
+  const { favorites } = useFavorites();
 
   // تحميل البيانات
   useEffect(() => {
@@ -113,7 +116,7 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="flex items-center gap-4 text-xs font-medium text-slate-600 hidden md:flex">
+            <div className="flex items-center gap-3 text-xs font-medium text-slate-600 hidden md:flex">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50">
                 <Pill className="h-4 w-4 text-sky-600" />
                 <span className="font-semibold text-sky-900">{stats.medications.toLocaleString()}</span>
@@ -129,6 +132,15 @@ export default function Home() {
                 <span className="font-semibold text-purple-900">{stats.codes.toLocaleString()}</span>
                 <span className="text-purple-700">Codes</span>
               </div>
+              <div className="w-px h-6 bg-slate-200" />
+              <Link href="/favorites">
+                <a>
+                  <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
+                    <Heart className="h-4 w-4" />
+                    <span className="font-semibold">{favorites.length}</span>
+                  </Button>
+                </a>
+              </Link>
             </div>
           </div>
         </div>
