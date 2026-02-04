@@ -145,15 +145,29 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Mobile Favorites Button */}
-            <Link href="/favorites">
-              <a>
-                <Button variant="outline" size="sm" className="md:hidden gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
-                  <Heart className="h-4 w-4" />
-                  <span className="font-semibold">{favorites.length}</span>
-                </Button>
-              </a>
-            </Link>
+            {/* Mobile Stats and Favorites */}
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 md:hidden flex-wrap justify-center">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50">
+                <Pill className="h-3 w-3 text-sky-600" />
+                <span className="font-semibold text-sky-900">{stats.medications}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50">
+                <Activity className="h-3 w-3 text-emerald-600" />
+                <span className="font-semibold text-emerald-900">{stats.conditions}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50">
+                <Database className="h-3 w-3 text-purple-600" />
+                <span className="font-semibold text-purple-900">{stats.codes}</span>
+              </div>
+              <Link href="/favorites">
+                <a>
+                  <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-7 px-2">
+                    <Heart className="h-3 w-3" />
+                    <span className="font-semibold text-xs">{favorites.length}</span>
+                  </Button>
+                </a>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
