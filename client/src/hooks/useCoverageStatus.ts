@@ -11,19 +11,18 @@ export function useCoverageStatus(icd10Codes: string) {
       try {
         // تحميل البيانات من الـ cache أو من الملف
         if (!coverageCache) {
-          const response = await fetch('/data/coverage_status.json');
-          const data = await response.json();
-          coverageCache = data.non_covered;
+          const response = await fetch('/data/non_covered_codes.json');
+          coverageCache = await response.json();
         }
 
-        // فحص جميع الأكواد في هذا الدواء (الكود الرئيسي والفرعي)
+        // فحص جميع الأكواد في هذا الدواء - مطابقة دقيقة فقط (exact match)
         const allCodes = icd10Codes
           .split(',')
           .map((code: string) => code.trim());
         
+        // البحث عن أي كود مطابق تماماً في قائمة الأكواد غير المغطاة
         const hasNonCovered = allCodes.some((code: string) => {
-          const mainCode = code.substring(0, 3);
-          return coverageCache!.includes(code) || coverageCache!.includes(mainCode);
+          return coverageCache!.includes(code);
         });
 
         setIsCovered(!hasNonCovered);

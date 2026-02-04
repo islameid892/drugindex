@@ -26,16 +26,25 @@ interface BranchViewerProps {
 
 export function BranchViewer({ mainCode, mainDescription, branches, isCovered: initialCovered = true }: BranchViewerProps) {
   const [isCovered, setIsCovered] = useState(initialCovered);
+  const [branchCoverageMap, setBranchCoverageMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // تحميل حالة التغطية من ملف JSON
     const loadCoverageStatus = async () => {
       try {
-        const response = await fetch('/data/coverage_status.json');
-        const data = await response.json();
-        const mainCodeOnly = mainCode.split('.')[0];
-        const isNonCovered = data.non_covered.includes(mainCode) || data.non_covered.includes(mainCodeOnly);
-        setIsCovered(!isNonCovered);
+        const response = await fetch('/data/non_covered_codes.json');
+        const nonCoveredCodes: string[] = await response.json();
+        
+        // فحص الكود الرئيسي - مطابقة دقيقة فقط
+        const isMainCodeNonCovered = nonCoveredCodes.includes(mainCode);
+        setIsCovered(!isMainCodeNonCovered);
+        
+        // فحص كل فرع - مطابقة دقيقة فقط
+        const coverageMap: Record<string, boolean> = {};
+        branches.forEach((branch) => {
+          coverageMap[branch.code] = !nonCoveredCodes.includes(branch.code);
+        });
+        setBranchCoverageMap(coverageMap);
       } catch (error) {
         console.error('Error loading coverage status:', error);
         setIsCovered(initialCovered);
@@ -43,7 +52,7 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
     };
 
     loadCoverageStatus();
-  }, [mainCode, initialCovered]);
+  }, [mainCode, branches, initialCovered]);
 
   if (!branches || branches.length === 0) return null;
 
@@ -96,42 +105,48 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-6 bg-slate-50/30">
             <div className="space-y-3 pr-4">
-              {branches.map((branch) => (
-                <div 
-                  key={branch.code} 
-                  className={`group flex items-start gap-3 p-3 rounded-lg border bg-white transition-all duration-200 ${
-                    isCovered
-                      ? 'border-slate-200 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-100/50'
-                      : 'border-red-200 hover:border-red-400 hover:shadow-md hover:shadow-red-100/50 bg-red-50/30'
-                  }`}
-                >
-                  <div className="mt-0.5 flex-shrink-0">
-                    <ChevronRight className={`h-4 w-4 transition-colors ${
-                      isCovered
-                        ? 'text-slate-400 group-hover:text-emerald-500'
-                        : 'text-red-400 group-hover:text-red-600'
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`font-mono text-sm font-bold px-1.5 py-0.5 rounded transition-colors ${
-                        isCovered
-                          ? 'text-slate-700 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-700'
-                          : 'text-red-700 bg-red-100 group-hover:bg-red-200 group-hover:text-red-800'
-                      }`}>
-                        {branch.code}
-                      </span>
+              {branches.map((branch) => {
+                const branchIsCovered = branchCoverageMap[branch.code] !== false;
+                return (
+                  <div 
+                    key={branch.code} 
+                    className={`group flex items-start gap-3 p-3 rounded-lg border bg-white transition-all duration-200 ${
+                      branchIsCovered
+                        ? 'border-slate-200 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-100/50'
+                        : 'border-red-200 hover:border-red-400 hover:shadow-md hover:shadow-red-100/50 bg-red-50/30'
+                    }`}
+                  >
+                    <div className="mt-0.5 flex-shrink-0">
+                      <ChevronRight className={`h-4 w-4 transition-colors ${
+                        branchIsCovered
+                          ? 'text-slate-400 group-hover:text-emerald-500'
+                          : 'text-red-400 group-hover:text-red-600'
+                      }`} />
                     </div>
-                    <p className={`text-sm leading-snug transition-colors ${
-                      isCovered
-                        ? 'text-slate-600 group-hover:text-slate-900'
-                        : 'text-red-600 group-hover:text-red-900'
-                    }`}>
-                      {branch.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`font-mono text-sm font-bold px-1.5 py-0.5 rounded transition-colors ${
+                          branchIsCovered
+                            ? 'text-slate-700 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-700'
+                            : 'text-red-700 bg-red-100 group-hover:bg-red-200 group-hover:text-red-800'
+                        }`}>
+                          {branch.code}
+                        </span>
+                        {!branchIsCovered && (
+                          <Badge className="text-xs bg-red-100 text-red-700 border-red-300">NOT COVERED</Badge>
+                        )}
+                      </div>
+                      <p className={`text-sm leading-snug transition-colors ${
+                        branchIsCovered
+                          ? 'text-slate-600 group-hover:text-slate-900'
+                          : 'text-red-600 group-hover:text-red-900'
+                      }`}>
+                        {branch.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
