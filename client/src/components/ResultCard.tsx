@@ -75,9 +75,9 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
               {data.scientific_name}
             </CardTitle>
-            <div className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600">Trade Name</span>
-              <span className="text-slate-700 font-semibold">{data.trade_name}</span>
+            <div className="text-sm font-medium text-slate-500">
+              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600 inline-block">Trade Name</span>
+              <p className="text-slate-700 font-semibold mt-1 leading-snug">{data.trade_name}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -108,16 +108,20 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
           </p>
         </div>
         
-        <div className={`flex items-center justify-between pt-2 mt-2 border-t transition-colors ${dividerClass}`}>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">ICD-10</span>
-            <Badge variant="outline" className={`font-mono font-bold ${badgeClass}`}>
-              {data.icd10_codes}
-            </Badge>
+        <div className={`pt-2 mt-2 border-t transition-colors ${dividerClass}`}>
+          <div className="flex items-start gap-2 mb-2">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">ICD-10</span>
+            <div className="flex flex-col gap-1 flex-1">
+              {data.icd10_codes.split(',').map((code: string, idx: number) => (
+                <Badge key={idx} variant="outline" className={`font-mono font-bold w-fit ${badgeClass}`}>
+                  {code.trim()}
+                </Badge>
+              ))}
+            </div>
           </div>
           
           {/* عرض أزرار Branches لكل الأكواد */}
-          <div className="flex gap-2 flex-wrap justify-end">
+          <div className="flex flex-col gap-2">
             {treeNodes.map((item: any, index: number) => (
               <BranchViewer 
                 key={`${item.mainCode}-${index}`}
