@@ -21,7 +21,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
   const treeNodes = allCodes
     .map((codeObj: any) => ({
       ...codeObj,
-      node: treeData?.find((node: any) => node.code === codeObj.mainCode)
+      node: treeData?.find((node: any) => node.code === codeObj.fullCode || node.code === codeObj.mainCode)
     }))
     .filter((item: any) => item.node);
 
@@ -92,7 +92,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
           {/* عرض أزرار Branches لكل الأكواد */}
           {treeNodes.map((item: any, index: number) => (
             <BranchViewer 
-              key={`${item.mainCode}-${index}`}
+              key={`${item.fullCode}-${index}`}
               mainCode={item.node.code} 
               mainDescription={item.node.description} 
               branches={item.node.branches}
