@@ -31,7 +31,7 @@ export function SearchBar({ value, onChange, className, placeholder = "Search by
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-11 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm"
+          className="pl-11 pr-16 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
           placeholder={placeholder}
         />
         <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
