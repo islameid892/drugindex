@@ -23,15 +23,15 @@ export function SearchBar({ value, onChange, className, placeholder = "Search by
   return (
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       <div className="relative group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
-          <Search className="h-5 w-5" />
+        <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+          <Search className="h-4 w-4" />
         </div>
         <Input
           ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-11 pr-16 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
+          className="pl-8 pr-16 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
           placeholder={placeholder}
         />
         <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
