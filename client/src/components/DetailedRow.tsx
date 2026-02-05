@@ -22,8 +22,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
     .map((codeObj: any) => ({
       ...codeObj,
       node: treeData?.find((node: any) => node.code === codeObj.fullCode || node.code === codeObj.mainCode)
-    }))
-    .filter((item: any) => item.node);
+    }));
 
   // استخدام الـ hook للتحقق من حالة التغطية
   const { isCovered } = useCoverageStatus(data.icd10_codes);
@@ -89,16 +88,18 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
           <Badge variant="outline" className={`font-mono ${badgeClass}`}>
             {data.icd10_codes}
           </Badge>
-          {/* عرض أزرار Branches لكل الأكواد */}
-          {treeNodes.map((item: any, index: number) => (
-            <BranchViewer 
-              key={`${item.fullCode}-${index}`}
-              mainCode={item.node.code} 
-              mainDescription={item.node.description} 
-              branches={item.node.branches}
-              isCovered={isCovered}
-            />
-          ))}
+          {/* عرض أزرار Branches لكل الأكواد التي لها فروع */}
+          {treeNodes.map((item: any, index: number) => 
+            item.node ? (
+              <BranchViewer 
+                key={`${item.fullCode}-${index}`}
+                mainCode={item.node.code} 
+                mainDescription={item.node.description} 
+                branches={item.node.branches}
+                isCovered={isCovered}
+              />
+            ) : null
+          )}
         </div>
       </TableCell>
       <TableCell>
