@@ -71,13 +71,13 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
     <Card className={`group overflow-hidden transition-all duration-300 ${cardBorderClass}`}>
       <CardHeader className={`pb-3 border-b transition-colors ${headerBgClass}`}>
         <div className="flex justify-between items-start gap-4">
-          <div className="space-y-1.5 flex-1">
+          <div className="space-y-0.5 flex-1">
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
               {data.scientific_name}
             </CardTitle>
             <div className="text-sm font-medium text-slate-500">
               <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600 inline-block">Trade Name</span>
-              <p className="text-slate-700 font-semibold mt-1 leading-snug">{data.trade_name}</p>
+              <p className="text-slate-700 font-semibold mt-0.5 leading-snug">{data.trade_name}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -109,28 +109,23 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
         </div>
         
         <div className={`pt-2 mt-2 border-t transition-colors ${dividerClass}`}>
-          <div className="flex items-start gap-2 mb-2">
+          <div className="flex items-start gap-2 flex-wrap">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">ICD-10</span>
-            <div className="flex flex-col gap-1 flex-1">
-              {data.icd10_codes.split(',').map((code: string, idx: number) => (
-                <Badge key={idx} variant="outline" className={`font-mono font-bold w-fit ${badgeClass}`}>
-                  {code.trim()}
-                </Badge>
+            <div className="flex flex-wrap gap-1.5 flex-1">
+              {treeNodes.map((item: any, index: number) => (
+                <div key={`${item.mainCode}-${index}`} className="flex items-center gap-1">
+                  <Badge variant="outline" className={`font-mono font-bold ${badgeClass}`}>
+                    {item.fullCode}
+                  </Badge>
+                  <BranchViewer 
+                    mainCode={item.node.code} 
+                    mainDescription={item.node.description} 
+                    branches={item.node.branches}
+                    isCovered={isCovered}
+                  />
+                </div>
               ))}
             </div>
-          </div>
-          
-          {/* عرض أزرار Branches لكل الأكواد */}
-          <div className="flex flex-col gap-2">
-            {treeNodes.map((item: any, index: number) => (
-              <BranchViewer 
-                key={`${item.mainCode}-${index}`}
-                mainCode={item.node.code} 
-                mainDescription={item.node.description} 
-                branches={item.node.branches}
-                isCovered={isCovered}
-              />
-            ))}
           </div>
         </div>
       </CardContent>
