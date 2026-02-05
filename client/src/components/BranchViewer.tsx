@@ -62,14 +62,15 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
         <Button 
           variant="outline" 
           size="sm" 
-          className={`gap-1.5 text-xs font-medium transition-colors ${
+          className={`gap-1 text-xs font-medium transition-colors h-7 px-2 ${
             isCovered 
               ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' 
               : 'text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300'
           }`}
         >
-          <GitBranch className="h-3.5 w-3.5" />
-          {branches.length} Branches
+          <GitBranch className="h-3 w-3" />
+          <span className="hidden sm:inline">{branches.length} Branches</span>
+          <span className="sm:hidden">{branches.length}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className={`sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl shadow-xl ${

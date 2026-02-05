@@ -180,7 +180,7 @@ export default function Home() {
             <div 
               className="absolute inset-0 opacity-40"
               style={{
-                backgroundImage: "url('/images/hero-background.png')",
+                backgroundImage: "url('https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/BxzzjCwZPqngcueX.png')",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -280,7 +280,7 @@ export default function Home() {
         ) : (
           <div className="animate-in fade-in duration-500 space-y-6">
             {viewMode === "aggregated" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {paginatedData.map((item, idx) => (
                   <ResultCard key={idx} data={item} treeData={treeData} />
                 ))}
