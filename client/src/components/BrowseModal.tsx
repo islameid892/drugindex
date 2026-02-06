@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 interface BrowseModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface BrowseModalProps {
 export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [localData, setLocalData] = useState<any[]>([]);
+  const [, navigate] = useLocation();
 
   // Load data when modal opens
   useEffect(() => {
@@ -106,7 +108,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col w-full sm:w-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{getTitle()}</DialogTitle>
         </DialogHeader>
@@ -118,7 +120,8 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
             placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : 'codes'}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm sm:text-base"
+            autoFocus
           />
         </div>
 
@@ -138,10 +141,16 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                   {groupedData[letter].map((item, idx) => (
                     <div
                       key={idx}
-                      className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm"
+                      className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70"
                       onClick={() => {
-                        // Copy to clipboard on click
-                        navigator.clipboard.writeText(String(item));
+                        const itemStr = String(item);
+                        if (type === 'drugs') {
+                          navigate(`/drug/${encodeURIComponent(itemStr)}`);
+                        } else if (type === 'conditions') {
+                          navigate(`/condition/${encodeURIComponent(itemStr)}`);
+                        } else if (type === 'codes') {
+                          navigate(`/code/${encodeURIComponent(itemStr)}`);
+                        }
                         onClose();
                       }}
                     >
@@ -155,8 +164,8 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
         </div>
 
         {/* Results count */}
-        <div className="text-xs text-muted-foreground text-center mt-2">
-          Showing {filteredData.length} results
+        <div className="text-xs sm:text-sm text-muted-foreground text-center mt-2">
+          Showing {filteredData.length} result{filteredData.length !== 1 ? 's' : ''}
         </div>
       </DialogContent>
     </Dialog>

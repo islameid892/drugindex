@@ -7,6 +7,9 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
+import DrugDetail from "./pages/DrugDetail";
+import CodeDetail from "./pages/CodeDetail";
+import ConditionDetail from "./pages/ConditionDetail";
 
 
 function Router() {
@@ -14,6 +17,9 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/favorites"} component={Favorites} />
+      <Route path={"/drug/:name"} component={DrugDetail} />
+      <Route path={"/code/:code"} component={CodeDetail} />
+      <Route path={"/condition/:condition"} component={ConditionDetail} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
