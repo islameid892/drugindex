@@ -89,7 +89,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
             {data.icd10_codes}
           </Badge>
           {/* عرض أزرار Branches لكل الأكواد التي لها فروع */}
-          {treeNodes.map((item: any, index: number) => 
+          {treeNodes.map((item: any, index: number) =>
             item.node ? (
               <BranchViewer 
                 key={`${item.fullCode}-${index}`}
