@@ -61,18 +61,18 @@ export default function ConditionDetail() {
             <div
               key={idx}
               className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/drug/${encodeURIComponent(drug.scientific_name)}`)}
+              onClick={() => navigate(`/drug/${encodeURIComponent(drug.scientificName)}`)}
             >
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-900">
-                    {drug.scientific_name}
+                    {drug.scientificName}
                   </h3>
                   <p className="text-sm text-slate-600">
-                    Trade: {drug.trade_name}
+                    Trade: {Array.isArray(drug.tradeNames) ? drug.tradeNames.join(', ') : ''}
                   </p>
                   <p className="text-sm text-slate-600 mt-2">
-                    Codes: {drug.icd10_codes}
+                    Codes: {Array.isArray(drug.icdCodes) ? drug.icdCodes.join(', ') : ''}
                   </p>
                 </div>
                 <Badge className="bg-sky-50 text-sky-700 border-sky-200 border">

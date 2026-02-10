@@ -13,7 +13,8 @@ interface ResultCardProps {
 
 export function ResultCard({ data, treeData }: ResultCardProps) {
   // استخراج جميع الأكواد الرئيسية (أول 3 أحرف) للبحث في الشجرة
-  const allCodes = data.icd10_codes.split(',').map((code: string) => ({
+  const icdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
+  const allCodes = icdCodes.map((code: string) => ({
     fullCode: code.trim(),
     mainCode: code.trim().substring(0, 3)
   }));
@@ -26,11 +27,13 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
     .filter((item: any) => item.node);
   
   // استخدام الـ hook للتحقق من حالة التغطية
-  const { isCovered } = useCoverageStatus(data.icd10_codes);
+  const codesString = icdCodes.join(',');
+  const { isCovered } = useCoverageStatus(codesString);
   
   // استخدام الـ hook للمفضلة
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-  const favoriteId = `${data.scientific_name}-${data.indication}-${data.icd10_codes}`;
+  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.join(', ') : '';
+  const favoriteId = `${data.scientificName}-${data.indication}-${codesString}`;
   const isFav = isFavorite(favoriteId);
   
   const handleToggleFavorite = () => {
@@ -39,11 +42,11 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
     } else {
       addFavorite({
         id: favoriteId,
-        scientific_name: data.scientific_name,
-        trade_name: data.trade_name,
+        scientific_name: data.scientificName,
+        trade_name: tradeName,
         indication: data.indication,
-        icd10_codes: data.icd10_codes,
-        atc_codes: data.atc_codes,
+        icd10_codes: codesString,
+        atc_codes: (data.atcCodes || []).join(','),
         addedAt: Date.now()
       });
     }
@@ -73,11 +76,11 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-0.5 flex-1">
             <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
-              {data.scientific_name}
+              {data.scientificName}
             </CardTitle>
             <div className="text-sm font-medium text-slate-500">
               <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600 inline-block">Trade Name</span>
-              <p className="text-slate-700 font-semibold mt-0.5 leading-snug">{data.trade_name}</p>
+              <p className="text-slate-700 font-semibold mt-0.5 leading-snug">{tradeName}</p>
             </div>
           </div>
           <div className="flex gap-2">

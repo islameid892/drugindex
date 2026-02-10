@@ -69,23 +69,30 @@ export default function Home() {
     const lowerQuery = query.toLowerCase().trim();
     
     // البحث عن الأدوية والحالات والأكواد المطابقة
-    const matchedMedications = mainData.filter(item => 
-      item.trade_name.toLowerCase().includes(lowerQuery) ||
-      item.scientific_name.toLowerCase().includes(lowerQuery)
-    );
+    const matchedMedications = mainData.filter(item => {
+      const tradeName = item.tradeNames && Array.isArray(item.tradeNames) ? item.tradeNames.join(' ') : '';
+      const scientificName = item.scientificName || '';
+      return tradeName.toLowerCase().includes(lowerQuery) ||
+             scientificName.toLowerCase().includes(lowerQuery);
+    });
     
-    const matchedConditions = mainData.filter(item =>
-      item.indication.toLowerCase().includes(lowerQuery)
-    );
+    const matchedConditions = mainData.filter(item => {
+      const indication = item.indication || '';
+      return indication.toLowerCase().includes(lowerQuery);
+    });
     
-    const matchedCodes = mainData.filter(item =>
-      item.icd10_codes.toLowerCase().includes(lowerQuery)
-    );
+    const matchedCodes = mainData.filter(item => {
+      const codes = item.icdCodes && Array.isArray(item.icdCodes) ? item.icdCodes.join(' ') : '';
+      return codes.toLowerCase().includes(lowerQuery);
+    });
     
     // دمج النتائج وإزالة التكرارات
     const allMatched = [...matchedMedications, ...matchedConditions, ...matchedCodes];
     const uniqueMatched = Array.from(
-      new Map(allMatched.map(item => [item.trade_name + item.indication + item.icd10_codes, item])).values()
+      new Map(allMatched.map(item => {
+        const key = (item.tradeNames?.join('') || '') + (item.indication || '') + (item.icdCodes?.join('') || '');
+        return [key, item];
+      })).values()
     );
     
     return uniqueMatched;

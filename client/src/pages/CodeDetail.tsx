@@ -18,7 +18,7 @@ export default function CodeDetail() {
         const main = await res.json();
         
         const filtered = main.filter((item: any) =>
-          item.icd10_codes.split(",").some((c: string) => c.trim() === decodedCode)
+          Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === decodedCode)
         );
         setDrugs(filtered);
       } catch (error) {
@@ -66,10 +66,10 @@ export default function CodeDetail() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-900">
-                    {drug.scientific_name}
+                    {drug.scientificName}
                   </h3>
                   <p className="text-sm text-slate-600">
-                    Trade: {drug.trade_name}
+                    Trade: {Array.isArray(drug.tradeNames) ? drug.tradeNames.join(', ') : ''}
                   </p>
                   <p className="text-sm text-slate-600 mt-2">
                     {drug.indication}

@@ -27,7 +27,7 @@ export default function DrugDetail() {
         const tree = await treeRes.json();
         
         const filtered = main.filter(
-          (item: any) => item.scientific_name.toLowerCase() === decodedName.toLowerCase()
+          (item: any) => item.scientificName.toLowerCase() === decodedName.toLowerCase()
         );
         setDrugs(filtered);
         setTreeData(tree);
@@ -41,7 +41,7 @@ export default function DrugDetail() {
     loadData();
   }, [decodedName]);
 
-  const allCodes = drugs.map((d: any) => d.icd10_codes).join(",");
+  const allCodes = drugs.map((d: any) => (Array.isArray(d.icdCodes) ? d.icdCodes.join(',') : '')).join(",");
   const { isCovered } = useCoverageStatus(allCodes);
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
@@ -79,9 +79,10 @@ export default function DrugDetail() {
 
         <div className="space-y-6">
           {drugs.map((drug: any, idx: number) => {
-            const favoriteId = `${drug.scientific_name}-${drug.indication}-${drug.icd10_codes}`;
+            const icdCodesStr = Array.isArray(drug.icdCodes) ? drug.icdCodes.join(',') : '';
+            const favoriteId = `${drug.scientificName}-${drug.indication}-${icdCodesStr}`;
             const isFav = isFavorite(favoriteId);
-            const codes = drug.icd10_codes.split(",").map((c: string) => ({
+            const codes = (Array.isArray(drug.icdCodes) ? drug.icdCodes : []).map((c: string) => ({
               fullCode: c.trim(),
               mainCode: c.trim().substring(0, 3),
             }));
@@ -101,10 +102,10 @@ export default function DrugDetail() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900">
-                      {drug.scientific_name}
+                      {drug.scientificName}
                     </h2>
                     <p className="text-sm text-slate-600 mt-1">
-                      Trade Names: {drug.trade_name}
+                      Trade Names: {Array.isArray(drug.tradeNames) ? drug.tradeNames.join(', ') : ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -124,11 +125,11 @@ export default function DrugDetail() {
                         } else {
                           addFavorite({
                             id: favoriteId,
-                            scientific_name: drug.scientific_name,
-                            trade_name: drug.trade_name,
+                            scientific_name: drug.scientificName,
+                            trade_name: Array.isArray(drug.tradeNames) ? drug.tradeNames.join(', ') : '',
                             indication: drug.indication,
-                            icd10_codes: drug.icd10_codes,
-                            atc_codes: drug.atc_codes,
+                            icd10_codes: icdCodesStr,
+                            atc_codes: (Array.isArray(drug.atcCodes) ? drug.atcCodes.join(',') : ''),
                             addedAt: Date.now(),
                           });
                         }

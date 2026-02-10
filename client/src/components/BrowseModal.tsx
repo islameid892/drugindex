@@ -51,8 +51,8 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       // Extract unique drug names
       const drugSet = new Set();
       localData.forEach((item) => {
-        if (item.scientific_name) {
-          drugSet.add(item.scientific_name);
+        if (item.scientificName) {
+          drugSet.add(item.scientificName);
         }
       });
       items = Array.from(drugSet) as any[];
@@ -66,12 +66,14 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       });
       items = Array.from(conditionSet) as any[];
     } else if (type === 'codes') {
-      // Extract unique codes
+      // Extract unique codes from icdCodes array
       const codeSet = new Set();
       localData.forEach((item) => {
-        if (item.icd10_codes) {
-          const codes = item.icd10_codes.split(',').map((c: string) => c.trim().substring(0, 3));
-          codes.forEach((code: string) => codeSet.add(code));
+        if (Array.isArray(item.icdCodes)) {
+          item.icdCodes.forEach((code: string) => {
+            const mainCode = code.trim().substring(0, 3);
+            codeSet.add(mainCode);
+          });
         }
       });
       items = Array.from(codeSet) as any[];

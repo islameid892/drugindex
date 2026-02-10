@@ -13,7 +13,8 @@ interface DetailedRowProps {
 
 export function DetailedRow({ data, treeData }: DetailedRowProps) {
   // استخراج جميع الأكواد الرئيسية (أول 3 أحرف) للبحث في الشجرة
-  const allCodes = data.icd10_codes.split(',').map((code: string) => ({
+  const icdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
+  const allCodes = icdCodes.map((code: string) => ({
     fullCode: code.trim(),
     mainCode: code.trim().substring(0, 3)
   }));
@@ -25,11 +26,13 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
     }));
 
   // استخدام الـ hook للتحقق من حالة التغطية
-  const { isCovered } = useCoverageStatus(data.icd10_codes);
+  const codesString = icdCodes.join(',');
+  const { isCovered } = useCoverageStatus(codesString);
 
   // استخدام الـ hook للمفضلة
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-  const favoriteId = `${data.scientific_name}-${data.indication}-${data.icd10_codes}`;
+  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.join(', ') : '';
+  const favoriteId = `${data.scientificName}-${data.indication}-${codesString}`;
   const isFav = isFavorite(favoriteId);
   
   const handleToggleFavorite = () => {
@@ -38,11 +41,11 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
     } else {
       addFavorite({
         id: favoriteId,
-        scientific_name: data.scientific_name,
-        trade_name: data.trade_name,
+        scientific_name: data.scientificName,
+        trade_name: tradeName,
         indication: data.indication,
-        icd10_codes: data.icd10_codes,
-        atc_codes: data.atc_codes,
+        icd10_codes: codesString,
+        atc_codes: (data.atcCodes || []).join(','),
         addedAt: Date.now()
       });
     }
@@ -62,7 +65,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
       <TableCell className="font-medium text-slate-900">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold group-hover:text-sky-700 transition-colors">{data.scientific_name}</span>
+            <span className="font-bold group-hover:text-sky-700 transition-colors">{data.scientificName}</span>
             <Button
               onClick={handleToggleFavorite}
               variant="ghost"
@@ -77,7 +80,7 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
               <Heart className={`h-4 w-4 ${isFav ? 'fill-current' : ''}`} />
             </Button>
           </div>
-          <span className="text-xs text-slate-500 font-normal">Trade Name: {data.trade_name}</span>
+          <span className="text-xs text-slate-500 font-normal">Trade Name: {tradeName}</span>
         </div>
       </TableCell>
       <TableCell className={`max-w-xs truncate transition-colors ${indicationClass}`} title={data.indication}>
