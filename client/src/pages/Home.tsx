@@ -21,7 +21,7 @@ export default function Home() {
   const [treeData, setTreeData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
-  const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' }>({ isOpen: false, type: 'drugs' });
+  const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' | 'non-covered' }>({ isOpen: false, type: 'drugs' });
   const [currentPage, setCurrentPage] = useState(1);
   const { favorites } = useFavorites();
 
@@ -393,6 +393,29 @@ export default function Home() {
                   </div>
                   
                   <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Explore <ChevronRight className="h-4 w-4" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Browse Non-Covered Codes Card */}
+              <button
+                onClick={() => setBrowseModal({ isOpen: true, type: 'non-covered' })}
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-red-300"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                    <Database className="h-7 w-7 text-white" />
+                  </div>
+                  
+                  <div className="text-left">
+                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-red-700 transition-colors">Browse Non-Covered Codes</h4>
+                    <p className="text-sm text-slate-600 mt-1">View codes not covered by Saudi health insurance</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-red-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     Explore <ChevronRight className="h-4 w-4" />
                   </div>
                 </div>
