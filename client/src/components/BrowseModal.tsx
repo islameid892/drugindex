@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search, AlertCircle } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
   const [localData, setLocalData] = useState<any[]>([]);
   const [mainData, setMainData] = useState<any[]>([]);
   const [, navigate] = useLocation();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load data when modal opens
   useEffect(() => {
@@ -150,9 +151,18 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : type === 'non-covered' ? 'codes or descriptions' : 'codes'}...`}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              // إغلاق لوحة المفاتيح على الأجهزة المحمولة
+              if (window.innerWidth < 768) {
+                setTimeout(() => {
+                  searchInputRef.current?.blur();
+                }, 100);
+              }
+            }}
             className="pl-10 text-sm sm:text-base"
             autoFocus
           />

@@ -30,7 +30,15 @@ export function SearchBar({ value, onChange, className, placeholder = "Search by
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            // إغلاق لوحة المفاتيح على الأجهزة المحمولة
+            if (window.innerWidth < 768) {
+              setTimeout(() => {
+                inputRef.current?.blur();
+              }, 100);
+            }
+          }}
           className="pl-8 pr-16 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
           placeholder={placeholder}
         />
