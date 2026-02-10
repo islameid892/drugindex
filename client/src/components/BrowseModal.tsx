@@ -152,17 +152,10 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             ref={searchInputRef}
+            type="search"
             placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : type === 'non-covered' ? 'codes or descriptions' : 'codes'}...`}
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              // إغلاق لوحة المفاتيح على الأجهزة المحمولة
-              if (window.innerWidth < 768) {
-                setTimeout(() => {
-                  searchInputRef.current?.blur();
-                }, 100);
-              }
-            }}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 text-sm sm:text-base"
             autoFocus
           />
@@ -188,6 +181,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                           key={idx}
                           className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70 flex items-start justify-between gap-2"
                           onClick={() => {
+                            searchInputRef.current?.blur();
                             if (item.hasDrugs) {
                               navigate(`/code/${encodeURIComponent(item.code)}`);
                             } else {
@@ -216,6 +210,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                         key={idx}
                         className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70"
                         onClick={() => {
+                          searchInputRef.current?.blur();
                           const itemStr = String(item);
                           if (type === 'drugs') {
                             navigate(`/drug/${encodeURIComponent(itemStr)}`);
