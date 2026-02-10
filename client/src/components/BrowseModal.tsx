@@ -19,6 +19,15 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
   const [, navigate] = useLocation();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const handleClear = () => {
+    setSearchQuery('');
+    searchInputRef.current?.blur();
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  };
+
   // Load data when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -150,15 +159,28 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
         {/* Search Bar */}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            ref={searchInputRef}
-            type="search"
-            placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : type === 'non-covered' ? 'codes or descriptions' : 'codes'}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 text-sm sm:text-base"
-            autoFocus
-          />
+          <div className="relative">
+            <Input
+              ref={searchInputRef}
+              type="search"
+              placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : type === 'non-covered' ? 'codes or descriptions' : 'codes'}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 text-sm sm:text-base"
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClear}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                aria-label="Clear search"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Scrollable List */}
@@ -182,6 +204,10 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                           className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70 flex items-start justify-between gap-2"
                           onClick={() => {
                             searchInputRef.current?.blur();
+                            // Haptic feedback
+                            if (navigator.vibrate) {
+                              navigator.vibrate(10);
+                            }
                             if (item.hasDrugs) {
                               navigate(`/code/${encodeURIComponent(item.code)}`);
                             } else {
@@ -211,6 +237,10 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                         className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70"
                         onClick={() => {
                           searchInputRef.current?.blur();
+                          // Haptic feedback
+                          if (navigator.vibrate) {
+                            navigator.vibrate(10);
+                          }
                           const itemStr = String(item);
                           if (type === 'drugs') {
                             navigate(`/drug/${encodeURIComponent(itemStr)}`);
