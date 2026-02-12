@@ -2,13 +2,11 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useBrowse } from "@/contexts/BrowseContext";
 import { useState, useEffect } from "react";
 
 export default function ConditionDetail() {
   const { condition } = useParams<{ condition: string }>();
   const [, navigate] = useLocation();
-  const { browseState, closeBrowse } = useBrowse();
   const decodedCondition = decodeURIComponent(condition || "");
   const [drugs, setDrugs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,13 +42,7 @@ export default function ConditionDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <Button onClick={() => {
-          if (browseState.isOpen) {
-            closeBrowse();
-          } else {
-            navigate("/");
-          }
-        }} variant="ghost" className="mb-6">
+        <Button onClick={() => navigate("/")} variant="ghost" className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>

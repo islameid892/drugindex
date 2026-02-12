@@ -88,12 +88,9 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* عرض جميع الأكواد */}
-          {icdCodes.map((code: string, index: number) => (
-            <Badge key={`code-${index}`} variant="outline" className={`font-mono ${badgeClass}`}>
-              {code.trim()}
-            </Badge>
-          ))}
+          <Badge variant="outline" className={`font-mono ${badgeClass}`}>
+            {data.icd10_codes}
+          </Badge>
           {/* عرض أزرار Branches لكل الأكواد التي لها فروع */}
           {treeNodes.map((item: any, index: number) =>
             item.node ? (

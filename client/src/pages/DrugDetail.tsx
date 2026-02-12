@@ -6,13 +6,11 @@ import { useCoverageStatus } from "@/hooks/useCoverageStatus";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 import { BranchViewer } from "@/components/BranchViewer";
-import { useBrowse } from "@/contexts/BrowseContext";
 import { useState, useEffect } from "react";
 
 export default function DrugDetail() {
   const { name } = useParams<{ name: string }>();
   const [, navigate] = useLocation();
-  const { browseState, closeBrowse } = useBrowse();
   const decodedName = decodeURIComponent(name || "");
   const [drugs, setDrugs] = useState<any[]>([]);
   const [treeData, setTreeData] = useState<any[]>([]);
@@ -59,13 +57,7 @@ export default function DrugDetail() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
         <div className="max-w-4xl mx-auto">
-          <Button onClick={() => {
-            if (browseState.isOpen) {
-              closeBrowse();
-            } else {
-              navigate("/");
-            }
-          }} variant="ghost" className="mb-6">
+          <Button onClick={() => navigate("/")} variant="ghost" className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -80,13 +72,7 @@ export default function DrugDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <Button onClick={() => {
-          if (browseState.isOpen) {
-            closeBrowse();
-          } else {
-            navigate("/");
-          }
-        }} variant="ghost" className="mb-6">
+        <Button onClick={() => navigate("/")} variant="ghost" className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Search
         </Button>

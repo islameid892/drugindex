@@ -1,20 +1,19 @@
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search, AlertCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect, useMemo, useRef } from 'react';
 
 interface BrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'drugs' | 'conditions' | 'codes' | 'non-covered';
   data: any[];
-  searchQuery?: string;
 }
 
-export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: initialSearchQuery = '' }: BrowseModalProps) {
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
   const [localData, setLocalData] = useState<any[]>([]);
   const [mainData, setMainData] = useState<any[]>([]);
   const [, navigate] = useLocation();
@@ -51,13 +50,6 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
     }
   }, [isOpen, data, type]);
 
-  // Initialize search query from props when modal opens
-  useEffect(() => {
-    if (isOpen && initialSearchQuery) {
-      setSearchQuery(initialSearchQuery);
-    }
-  }, [isOpen, initialSearchQuery]);
-
   // Get title and description based on type
   const getTitle = () => {
     switch (type) {
@@ -68,10 +60,17 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
       case 'codes':
         return 'Browse Codes';
       case 'non-covered':
-        return 'Non-Covered Codes';
+        return 'Browse Non-Covered Codes';
       default:
         return '';
     }
+  };
+
+  // Check if code has associated drugs
+  const getCodesWithDrugs = (code: string) => {
+    return mainData.filter(item => 
+      Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === code)
+    );
   };
 
   // Extract and sort data based on type
@@ -79,18 +78,14 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
     let items: any[] = [];
 
     if (type === 'drugs') {
-      // Extract unique drug names with their full data
-      const drugMap = new Map();
+      const drugSet = new Set();
       localData.forEach((item) => {
         if (item.scientificName) {
-          if (!drugMap.has(item.scientificName)) {
-            drugMap.set(item.scientificName, item);
-          }
+          drugSet.add(item.scientificName);
         }
       });
-      items = Array.from(drugMap.values());
+      items = Array.from(drugSet) as any[];
     } else if (type === 'conditions') {
-      // Extract unique conditions
       const conditionSet = new Set();
       localData.forEach((item) => {
         if (item.indication) {
@@ -99,7 +94,6 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
       });
       items = Array.from(conditionSet) as any[];
     } else if (type === 'codes') {
-      // Extract unique codes from icdCodes array
       const codeSet = new Set();
       localData.forEach((item) => {
         if (Array.isArray(item.icdCodes)) {
@@ -111,16 +105,19 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
       });
       items = Array.from(codeSet) as any[];
     } else if (type === 'non-covered') {
-      items = localData;
+      items = localData.map(item => ({
+        code: item.code,
+        description: item.description,
+        hasDrugs: getCodesWithDrugs(item.code).length > 0
+      }));
     }
 
-    // Sort alphabetically
     return items.sort((a, b) => {
       const aStr = type === 'non-covered' ? a.code : String(a);
       const bStr = type === 'non-covered' ? b.code : String(b);
       return aStr.localeCompare(bStr);
     });
-  }, [localData, type]);
+  }, [localData, mainData, type]);
 
   // Filter based on search query
   const filteredData = useMemo(() => {
@@ -128,27 +125,26 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
       return sortedData;
     }
     return sortedData.filter((item) => {
-      if (type === 'non-covered') {
-        return item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               item.description.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      return String(item).toLowerCase().includes(searchQuery.toLowerCase());
+      const searchStr = type === 'non-covered' 
+        ? `${item.code} ${item.description}`.toLowerCase()
+        : String(item).toLowerCase();
+      return searchStr.includes(searchQuery.toLowerCase());
     });
-  }, [searchQuery, sortedData, type]);
+  }, [sortedData, searchQuery, type]);
 
-  // Group data by first letter
+  // Group data by first letter/character
   const groupedData = useMemo(() => {
-    const grouped: { [key: string]: any[] } = {};
+    const groups: { [key: string]: any[] } = {};
     filteredData.forEach((item) => {
-      const firstLetter = type === 'non-covered' 
+      const firstChar = type === 'non-covered' 
         ? item.code.charAt(0).toUpperCase()
         : String(item).charAt(0).toUpperCase();
-      if (!grouped[firstLetter]) {
-        grouped[firstLetter] = [];
+      if (!groups[firstChar]) {
+        groups[firstChar] = [];
       }
-      grouped[firstLetter].push(item);
+      groups[firstChar].push(item);
     });
-    return grouped;
+    return groups;
   }, [filteredData, type]);
 
   const groupLetters = Object.keys(groupedData).sort();
@@ -208,10 +204,15 @@ export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: 
                           className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 flex items-start justify-between gap-3 group"
                           onClick={() => {
                             searchInputRef.current?.blur();
+                            // Haptic feedback
                             if (navigator.vibrate) {
                               navigator.vibrate(10);
                             }
-                            navigate(`/code/${encodeURIComponent(item.code)}`);
+                            if (item.hasDrugs) {
+                              navigate(`/code/${encodeURIComponent(item.code)}`);
+                            } else {
+                              navigate(`/code/${encodeURIComponent(item.code)}`);
+                            }
                             onClose();
                           }}
                         >
