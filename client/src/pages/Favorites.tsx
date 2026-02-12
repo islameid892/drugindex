@@ -36,11 +36,9 @@ export default function Favorites() {
             <h3 className="text-lg font-semibold text-slate-900">No favorites yet</h3>
             <p className="text-slate-600 mt-2 max-w-md mx-auto">Start adding your favorite medications and codes to see them here.</p>
             <Link href="/">
-              <a>
-                <Button className="mt-6 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
-                  Go to Search
-                </Button>
-              </a>
+              <Button className="mt-6 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700">
+                Go to Search
+              </Button>
             </Link>
           </div>
         </main>
