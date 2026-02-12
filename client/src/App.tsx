@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { BrowseProvider } from "./contexts/BrowseContext";
 import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
 import DrugDetail from "./pages/DrugDetail";
@@ -39,12 +40,14 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <FavoritesProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </FavoritesProvider>
+        <BrowseProvider>
+          <FavoritesProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </FavoritesProvider>
+        </BrowseProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

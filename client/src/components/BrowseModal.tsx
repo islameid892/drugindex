@@ -1,54 +1,41 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search, AlertCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { Badge } from '@/components/ui/badge';
 
 interface BrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'drugs' | 'conditions' | 'codes' | 'non-covered';
   data: any[];
+  searchQuery?: string;
 }
 
-export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function BrowseModal({ isOpen, onClose, type, data, searchQuery: initialSearchQuery = '' }: BrowseModalProps) {
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [localData, setLocalData] = useState<any[]>([]);
-  const [mainData, setMainData] = useState<any[]>([]);
   const [, navigate] = useLocation();
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleClear = () => {
-    setSearchQuery('');
-    searchInputRef.current?.blur();
-    // Haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate(10);
+  // Initialize search query from props when modal opens
+  useEffect(() => {
+    if (isOpen && initialSearchQuery) {
+      setSearchQuery(initialSearchQuery);
     }
-  };
+  }, [isOpen, initialSearchQuery]);
 
   // Load data when modal opens
   useEffect(() => {
-    if (isOpen) {
-      if (type === 'non-covered') {
-        Promise.all([
-          fetch('/data/non_covered_codes_full.json').then(r => r.json()),
-          fetch('/data/main_data.json').then(r => r.json())
-        ]).then(([nonCovered, main]) => {
-          setLocalData(nonCovered);
-          setMainData(main);
-        }).catch(e => console.error('Error loading data:', e));
-      } else if (data.length === 0) {
-        fetch('/data/main_data.json')
-          .then(r => r.json())
-          .then(d => setLocalData(d))
-          .catch(e => console.error('Error loading data:', e));
-      } else {
-        setLocalData(data);
-      }
+    if (isOpen && data.length === 0) {
+      // Load from JSON if data prop is empty
+      fetch('/data/main_data.json')
+        .then(r => r.json())
+        .then(d => setLocalData(d))
+        .catch(e => console.error('Error loading data:', e));
+    } else {
+      setLocalData(data);
     }
-  }, [isOpen, data, type]);
+  }, [isOpen, data]);
 
   // Get title and description based on type
   const getTitle = () => {
@@ -59,18 +46,9 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
         return 'Find Conditions';
       case 'codes':
         return 'Browse Codes';
-      case 'non-covered':
-        return 'Browse Non-Covered Codes';
       default:
         return '';
     }
-  };
-
-  // Check if code has associated drugs
-  const getCodesWithDrugs = (code: string) => {
-    return mainData.filter(item => 
-      Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === code)
-    );
   };
 
   // Extract and sort data based on type
@@ -78,6 +56,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
     let items: any[] = [];
 
     if (type === 'drugs') {
+      // Extract unique drug names
       const drugSet = new Set();
       localData.forEach((item) => {
         if (item.scientificName) {
@@ -86,6 +65,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       });
       items = Array.from(drugSet) as any[];
     } else if (type === 'conditions') {
+      // Extract unique conditions
       const conditionSet = new Set();
       localData.forEach((item) => {
         if (item.indication) {
@@ -94,6 +74,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       });
       items = Array.from(conditionSet) as any[];
     } else if (type === 'codes') {
+      // Extract unique codes from icdCodes array
       const codeSet = new Set();
       localData.forEach((item) => {
         if (Array.isArray(item.icdCodes)) {
@@ -104,83 +85,54 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
         }
       });
       items = Array.from(codeSet) as any[];
-    } else if (type === 'non-covered') {
-      items = localData.map(item => ({
-        code: item.code,
-        description: item.description,
-        hasDrugs: getCodesWithDrugs(item.code).length > 0
-      }));
     }
 
-    return items.sort((a, b) => {
-      const aStr = type === 'non-covered' ? a.code : String(a);
-      const bStr = type === 'non-covered' ? b.code : String(b);
-      return aStr.localeCompare(bStr);
-    });
-  }, [localData, mainData, type]);
+    // Sort alphabetically
+    return items.sort((a, b) => String(a).localeCompare(String(b)));
+  }, [localData, type]);
 
   // Filter based on search query
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) {
       return sortedData;
     }
-    return sortedData.filter((item) => {
-      const searchStr = type === 'non-covered' 
-        ? `${item.code} ${item.description}`.toLowerCase()
-        : String(item).toLowerCase();
-      return searchStr.includes(searchQuery.toLowerCase());
-    });
-  }, [sortedData, searchQuery, type]);
+    return sortedData.filter((item) =>
+      String(item).toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [sortedData, searchQuery]);
 
-  // Group data by first letter/character
+  // Group data by first letter
   const groupedData = useMemo(() => {
     const groups: { [key: string]: any[] } = {};
     filteredData.forEach((item) => {
-      const firstChar = type === 'non-covered' 
-        ? item.code.charAt(0).toUpperCase()
-        : String(item).charAt(0).toUpperCase();
-      if (!groups[firstChar]) {
-        groups[firstChar] = [];
+      const firstLetter = String(item).charAt(0).toUpperCase();
+      if (!groups[firstLetter]) {
+        groups[firstLetter] = [];
       }
-      groups[firstChar].push(item);
+      groups[firstLetter].push(item);
     });
     return groups;
-  }, [filteredData, type]);
+  }, [filteredData]);
 
   const groupLetters = Object.keys(groupedData).sort();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-2xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{getTitle()}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col w-full sm:w-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{getTitle()}</DialogTitle>
         </DialogHeader>
 
         {/* Search Bar */}
-        <div className="relative mb-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <div className="relative">
-            <Input
-              ref={searchInputRef}
-              type="search"
-              placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : type === 'non-covered' ? 'codes or descriptions' : 'codes'}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 text-base h-12 rounded-xl border-2 border-primary/20 focus:border-primary"
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                onClick={handleClear}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1.5 hover:bg-accent rounded-lg"
-                aria-label="Clear search"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder={`Search ${type === 'drugs' ? 'drugs' : type === 'conditions' ? 'conditions' : 'codes'}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 text-sm sm:text-base"
+            autoFocus
+          />
         </div>
 
         {/* Scrollable List */}
@@ -196,78 +148,25 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
                   {letter}
                 </h3>
                 <div className="space-y-1">
-                  {groupedData[letter].map((item, idx) => {
-                    if (type === 'non-covered') {
-                      return (
-                        <div
-                          key={idx}
-                          className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 flex items-start justify-between gap-3 group"
-                          onClick={() => {
-                            searchInputRef.current?.blur();
-                            // Haptic feedback
-                            if (navigator.vibrate) {
-                              navigator.vibrate(10);
-                            }
-                            if (item.hasDrugs) {
-                              navigate(`/code/${encodeURIComponent(item.code)}`);
-                            } else {
-                              navigate(`/code/${encodeURIComponent(item.code)}`);
-                            }
-                            onClose();
-                          }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-base group-hover:text-primary transition-colors">{item.code}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</div>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {!item.hasDrugs && (
-                              <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                Not Covered
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                    const isObjectItem = typeof item === 'object' && item !== null;
-                    return (
-                      <div
-                        key={idx}
-                        className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 group"
-                        onClick={() => {
-                          searchInputRef.current?.blur();
-                          if (navigator.vibrate) {
-                            navigator.vibrate(10);
-                          }
-                          const itemStr = isObjectItem ? (item.scientificName || String(item)) : String(item);
-                          if (type === 'drugs') {
-                            navigate(`/drug/${encodeURIComponent(itemStr)}`);
-                          } else if (type === 'conditions') {
-                            navigate(`/condition/${encodeURIComponent(itemStr)}`);
-                          } else if (type === 'codes') {
-                            navigate(`/code/${encodeURIComponent(itemStr)}`);
-                          }
-                          onClose();
-                        }}
-                      >
-                        {type === 'drugs' && isObjectItem ? (
-                          <div className="space-y-1">
-                            <div className="font-semibold text-base group-hover:text-primary transition-colors">{item.scientificName || item}</div>
-                            {item.atcCodes && item.atcCodes.length > 0 && (
-                              <div className="text-xs text-muted-foreground flex flex-wrap gap-1">
-                                <span className="font-medium">ATC:</span>
-                                <span>{item.atcCodes.join(", ")}</span>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="font-semibold text-base group-hover:text-primary transition-colors">{String(item)}</div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {groupedData[letter].map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="px-3 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors text-sm sm:text-base active:bg-accent/70"
+                      onClick={() => {
+                        const itemStr = String(item);
+                        if (type === 'drugs') {
+                          navigate(`/drug/${encodeURIComponent(itemStr)}`);
+                        } else if (type === 'conditions') {
+                          navigate(`/condition/${encodeURIComponent(itemStr)}`);
+                        } else if (type === 'codes') {
+                          navigate(`/code/${encodeURIComponent(itemStr)}`);
+                        }
+                        onClose();
+                      }}
+                    >
+                      {String(item)}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))
