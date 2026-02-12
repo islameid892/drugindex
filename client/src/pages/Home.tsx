@@ -111,16 +111,16 @@ export default function Home() {
     <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Header Section */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 shadow-sm">
-        <div className="container py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2.5 rounded-xl shadow-lg shadow-sky-500/30">
-                <Stethoscope className="h-6 w-6 text-white" />
+        <div className="container py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-lg shadow-sky-500/30 flex-shrink-0">
+                <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">ICD-10 Search Engine</h1>
-                <p className="text-sm text-slate-500 font-medium">Drug Reference & Medical Coding</p>
-                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">ICD-10 Search Engine</h1>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">Drug Reference & Medical Coding</p>
+                <p className="text-xs mt-0.5 sm:mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent hidden sm:block">Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
             
@@ -152,24 +152,12 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Mobile Stats and Favorites */}
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 md:hidden flex-wrap justify-center">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50">
-                <Pill className="h-3 w-3 text-sky-600" />
-                <span className="font-semibold text-sky-900">{stats.medications}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50">
-                <Activity className="h-3 w-3 text-emerald-600" />
-                <span className="font-semibold text-emerald-900">{stats.conditions}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50">
-                <Database className="h-3 w-3 text-purple-600" />
-                <span className="font-semibold text-purple-900">{stats.codes}</span>
-              </div>
+            {/* Mobile Favorites Only */}
+            <div className="flex items-center gap-2 sm:hidden">
               <Link href="/favorites">
                 <a>
-                  <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-7 px-2">
-                    <Heart className="h-3 w-3" />
+                  <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2">
+                    <Heart className="h-4 w-4" />
                     <span className="font-semibold text-xs">{favorites.length}</span>
                   </Button>
                 </a>
