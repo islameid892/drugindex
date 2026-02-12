@@ -152,8 +152,20 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Mobile Favorites Only */}
-            <div className="flex items-center gap-2 sm:hidden">
+            {/* Mobile Stats and Favorites */}
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:hidden">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50">
+                <Pill className="h-3 w-3 text-sky-600" />
+                <span className="font-semibold text-sky-900 text-xs">{stats.medications}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50">
+                <Activity className="h-3 w-3 text-emerald-600" />
+                <span className="font-semibold text-emerald-900 text-xs">{stats.conditions}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50">
+                <Database className="h-3 w-3 text-purple-600" />
+                <span className="font-semibold text-purple-900 text-xs">{stats.codes}</span>
+              </div>
               <Link href="/favorites">
                 <a>
                   <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2">

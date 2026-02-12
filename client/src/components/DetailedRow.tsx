@@ -88,21 +88,25 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className={`font-mono ${badgeClass}`}>
-            {data.icd10_codes}
-          </Badge>
-          {/* عرض أزرار Branches لكل الأكواد التي لها فروع */}
-          {treeNodes.map((item: any, index: number) =>
-            item.node ? (
-              <BranchViewer 
-                key={`${item.fullCode}-${index}`}
-                mainCode={item.node.code} 
-                mainDescription={item.node.description} 
-                branches={item.node.branches}
-                isCovered={isCovered}
-              />
-            ) : null
-          )}
+          {icdCodes.map((code: string, index: number) => {
+            const codeObj = allCodes[index];
+            const node = treeData?.find((n: any) => n.code === codeObj.fullCode || n.code === codeObj.mainCode);
+            return (
+              <div key={`${code}-${index}`} className="flex items-center gap-1">
+                <Badge variant="outline" className={`font-mono text-xs ${badgeClass}`}>
+                  {code}
+                </Badge>
+                {node && (
+                  <BranchViewer 
+                    mainCode={node.code} 
+                    mainDescription={node.description} 
+                    branches={node.branches}
+                    isCovered={isCovered}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </TableCell>
       <TableCell>
