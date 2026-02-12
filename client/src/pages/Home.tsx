@@ -128,6 +128,7 @@ export default function Home() {
     
     // دمج النتائج وإزالة التكرارات
     const allMatched = [...matchedMedications, ...matchedConditions, ...matchedCodes];
+    
     const uniqueMatched = Array.from(
       new Map(allMatched.map(item => {
         const key = (item.tradeNames?.join('') || '') + (item.indication || '') + (item.icdCodes?.join('') || '');
