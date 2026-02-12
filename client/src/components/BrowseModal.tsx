@@ -28,6 +28,21 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
     }
   };
 
+  // Create code to drugs map for fast lookup
+  const codeTodrugsMap = useMemo(() => {
+    if (mainData.length === 0) return new Map();
+    const map = new Map<string, number>();
+    mainData.forEach((item) => {
+      if (Array.isArray(item.icdCodes)) {
+        item.icdCodes.forEach((code: string) => {
+          const key = code.trim();
+          map.set(key, (map.get(key) || 0) + 1);
+        });
+      }
+    });
+    return map;
+  }, [mainData]);
+
   // Load data when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -66,11 +81,9 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
     }
   };
 
-  // Check if code has associated drugs
-  const getCodesWithDrugs = (code: string) => {
-    return mainData.filter(item => 
-      Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === code)
-    );
+  // Check if code has associated drugs (using map for O(1) lookup)
+  const hasCodesWithDrugs = (code: string) => {
+    return codeTodrugsMap.has(code.trim());
   };
 
   // Extract and sort data based on type
@@ -108,7 +121,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       items = localData.map(item => ({
         code: item.code,
         description: item.description,
-        hasDrugs: getCodesWithDrugs(item.code).length > 0
+        hasDrugs: hasCodesWithDrugs(item.code)
       }));
     }
 
@@ -117,7 +130,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       const bStr = type === 'non-covered' ? b.code : String(b);
       return aStr.localeCompare(bStr);
     });
-  }, [localData, mainData, type]);
+  }, [localData, mainData, type, codeTodrugsMap]);
 
   // Filter based on search query
   const filteredData = useMemo(() => {
