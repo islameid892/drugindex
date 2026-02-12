@@ -114,8 +114,8 @@ export default function Home() {
         <div className="container py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-lg shadow-sky-500/30 flex-shrink-0">
-                <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl shadow-lg shadow-sky-500/40 flex-shrink-0 hover:shadow-xl hover:shadow-sky-500/50 transition-all duration-300">
+                <Stethoscope className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
               </div>
               <div className="flex-1 sm:flex-none">
                 <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">ICD-10 Search Engine</h1>
@@ -432,6 +432,16 @@ export default function Home() {
           data={mainData}
         />
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-100 bg-slate-50 py-6 mt-12">
+        <div className="container">
+          <div className="flex flex-col items-center justify-center gap-2 text-center">
+            <p className="text-sm font-semibold text-slate-700">© 2026 Pharmacist Islam Mostafa Eid</p>
+            <p className="text-xs text-slate-500">ICD-10 Medical Search Engine - All Rights Reserved</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
