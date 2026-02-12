@@ -24,7 +24,7 @@ export default function Home() {
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [currentPage, setCurrentPage] = useState(1);
   const { favorites } = useFavorites();
-  const { browseState, openBrowse, closeBrowse } = useBrowse();
+  const { browseState, openBrowse, closeBrowse, closeModalCompletely } = useBrowse();
 
   // تحميل البيانات
   useEffect(() => {
@@ -428,7 +428,7 @@ export default function Home() {
         {/* Browse Modal */}
         <BrowseModal
           isOpen={browseState.isOpen}
-          onClose={closeBrowse}
+          onClose={closeModalCompletely}
           type={browseState.type}
           data={mainData}
           searchQuery={browseState.searchQuery}
