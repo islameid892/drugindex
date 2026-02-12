@@ -257,6 +257,108 @@ export default function Home() {
                   autoFocus={false}
                 />
               </div>
+              
+              {/* Browse by Category */}
+              <div className="mt-12 pt-8 border-t border-sky-200">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Browse by Category</h3>
+                  <p className="text-slate-600">Quick access to drugs, conditions, and codes</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                  {/* Search Drugs Card */}
+                  <button
+                    onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-sky-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <Pill className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <div className="text-left">
+                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Search Drugs</h4>
+                        <p className="text-sm text-slate-600 mt-1">Browse all medications alphabetically</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sky-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        Explore <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {/* Find Conditions Card */}
+                  <button
+                    onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-emerald-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <Activity className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <div className="text-left">
+                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Find Conditions</h4>
+                        <p className="text-sm text-slate-600 mt-1">Discover medical conditions and diagnoses</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        Explore <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {/* Browse Codes Card */}
+                  <button
+                    onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-purple-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <Database className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <div className="text-left">
+                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Browse Codes</h4>
+                        <p className="text-sm text-slate-600 mt-1">View all ICD-10 codes and classifications</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        Explore <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {/* Browse Non-Covered Codes Card */}
+                  <button
+                    onClick={() => setBrowseModal({ isOpen: true, type: 'non-covered' })}
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-red-300"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <Search className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <div className="text-left">
+                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-red-700 transition-colors">Non-Covered Codes</h4>
+                        <p className="text-sm text-slate-600 mt-1">Codes not covered by Saudi health insurance</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-red-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        Explore <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
