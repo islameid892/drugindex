@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { ResultCard } from "@/components/ResultCard";
 import { DetailedRow } from "@/components/DetailedRow";
@@ -26,31 +26,70 @@ export default function Home() {
   const { favorites } = useFavorites();
   const { browseState, openBrowse, closeBrowse, closeModalCompletely } = useBrowse();
 
-  // تحميل البيانات
+  // تحميل البيانات من الأجزاء مع fallback
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [mainRes, treeRes] = await Promise.all([
-          fetch('/data/main_data.json'),
-          fetch('/data/tree_data.json')
-        ]);
+        // Load index to get chunk information
+        const indexRes = await fetch('/data/chunks/index.json');
+        const index = await indexRes.json();
         
-        const main = await mainRes.json();
+        // Load first chunk immediately for initial display
+        const firstChunkRes = await fetch(`/data/chunks/${index.files[0]}`);
+        const firstChunk = await firstChunkRes.json();
+        
+        // Load tree data
+        const treeRes = await fetch('/data/tree_data.json');
         const tree = await treeRes.json();
         
-        setMainData(main);
+        // Set initial data with first chunk
+        setMainData(firstChunk);
         setTreeData(tree);
         
-        // حساب الإحصائيات
+        // Calculate initial stats
         setStats({
-          medications: main.length,
-          conditions: new Set(main.map((item: any) => item.indication)).size,
+          medications: index.total,
+          conditions: new Set(firstChunk.map((item: any) => item.indication)).size,
           codes: tree.length
         });
         
+        // Load remaining chunks in background
+        const remainingChunks = index.files.slice(1).map((file: string) =>
+          fetch(`/data/chunks/${file}`).then(r => r.json())
+        );
+        
+        Promise.all(remainingChunks).then(chunks => {
+          const allData = [firstChunk, ...chunks].flat();
+          setMainData(allData);
+          
+          setStats({
+            medications: allData.length,
+            conditions: new Set(allData.map((item: any) => item.indication)).size,
+            codes: tree.length
+          });
+        }).catch(error => console.warn('Failed to load remaining chunks:', error));
+        
         setLoading(false);
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("Failed to load chunked data:", error);
+        // Fallback to loading full file
+        try {
+          const [mainRes, treeRes] = await Promise.all([
+            fetch('/data/main_data.json'),
+            fetch('/data/tree_data.json')
+          ]);
+          const main = await mainRes.json();
+          const tree = await treeRes.json();
+          setMainData(main);
+          setTreeData(tree);
+          setStats({
+            medications: main.length,
+            conditions: new Set(main.map((item: any) => item.indication)).size,
+            codes: tree.length
+          });
+        } catch (fallbackError) {
+          console.error("Fallback data loading failed:", fallbackError);
+        }
         setLoading(false);
       }
     };
@@ -99,7 +138,7 @@ export default function Home() {
     return uniqueMatched;
   }, [query, mainData]);
 
-  // حساب البيانات المعروضة حسب الصفحة
+  // حساب البيانات المعروضة مع الترقيم
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -109,319 +148,232 @@ export default function Home() {
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Header Section */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 shadow-sm">
-        <div className="container py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2.5 rounded-xl shadow-lg shadow-sky-500/30">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/">
+            <a className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <Stethoscope className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">ICD-10 Search Engine</h1>
-                <p className="text-sm text-slate-500 font-medium">Drug Reference & Medical Coding</p>
-                <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
+                <h1 className="text-xl font-bold text-slate-900">ICD-10 Search Engine</h1>
+                <p className="text-xs text-slate-500">Drug Reference & Medical Coding</p>
               </div>
-            </div>
-            
-            {/* Desktop Stats and Favorites */}
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-600 hidden md:flex">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50">
-                <Pill className="h-4 w-4 text-sky-600" />
-                <span className="font-semibold text-sky-900">{stats.medications.toLocaleString()}</span>
-                <span className="text-sky-700">Meds</span>
+            </a>
+          </Link>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-6 text-sm">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Pill className="h-4 w-4 text-blue-500" />
+                <span className="font-semibold text-slate-900">{stats.medications.toLocaleString()}</span>
+                <span className="text-slate-500">Meds</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50">
-                <Activity className="h-4 w-4 text-emerald-600" />
-                <span className="font-semibold text-emerald-900">{stats.conditions.toLocaleString()}</span>
-                <span className="text-emerald-700">Conditions</span>
+              <div className="flex items-center gap-2 text-slate-600">
+                <Activity className="h-4 w-4 text-green-500" />
+                <span className="font-semibold text-slate-900">{stats.conditions.toLocaleString()}</span>
+                <span className="text-slate-500">Conditions</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50">
-                <Database className="h-4 w-4 text-purple-600" />
-                <span className="font-semibold text-purple-900">{stats.codes.toLocaleString()}</span>
-                <span className="text-purple-700">Codes</span>
+              <div className="flex items-center gap-2 text-slate-600">
+                <Database className="h-4 w-4 text-purple-500" />
+                <span className="font-semibold text-slate-900">{stats.codes.toLocaleString()}</span>
+                <span className="text-slate-500">Codes</span>
               </div>
-              <div className="w-px h-6 bg-slate-200" />
-              <Link href="/favorites">
-                <a>
-                  <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
-                    <Heart className="h-4 w-4" />
-                    <span className="font-semibold">{favorites.length}</span>
-                  </Button>
-                </a>
-              </Link>
             </div>
 
-            {/* Mobile Stats and Favorites */}
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 md:hidden flex-wrap justify-center">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50">
-                <Pill className="h-3 w-3 text-sky-600" />
-                <span className="font-semibold text-sky-900">{stats.medications}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50">
-                <Activity className="h-3 w-3 text-emerald-600" />
-                <span className="font-semibold text-emerald-900">{stats.conditions}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50">
-                <Database className="h-3 w-3 text-purple-600" />
-                <span className="font-semibold text-purple-900">{stats.codes}</span>
-              </div>
-              <Link href="/favorites">
-                <a>
-                  <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-7 px-2">
-                    <Heart className="h-3 w-3" />
-                    <span className="font-semibold text-xs">{favorites.length}</span>
-                  </Button>
-                </a>
-              </Link>
-            </div>
+            <Link href="/favorites">
+              <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                <Heart className="h-5 w-5 text-red-500" />
+                <span className="text-sm font-semibold text-slate-900">{favorites.length}</span>
+              </a>
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container py-12 space-y-12">
+      <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        {!query && !loading && (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 border border-sky-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
-            {/* Background Image */}
-            <div 
-              className="absolute inset-0 opacity-40"
-              style={{
-                backgroundImage: "url('https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/BxzzjCwZPqngcueX.png')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-sky-50/40" />
-            
-            {/* Content */}
-            <div className="relative px-6 py-16 md:px-12 md:py-20 text-center space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-sky-200 shadow-sm">
-                <Sparkles className="h-4 w-4 text-sky-600" />
-                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database</span>
-              </div>
-              
-              <div className="space-y-3">
-                <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
-                  Find Codes & Medications
-                </h2>
-                <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                  Search by scientific name, trade name, indication, or ICD-10 code. Get instant access to comprehensive medical coding information.
-                </p>
-              </div>
-              
-              {/* Search Bar in Hero */}
-              <div className="max-w-2xl mx-auto pt-4">
-                <SearchBar 
-                  value={query} 
-                  onChange={setQuery} 
-                  placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
-                  autoFocus={false}
-                />
-              </div>
+        {!query && (
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 mb-4">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-600">Comprehensive Medical Database</span>
             </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+              Find Codes & Medications
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+              Search by scientific name, trade name, indication, or ICD-10 code. Get instant access to comprehensive medical coding information.
+            </p>
           </div>
         )}
 
-        {/* Search Section */}
-        {query && (
-          <div className="flex flex-col items-center space-y-6 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Search Results</h2>
-              <p className="text-slate-500">
-                Showing results for <span className="font-semibold text-sky-600">"{query}"</span>
-              </p>
-            </div>
-            
-            <SearchBar 
-              value={query} 
-              onChange={setQuery} 
-              placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
-              autoFocus={true}
-            />
-            
-            {/* View Toggle */}
-            {filteredData.length > 0 && (
-              <div className="flex items-center justify-between w-full pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700 transition-all shadow-md">
-                    {filteredData.length} Results Found
-                  </Badge>
-                </div>
-                
-                <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
-                  <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-100 p-1 rounded-lg">
-                    <TabsTrigger value="aggregated" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-md transition-all">
-                      <LayoutGrid className="h-4 w-4" /> Cards
-                    </TabsTrigger>
-                    <TabsTrigger value="detailed" className="text-xs gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-md transition-all">
-                      <List className="h-4 w-4" /> List
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Search Bar */}
+        <SearchBar value={query} onChange={setQuery} />
 
-        {/* Results Section */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-emerald-500/20 rounded-full blur-xl" />
-              <Loader2 className="h-12 w-12 animate-spin text-sky-500 relative" />
-            </div>
-            <p className="mt-6 text-lg font-medium">Loading medical database...</p>
-            <p className="text-sm text-slate-400 mt-2">This may take a moment</p>
-          </div>
-        ) : query && filteredData.length === 0 ? (
-          <div className="text-center py-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="bg-gradient-to-br from-slate-200 to-slate-300 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-              <Search className="h-8 w-8 text-slate-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900">No results found</h3>
-            <p className="text-slate-600 mt-2 max-w-md mx-auto">Try adjusting your search terms or check for typos. You can also browse by drugs, conditions, or codes.</p>
-          </div>
-        ) : (
-          <div className="animate-in fade-in duration-500 space-y-6">
-            {viewMode === "aggregated" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {paginatedData.map((item, idx) => (
-                  <ResultCard key={idx} data={item} treeData={treeData} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-lg">
-                <Table>
-                  <TableHeader className="bg-gradient-to-r from-sky-50 to-emerald-50 border-b border-slate-200">
-                    <TableRow>
-                      <TableHead className="w-[30%] font-semibold text-slate-700">Scientific Name</TableHead>
-                      <TableHead className="w-[30%] font-semibold text-slate-700">Indication</TableHead>
-                      <TableHead className="w-[25%] font-semibold text-slate-700">ICD-10 Code</TableHead>
-                      <TableHead className="w-[15%] font-semibold text-slate-700">Coverage Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedData.map((item, idx) => (
-                      <DetailedRow key={idx} data={item} treeData={treeData} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Pagination Controls */}
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        )}
-        
-        {!query && !loading && (
-          <div className="py-12">
-            <div className="text-center mb-12">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Browse by Category</h3>
-              <p className="text-slate-600">Quick access to drugs, conditions, and codes</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {/* Search Drugs Card */}
+        {/* Browse Section */}
+        {!query && (
+          <div className="mt-12 mb-12">
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">Browse by Category</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Browse Drugs */}
               <button
                 onClick={() => openBrowse('drugs')}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-sky-300"
+                className="group p-6 bg-white rounded-lg border border-slate-200 hover:border-blue-500 hover:shadow-lg transition-all text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="relative space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Pill className="h-7 w-7 text-white" />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                    <Pill className="h-6 w-6 text-blue-600" />
                   </div>
-                  
-                  <div className="text-left">
-                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Search Drugs</h4>
-                    <p className="text-sm text-slate-600 mt-1">Browse all medications alphabetically</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sky-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explore <ChevronRight className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-blue-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Browse <ChevronRight className="h-4 w-4" />
                   </div>
                 </div>
+                <h4 className="font-bold text-slate-900 mb-1">Browse Drugs</h4>
+                <p className="text-sm text-slate-600 mt-1">Browse all {stats.medications.toLocaleString()} medications</p>
               </button>
 
-              {/* Find Conditions Card */}
+              {/* Browse Conditions */}
               <button
                 onClick={() => openBrowse('conditions')}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-emerald-300"
+                className="group p-6 bg-white rounded-lg border border-slate-200 hover:border-green-500 hover:shadow-lg transition-all text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="relative space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Activity className="h-7 w-7 text-white" />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors">
+                    <Activity className="h-6 w-6 text-green-600" />
                   </div>
-                  
-                  <div className="text-left">
-                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Find Conditions</h4>
-                    <p className="text-sm text-slate-600 mt-1">Discover medical conditions and diagnoses</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explore <ChevronRight className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-green-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Browse <ChevronRight className="h-4 w-4" />
                   </div>
                 </div>
+                <h4 className="font-bold text-slate-900 mb-1">Browse Conditions</h4>
+                <p className="text-sm text-slate-600 mt-1">Browse all {stats.conditions.toLocaleString()} conditions</p>
               </button>
 
-              {/* Browse Codes Card */}
+              {/* Browse Codes */}
               <button
                 onClick={() => openBrowse('codes')}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-purple-300"
+                className="group p-6 bg-white rounded-lg border border-slate-200 hover:border-purple-500 hover:shadow-lg transition-all text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="relative space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                    <Database className="h-7 w-7 text-white" />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-3 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                    <Database className="h-6 w-6 text-purple-600" />
                   </div>
-                  
-                  <div className="text-left">
-                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Browse Codes</h4>
-                    <p className="text-sm text-slate-600 mt-1">View all ICD-10 codes and classifications</p>
-                  </div>
-                  
                   <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explore <ChevronRight className="h-4 w-4" />
+                    Browse <ChevronRight className="h-4 w-4" />
                   </div>
                 </div>
+                <h4 className="font-bold text-slate-900 mb-1">Browse Codes</h4>
+                <p className="text-sm text-slate-600 mt-1">Browse all {stats.codes.toLocaleString()} ICD-10 codes</p>
               </button>
 
-              {/* Browse Non-Covered Codes Card */}
+              {/* Browse Non-Covered Codes */}
               <button
                 onClick={() => openBrowse('non-covered')}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-red-300"
+                className="group p-6 bg-white rounded-lg border border-slate-200 hover:border-red-500 hover:shadow-lg transition-all text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="relative space-y-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                    <AlertCircle className="h-7 w-7 text-white" />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-3 bg-red-50 rounded-lg group-hover:bg-red-100 transition-colors">
+                    <AlertCircle className="h-6 w-6 text-red-600" />
                   </div>
-                  
-                  <div className="text-left">
-                    <h4 className="text-lg font-bold text-slate-900 group-hover:text-red-700 transition-colors">Non-Covered Codes</h4>
-                    <p className="text-sm text-slate-600 mt-1">Browse codes not covered by insurance</p>
-                  </div>
-                  
                   <div className="flex items-center gap-2 text-red-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     Explore <ChevronRight className="h-4 w-4" />
                   </div>
                 </div>
+                <h4 className="font-bold text-slate-900 mb-1">Browse Non-Covered Codes</h4>
+                <p className="text-sm text-slate-600 mt-1">Browse codes not covered by insurance</p>
               </button>
             </div>
+          </div>
+        )}
+        
+        {/* Results Section */}
+        {query && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-slate-500" />
+                <span className="text-sm font-medium text-slate-600">
+                  {filteredData.length} result{filteredData.length !== 1 ? 's' : ''} found
+                </span>
+              </div>
+
+              {/* View Mode Toggle */}
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+                <TabsList className="bg-slate-100 p-1">
+                  <TabsTrigger value="aggregated" className="gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="hidden sm:inline">Cards</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="detailed" className="gap-2">
+                    <List className="h-4 w-4" />
+                    <span className="hidden sm:inline">List</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
+                <p className="text-slate-600">Loading data...</p>
+              </div>
+            )}
+
+            {/* Results Display */}
+            {!loading && filteredData.length > 0 && (
+              <>
+                {viewMode === "aggregated" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedData.map((item, index) => (
+                      <ResultCard key={index} data={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead className="font-bold text-slate-900">Scientific Name</TableHead>
+                          <TableHead className="font-bold text-slate-900">Trade Names</TableHead>
+                          <TableHead className="font-bold text-slate-900">ICD-10 Codes</TableHead>
+                          <TableHead className="font-bold text-slate-900">Indication</TableHead>
+                          <TableHead className="font-bold text-slate-900">Coverage</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedData.map((item, index) => (
+                          <DetailedRow key={index} data={item} />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex justify-center">
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Empty State */}
+            {!loading && filteredData.length === 0 && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600 text-lg">No results found for "{query}"</p>
+                <p className="text-slate-500 text-sm mt-2">Try searching with different keywords</p>
+              </div>
+            )}
           </div>
         )}
         
