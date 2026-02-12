@@ -257,6 +257,38 @@ export default function Home() {
                   autoFocus={false}
                 />
               </div>
+              
+              {/* Browse by Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto pt-6">
+                <Button
+                  onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
+                  className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold gap-2 h-12"
+                >
+                  <Pill className="h-5 w-5" />
+                  Browse Drugs
+                </Button>
+                <Button
+                  onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold gap-2 h-12"
+                >
+                  <Activity className="h-5 w-5" />
+                  Browse Conditions
+                </Button>
+                <Button
+                  onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold gap-2 h-12"
+                >
+                  <Database className="h-5 w-5" />
+                  Browse Codes
+                </Button>
+                <Button
+                  onClick={() => setBrowseModal({ isOpen: true, type: 'non-covered' })}
+                  className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold gap-2 h-12"
+                >
+                  <Search className="h-5 w-5" />
+                  Non-Covered Codes
+                </Button>
+              </div>
             </div>
           </div>
         )}
