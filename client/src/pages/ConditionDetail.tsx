@@ -42,7 +42,7 @@ export default function ConditionDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <Button onClick={() => navigate("/")} variant="ghost" className="mb-6">
+        <Button onClick={() => window.history.back()} variant="ghost" className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
