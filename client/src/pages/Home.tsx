@@ -376,6 +376,7 @@ export default function Home() {
             />
 
             {/* Browse by Category */}
+            {!query && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <Button
                 onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
@@ -406,6 +407,7 @@ export default function Home() {
                 Non-Covered Codes
               </Button>
             </div>
+            )}
 
             {/* Results Count */}
             <div className="flex items-center justify-between">

@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+'use client';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Search, AlertCircle, ArrowLeft, ChevronDown } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 interface BrowseModalProps {
   isOpen: boolean;
@@ -14,16 +16,17 @@ interface BrowseModalProps {
 }
 
 export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModalProps) {
+  const [initialized, setInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [localData, setLocalData] = useState<any[]>([]);
   const [mainData, setMainData] = useState<any[]>([]);
+  const [expandedLetters, setExpandedLetters] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleClear = () => {
     setSearchQuery('');
     searchInputRef.current?.blur();
-    // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(10);
     }
@@ -48,25 +51,101 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
   useEffect(() => {
     if (isOpen) {
       if (type === 'non-covered') {
-        Promise.all([
-          fetch('/data/non_covered_codes_full.json').then(r => r.json()),
-          fetch('/data/main_data.json').then(r => r.json())
-        ]).then(([nonCovered, main]) => {
-          setLocalData(nonCovered);
-          setMainData(main);
-        }).catch(e => console.error('Error loading data:', e));
-      } else if (data.length === 0) {
-        fetch('/data/main_data.json')
-          .then(r => r.json())
-          .then(d => setLocalData(d))
-          .catch(e => console.error('Error loading data:', e));
-      } else {
+        const nonCoveredCodes = [
+          'B07', 'E28.1', 'E65', 'F10', 'F10.1', 'F10.3', 'F10.5', 'F11', 'F11.5', 'F12', 'F12.0', 'F12.1', 'F12.2', 'F12.3',
+          'F13', 'F13.1', 'F13.10', 'F13.2', 'F13.20', 'F13.29', 'F13.9', 'F14.5', 'F15', 'F15.1', 'F16', 'F16.0', 'F16.49',
+          'F16.5', 'F17.1', 'F17.2', 'F17.3', 'F19', 'F19.0', 'F19.2', 'F19.9', 'F51.0', 'F52', 'F52.0', 'F52.1', 'F52.2',
+          'F52.3', 'F52.4', 'F52.5', 'F52.6', 'F52.7', 'F52.8', 'F52.9', 'F55.4', 'F55.5', 'F64.2', 'F64.8', 'F65', 'F65.6',
+          'F65.8', 'F65.9', 'F66.2', 'F66.9', 'J60', 'K29.20', 'L57.8', 'L63', 'L63.0', 'L63.1', 'L63.8', 'L64', 'L64.0',
+          'L64.8', 'L64.9', 'L65', 'L65.0', 'L65.1', 'L65.2', 'L65.8', 'L65.9', 'L66', 'L66.0', 'L66.1', 'L66.2', 'L66.3',
+          'L66.4', 'L66.8', 'L66.9', 'L67', 'L67.1', 'L67.8', 'L67.9', 'L68', 'L68.0', 'L68.8', 'L70', 'L70.0', 'L70.1',
+          'L70.2', 'L70.3', 'L70.4', 'L70.5'
+        ];
+        const codes = nonCoveredCodes.map((code) => ({
+          code,
+          description: `${code} - Not Covered`,
+          hasDrugs: codeTodrugsMap.has(code),
+        }));
+        setLocalData(codes);
+      } else if (type === 'drugs') {
+        setLocalData(data);
+      } else if (type === 'conditions') {
+        setLocalData(data);
+      } else if (type === 'codes') {
         setLocalData(data);
       }
     }
-  }, [isOpen, data, type]);
+  }, [isOpen, type, data, codeTodrugsMap]);
 
-  // Get title and description based on type
+  useEffect(() => {
+    setMainData(data);
+  }, [data]);
+
+  // Filter data based on search
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return localData;
+
+    const query = searchQuery.toLowerCase();
+    return localData.filter((item) => {
+      if (type === 'drugs') {
+        return (
+          item.tradeNames?.some((name: string) => name.toLowerCase().includes(query)) ||
+          item.scientificName?.toLowerCase().includes(query)
+        );
+      } else if (type === 'conditions') {
+        return item.toLowerCase?.includes(query) || item.includes?.(query);
+      } else if (type === 'non-covered' || type === 'codes') {
+        return (
+          item.code?.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query)
+        );
+      }
+      return false;
+    });
+  }, [searchQuery, localData, type]);
+
+  // Group data by first letter
+  const groupedData = useMemo(() => {
+    const groups: { [key: string]: any[] } = {};
+    filteredData.forEach((item) => {
+      let firstLetter = '';
+      if (type === 'drugs') {
+        firstLetter = item.tradeNames?.[0]?.[0]?.toUpperCase() || '#';
+      } else if (type === 'conditions') {
+        firstLetter = item[0]?.toUpperCase() || '#';
+      } else {
+        firstLetter = item.code?.[0]?.toUpperCase() || '#';
+      }
+
+      if (!groups[firstLetter]) {
+        groups[firstLetter] = [];
+      }
+      groups[firstLetter].push(item);
+    });
+    return groups;
+  }, [filteredData, type]);
+
+  const groupLetters = Object.keys(groupedData).sort();
+
+  // When search is active, expand all letters
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setExpandedLetters(new Set(groupLetters));
+    } else if (groupLetters.length > 0 && expandedLetters.size === 0) {
+      setExpandedLetters(new Set([groupLetters[0]]));
+    }
+  }, [searchQuery]);
+
+  const toggleLetter = (letter: string) => {
+    const newExpanded = new Set(expandedLetters);
+    if (newExpanded.has(letter)) {
+      newExpanded.delete(letter);
+    } else {
+      newExpanded.add(letter);
+    }
+    setExpandedLetters(newExpanded);
+  };
+
   const getTitle = () => {
     switch (type) {
       case 'drugs':
@@ -78,95 +157,14 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
       case 'non-covered':
         return 'Browse Non-Covered Codes';
       default:
-        return '';
+        return 'Browse';
     }
   };
-
-  // Check if code has associated drugs (using map for O(1) lookup)
-  const hasCodesWithDrugs = (code: string) => {
-    return codeTodrugsMap.has(code.trim());
-  };
-
-  // Extract and sort data based on type
-  const sortedData = useMemo(() => {
-    let items: any[] = [];
-
-    if (type === 'drugs') {
-      const drugSet = new Set();
-      localData.forEach((item) => {
-        if (item.scientificName) {
-          drugSet.add(item.scientificName);
-        }
-      });
-      items = Array.from(drugSet) as any[];
-    } else if (type === 'conditions') {
-      const conditionSet = new Set();
-      localData.forEach((item) => {
-        if (item.indication) {
-          conditionSet.add(item.indication);
-        }
-      });
-      items = Array.from(conditionSet) as any[];
-    } else if (type === 'codes') {
-      const codeSet = new Set();
-      localData.forEach((item) => {
-        if (Array.isArray(item.icdCodes)) {
-          item.icdCodes.forEach((code: string) => {
-            const mainCode = code.trim().substring(0, 3);
-            codeSet.add(mainCode);
-          });
-        }
-      });
-      items = Array.from(codeSet) as any[];
-    } else if (type === 'non-covered') {
-      items = localData.map(item => ({
-        code: item.code,
-        description: item.description,
-        hasDrugs: hasCodesWithDrugs(item.code)
-      }));
-    }
-
-    return items.sort((a, b) => {
-      const aStr = type === 'non-covered' ? a.code : String(a);
-      const bStr = type === 'non-covered' ? b.code : String(b);
-      return aStr.localeCompare(bStr);
-    });
-  }, [localData, mainData, type, codeTodrugsMap]);
-
-  // Filter based on search query
-  const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return sortedData;
-    }
-    return sortedData.filter((item) => {
-      const searchStr = type === 'non-covered' 
-        ? `${item.code} ${item.description}`.toLowerCase()
-        : String(item).toLowerCase();
-      return searchStr.includes(searchQuery.toLowerCase());
-    });
-  }, [sortedData, searchQuery, type]);
-
-  // Group data by first letter/character
-  const groupedData = useMemo(() => {
-    const groups: { [key: string]: any[] } = {};
-    filteredData.forEach((item) => {
-      const firstChar = type === 'non-covered' 
-        ? item.code.charAt(0).toUpperCase()
-        : String(item).charAt(0).toUpperCase();
-      if (!groups[firstChar]) {
-        groups[firstChar] = [];
-      }
-      groups[firstChar].push(item);
-    });
-    return groups;
-  }, [filteredData, type]);
-
-  const groupLetters = Object.keys(groupedData).sort();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-4xl lg:max-w-5xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-        <DialogHeader className="pb-4 border-b flex flex-row items-center justify-between">
+      <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 p-0 sm:p-6">
+        <DialogHeader className="pb-4 border-b flex flex-row items-center justify-between px-4 sm:px-0">
           <Button
             onClick={onClose}
             variant="ghost"
@@ -176,13 +174,13 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </Button>
-          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex-1 text-center">{getTitle()}</DialogTitle>
-          <div className="w-10" /> {/* Spacer for alignment */}
+          <DialogTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex-1 text-center">{getTitle()}</DialogTitle>
+          <div className="w-10" />
         </DialogHeader>
 
         {/* Search Bar */}
-        <div className="relative mb-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <div className="relative mb-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 px-4 sm:px-0">
+          <Search className="absolute left-7 sm:left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <div className="relative">
             <Input
               ref={searchInputRef}
@@ -207,100 +205,106 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
           </div>
         </div>
 
-        {/* Scrollable List */}
-        <div className="flex-1 overflow-y-auto pr-4 space-y-4">
+        {/* Scrollable List with Collapse */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-0 space-y-2">
           {groupLetters.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               No results found
             </div>
           ) : (
             groupLetters.map((letter) => (
-              <div key={letter}>
-                <h3 className="text-sm font-semibold text-primary mb-2 sticky top-0 bg-background py-1">
-                  {letter}
-                </h3>
-                <div className="space-y-1">
-                  {groupedData[letter].map((item, idx) => {
-                    if (type === 'non-covered') {
+              <div key={letter} className="border border-slate-200 rounded-lg overflow-hidden">
+                {/* Letter Header - Collapsible */}
+                <button
+                  onClick={() => toggleLetter(letter)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                >
+                  <h3 className="text-sm font-semibold text-primary">
+                    {letter} ({groupedData[letter].length})
+                  </h3>
+                  <ChevronDown
+                    className={`h-4 w-4 text-slate-600 transition-transform ${
+                      expandedLetters.has(letter) ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Items - Collapsible Content */}
+                {expandedLetters.has(letter) && (
+                  <div className="space-y-1 p-2">
+                    {groupedData[letter].map((item, idx) => {
+                      if (type === 'non-covered') {
+                        return (
+                          <div
+                            key={idx}
+                            className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 flex items-start justify-between gap-3 group"
+                            onClick={() => {
+                              searchInputRef.current?.blur();
+                              if (navigator.vibrate) {
+                                navigator.vibrate(10);
+                              }
+                              navigate(`/code/${encodeURIComponent(item.code)}`);
+                              onClose();
+                            }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-base group-hover:text-primary transition-colors">{item.code}</div>
+                              <div className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {!item.hasDrugs && (
+                                <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Not Covered
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      const isObjectItem = typeof item === 'object' && item !== null;
                       return (
                         <div
                           key={idx}
-                          className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 flex items-start justify-between gap-3 group"
+                          className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 group"
                           onClick={() => {
                             searchInputRef.current?.blur();
-                            // Haptic feedback
                             if (navigator.vibrate) {
                               navigator.vibrate(10);
                             }
-                            if (item.hasDrugs) {
-                              navigate(`/code/${encodeURIComponent(item.code)}`);
-                            } else {
+                            if (type === 'drugs') {
+                              navigate(`/drug/${encodeURIComponent(item.tradeNames?.[0])}`);
+                            } else if (type === 'conditions') {
+                              navigate(`/condition/${encodeURIComponent(item)}`);
+                            } else if (type === 'codes') {
                               navigate(`/code/${encodeURIComponent(item.code)}`);
                             }
                             onClose();
                           }}
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-base group-hover:text-primary transition-colors">{item.code}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-2 mt-1">{item.description}</div>
+                          <div className="font-semibold text-base group-hover:text-primary transition-colors">
+                            {isObjectItem
+                              ? item.tradeNames?.[0] || item.code || String(item)
+                              : String(item)}
                           </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {!item.hasDrugs && (
-                              <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                Not Covered
-                              </Badge>
-                            )}
-                          </div>
+                          {isObjectItem && item.scientificName && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {item.scientificName}
+                            </div>
+                          )}
+                          {isObjectItem && item.description && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {item.description}
+                            </div>
+                          )}
                         </div>
                       );
-                    }
-                    const isObjectItem = typeof item === 'object' && item !== null;
-                    return (
-                      <div
-                        key={idx}
-                        className="px-4 py-3 rounded-lg hover:bg-accent cursor-pointer transition-all active:bg-accent/70 border border-transparent hover:border-primary/20 group"
-                        onClick={() => {
-                          searchInputRef.current?.blur();
-                          if (navigator.vibrate) {
-                            navigator.vibrate(10);
-                          }
-                          const itemStr = isObjectItem ? (item.scientificName || String(item)) : String(item);
-                          if (type === 'drugs') {
-                            navigate(`/drug/${encodeURIComponent(itemStr)}`);
-                          } else if (type === 'conditions') {
-                            navigate(`/condition/${encodeURIComponent(itemStr)}`);
-                          } else if (type === 'codes') {
-                            navigate(`/code/${encodeURIComponent(itemStr)}`);
-                          }
-                          onClose();
-                        }}
-                      >
-                        {type === 'drugs' && isObjectItem ? (
-                          <div className="space-y-1">
-                            <div className="font-semibold text-base group-hover:text-primary transition-colors">{item.scientificName || item}</div>
-                            {item.atcCodes && item.atcCodes.length > 0 && (
-                              <div className="text-xs text-muted-foreground flex flex-wrap gap-1">
-                                <span className="font-medium">ATC:</span>
-                                <span>{item.atcCodes.join(", ")}</span>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="font-semibold text-base group-hover:text-primary transition-colors">{String(item)}</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                    })}
+                  </div>
+                )}
               </div>
             ))
           )}
-        </div>
-
-        {/* Results count */}
-        <div className="text-xs sm:text-sm text-muted-foreground text-center mt-2">
-          Showing {filteredData.length} result{filteredData.length !== 1 ? 's' : ''}
         </div>
       </DialogContent>
     </Dialog>
