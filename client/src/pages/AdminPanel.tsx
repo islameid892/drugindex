@@ -1,15 +1,24 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Database, Pill, Activity, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, Database, Pill, Activity, Search, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [medicationSearchQuery, setMedicationSearchQuery] = useState("");
+  const [medicationResults, setMedicationResults] = useState<any[]>([]);
+  const [medicationSearching, setMedicationSearching] = useState(false);
+  
+  const [codeSearchQuery, setCodeSearchQuery] = useState("");
+  const [codeResults, setCodeResults] = useState<any[]>([]);
+  const [codeSearching, setCodeSearching] = useState(false);
+  
   const { data: stats, isLoading } = trpc.data.admin.getStats.useQuery();
 
   // Check if user is admin (you'll need to add role field to user)
@@ -57,6 +66,34 @@ export default function AdminPanel() {
     );
   }
 
+  const handleMedicationSearch = useCallback(async () => {
+    if (!medicationSearchQuery.trim()) return;
+    setMedicationSearching(true);
+    try {
+      const results = await fetch("/api/trpc/data.medications.search?input=" + encodeURIComponent(JSON.stringify({ query: medicationSearchQuery }))).then(r => r.json());
+      setMedicationResults(results.result?.data || []);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setMedicationResults([]);
+    } finally {
+      setMedicationSearching(false);
+    }
+  }, [medicationSearchQuery]);
+
+  const handleCodeSearch = useCallback(async () => {
+    if (!codeSearchQuery.trim()) return;
+    setCodeSearching(true);
+    try {
+      const results = await fetch("/api/trpc/data.codes.search?input=" + encodeURIComponent(JSON.stringify({ query: codeSearchQuery }))).then(r => r.json());
+      setCodeResults(results.result?.data || []);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setCodeResults([]);
+    } finally {
+      setCodeSearching(false);
+    }
+  }, [codeSearchQuery]);
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -76,7 +113,7 @@ export default function AdminPanel() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? '...' : (stats?.medicationsCount ?? 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.medicationsCount ?? 0).toLocaleString()}</div>
               <p className="text-xs text-slate-500 mt-1">Total medications</p>
             </CardContent>
           </Card>
@@ -89,7 +126,7 @@ export default function AdminPanel() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? '...' : (stats?.conditionsCount ?? 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.conditionsCount ?? 0).toLocaleString()}</div>
               <p className="text-xs text-slate-500 mt-1">Total conditions</p>
             </CardContent>
           </Card>
@@ -102,7 +139,7 @@ export default function AdminPanel() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? '...' : (stats?.codesCount ?? 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.codesCount ?? 0).toLocaleString()}</div>
               <p className="text-xs text-slate-500 mt-1">Total codes</p>
             </CardContent>
           </Card>
@@ -115,7 +152,7 @@ export default function AdminPanel() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? '...' : (stats?.nonCoveredCodesCount ?? 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.nonCoveredCodesCount ?? 0).toLocaleString()}</div>
               <p className="text-xs text-slate-500 mt-1">Non-covered codes</p>
             </CardContent>
           </Card>
@@ -173,11 +210,77 @@ export default function AdminPanel() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">Medications Management</h3>
                   <p className="text-slate-600 mb-4">
-                    View and manage medications in the database.
+                    Search and view medications in the database.
                   </p>
-                  <Button disabled>
-                    Coming Soon - Medications Editor
-                  </Button>
+                  
+                  {/* Search Box */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Search by trade name, scientific name, or indication..."
+                        value={medicationSearchQuery}
+                        onChange={(e) => setMedicationSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && handleMedicationSearch()}
+                        className="pl-10"
+                      />
+                      {medicationSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setMedicationSearchQuery("");
+                            setMedicationResults([]);
+                          }}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleMedicationSearch}
+                      disabled={!medicationSearchQuery.trim() || medicationSearching}
+                    >
+                      {medicationSearching ? "Searching..." : "Search"}
+                    </Button>
+                  </div>
+
+                  {/* Search Results */}
+                  {medicationResults.length > 0 && (
+                    <div className="mt-6 space-y-3">
+                      <h4 className="font-semibold text-slate-900">Results ({medicationResults.length})</h4>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {medicationResults.map((med, idx) => (
+                          <Card key={idx} className="p-4">
+                            <div className="space-y-2">
+                              <div>
+                                <p className="font-medium text-slate-900">{med.tradeNames?.join(", ") || "N/A"}</p>
+                                <p className="text-sm text-slate-600">{med.scientificName}</p>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {med.indication || "No indication"}
+                                </span>
+                                {med.icdCodes?.map((code: string) => (
+                                  <span key={code} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    {code}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {medicationSearchQuery && medicationResults.length === 0 && !medicationSearching && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No medications found matching "{medicationSearchQuery}"
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               </TabsContent>
 
@@ -185,11 +288,67 @@ export default function AdminPanel() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">ICD-10 Codes Management</h3>
                   <p className="text-slate-600 mb-4">
-                    View and manage ICD-10 codes in the database.
+                    Search and view ICD-10 codes in the database.
                   </p>
-                  <Button disabled>
-                    Coming Soon - Codes Editor
-                  </Button>
+                  
+                  {/* Search Box */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Search by code or description..."
+                        value={codeSearchQuery}
+                        onChange={(e) => setCodeSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && handleCodeSearch()}
+                        className="pl-10"
+                      />
+                      {codeSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setCodeSearchQuery("");
+                            setCodeResults([]);
+                          }}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleCodeSearch}
+                      disabled={!codeSearchQuery.trim() || codeSearching}
+                    >
+                      {codeSearching ? "Searching..." : "Search"}
+                    </Button>
+                  </div>
+
+                  {/* Search Results */}
+                  {codeResults.length > 0 && (
+                    <div className="mt-6 space-y-3">
+                      <h4 className="font-semibold text-slate-900">Results ({codeResults.length})</h4>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {codeResults.map((code, idx) => (
+                          <Card key={idx} className="p-4">
+                            <div className="space-y-2">
+                              <div>
+                                <p className="font-medium text-slate-900">{code.code}</p>
+                                <p className="text-sm text-slate-600">{code.description || "No description"}</p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {codeSearchQuery && codeResults.length === 0 && !codeSearching && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No codes found matching "{codeSearchQuery}"
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               </TabsContent>
 
