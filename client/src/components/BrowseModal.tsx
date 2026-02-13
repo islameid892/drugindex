@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, ArrowLeft, Search } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// import { ScrollArea } from "@/components/ui/scroll-area";
 import { matchesSearchQuery } from '@/lib/arabicSearch';
 
 interface BrowseModalProps {
@@ -300,8 +300,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 h-full w-full">
-            <div className="px-4 sm:px-6 py-4 space-y-6 pr-4">
+          <div className="flex-1 h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 space-y-6 pr-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
               {relatedData.drugs.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3 text-sm">Trade Names ({relatedData.drugs.length})</h3>
@@ -365,8 +364,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                   </div>
                 </div>
               )}
-            </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -393,8 +391,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
           </div>
         </div>
         
-        <ScrollArea className="flex-1 h-full w-full">
-          <div className="px-4 sm:px-6 py-3 space-y-2 pr-4">
+        <div className="flex-1 h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-3 space-y-2 pr-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
             {filteredLetters.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No results found
@@ -434,8 +431,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                 </div>
               ))
             )}
-          </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
