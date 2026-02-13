@@ -1,0 +1,24 @@
+# Robots.txt for ICD-10 Medical Search Engine
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /*.json
+Disallow: /data/
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+
+# Crawl delay to prevent server overload
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://icd10-search-engine.manus.space/sitemap.xml

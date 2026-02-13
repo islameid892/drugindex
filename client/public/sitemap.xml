@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Favorites Page -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/favorites</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Admin Panel -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/admin</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Sample Medication Detail Pages (representative examples) -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/drug/paracetamol</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://icd10-search-engine.manus.space/drug/ibuprofen</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Sample ICD-10 Code Detail Pages (representative examples) -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/code/E11</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://icd10-search-engine.manus.space/code/I10</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Sample Condition Detail Pages (representative examples) -->
+  <url>
+    <loc>https://icd10-search-engine.manus.space/condition/diabetes</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://icd10-search-engine.manus.space/condition/hypertension</loc>
+    <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+</urlset>

@@ -31,9 +31,21 @@
 - [ ] Document Admin Panel usage
 - [ ] Document API endpoints
 
-## SEO Improvements
+## SEO Improvements - Phase 1
 - [x] Fix page title length (28 → 51 characters)
 - [x] Add keywords meta tag
 - [x] Enhance meta description with keywords
 - [x] Add dynamic title setting with useEffect
-- [ ] Create backup strategy
+- [x] Add Saudi insurance and KSA drugs keywords
+
+## SEO Improvements - Phase 2 (Advanced)
+- [x] Add Open Graph meta tags (og:title, og:description, og:image)
+- [x] Add Twitter Card meta tags (twitter:card, twitter:title, twitter:description)
+- [x] Create robots.txt file
+- [x] Create sitemap.xml file
+- [x] Add JSON-LD Structured Data (MedicalWebApplication)
+- [x] Create structuredData.ts utility functions
+- [x] Add FAQSchema to Home page
+- [x] Add OrganizationSchema to Home page
+- [x] Add BreadcrumbSchema helper function
+- [x] Write tests for structured data functions

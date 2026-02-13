@@ -14,6 +14,7 @@ import { Link } from "wouter";
 import { memo } from "react";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
+import { addFAQSchema, addOrganizationSchema } from '@/lib/structuredData';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -77,6 +78,9 @@ export default function Home() {
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Search ICD-10 medical codes, medications, and healthcare diagnosis codes. Find drug references and pharmaceutical information with coverage status.');
     }
+    // Add structured data for better SEO
+    addFAQSchema();
+    addOrganizationSchema();
   }, []);
 
   // تحميل البيانات مع دعم الضغط
