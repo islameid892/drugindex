@@ -300,8 +300,8 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 space-y-6">
+          <ScrollArea className="flex-1 h-full w-full">
+            <div className="px-4 sm:px-6 py-4 space-y-6 pr-4">
               {relatedData.drugs.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3 text-sm">Trade Names ({relatedData.drugs.length})</h3>
@@ -393,8 +393,8 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
           </div>
         </div>
         
-        <ScrollArea className="flex-1 overflow-hidden">
-          <div className="px-4 sm:px-6 py-3 space-y-2">
+        <ScrollArea className="flex-1 h-full w-full">
+          <div className="px-4 sm:px-6 py-3 space-y-2 pr-4">
             {filteredLetters.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No results found
