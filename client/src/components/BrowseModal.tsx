@@ -372,22 +372,48 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                 <h3 className="font-semibold mb-3 text-sm text-slate-700">Indication</h3>
                 <div className="space-y-2">
                   {relatedData.conditions.map((condition: string, idx: number) => {
-                    // Find the code for this condition
                     const relatedCode = relatedData.codes[idx] || '';
                     return (
-                      <div key={idx} className="flex items-start gap-2">
-                        <div className="flex-1 text-sm p-2 rounded bg-green-50 text-green-900 border border-green-200">
-                          {condition}
+                      <div key={idx}>
+                        <div className="flex items-center justify-between p-2 rounded bg-green-50 text-green-900 border border-green-200">
+                          <div className="flex-1 text-sm">{condition}</div>
+                          {relatedCode && (
+                            <div className="flex items-center gap-2 ml-2">
+                              <span className="font-mono font-bold text-sm">{relatedCode}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleBranch(relatedCode)}
+                                className="h-7 w-7 p-0 hover:bg-green-100 transition-colors"
+                              >
+                                {expandedBranches.has(relatedCode) ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        {relatedCode && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleBranch(relatedCode)}
-                            className="font-mono text-xs whitespace-nowrap"
-                          >
-                            {relatedCode}
-                          </Button>
+                        {expandedBranches.has(relatedCode) && (
+                          <div className="mt-2 ml-2 space-y-1 border-l-2 border-green-200 pl-2">
+                            {(() => {
+                              const codeItem = treeData.find((item: any) => item.code === relatedCode);
+                              if (!codeItem || !codeItem.branches || codeItem.branches.length === 0) {
+                                return <div className="text-xs text-slate-500">No branches</div>;
+                              }
+                              return codeItem.branches.map((branch: any, bIdx: number) => {
+                                const branchCode = typeof branch === 'string' ? branch : branch.code;
+                                const branchName = typeof branch === 'string' ? getBranchName(branch) : (branch.description || branchCode);
+                                return (
+                                  <div key={bIdx} className="text-sm p-1.5 rounded bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <span className="font-mono font-bold text-xs mr-2 text-green-700">{branchCode}</span>
+                                    <span className="text-slate-700 text-xs">{branchName}</span>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
                         )}
                       </div>
                     );
