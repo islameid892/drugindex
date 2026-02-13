@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BranchViewer } from "./BranchViewer";
@@ -57,8 +57,8 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
     : 'border-red-200 hover:border-red-400 hover:shadow-lg hover:shadow-red-100/50';
     
   const headerBgClass = isCovered 
-    ? 'bg-slate-50/50 border-slate-100' 
-    : 'bg-red-50/50 border-red-100';
+    ? 'bg-slate-50/50' 
+    : 'bg-red-50/50';
     
   const indicationClass = isCovered 
     ? 'text-slate-700 bg-slate-50 border-slate-100' 
@@ -67,69 +67,76 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
   const badgeClass = isCovered 
     ? 'text-slate-700 border-slate-300 bg-white' 
     : 'text-red-700 border-red-300 bg-red-50';
-    
-  const dividerClass = isCovered ? 'border-slate-100' : 'border-red-200';
   
   return (
     <Card className={`group overflow-hidden transition-all duration-300 ${cardBorderClass}`}>
-      <CardHeader className={`pb-3 border-b transition-colors ${headerBgClass}`}>
-        <div className="flex justify-between items-start gap-4">
-          <div className="space-y-0.5 flex-1">
-            <CardTitle className="text-lg font-bold text-slate-800 leading-tight group-hover:text-sky-700 transition-colors">
-              {data.scientificName}
-            </CardTitle>
-            <div className="text-sm font-medium text-slate-500">
-              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider text-slate-600 inline-block">Trade Name</span>
-              <p className="text-slate-700 font-semibold mt-0.5 leading-snug">{tradeName}</p>
+      <CardContent className="p-0">
+        {/* Header Row with Trade Name / Scientific Name */}
+        <div className={`px-4 py-3 border-b ${headerBgClass}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Trade Name / Scientific Name</h4>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-slate-900 group-hover:text-sky-700 transition-colors truncate">
+                  {tradeName || data.scientificName}
+                </p>
+                {tradeName && (
+                  <p className="text-xs text-slate-600 italic truncate">
+                    {data.scientificName}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
             <Button
               onClick={handleToggleFavorite}
               variant="ghost"
               size="sm"
-              className={`transition-all ${
+              className={`flex-shrink-0 transition-all ${
                 isFav
                   ? 'text-red-500 hover:text-red-600 hover:bg-red-50'
                   : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
               }`}
               title={isFav ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <Heart className={`h-5 w-5 ${isFav ? 'fill-current' : ''}`} />
+              <Heart className={`h-4 w-4 ${isFav ? 'fill-current' : ''}`} />
             </Button>
-            <Badge className={`font-mono text-xs ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
-              {isCovered ? 'COVERED' : 'NOT COVERED'}
-            </Badge>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="pt-4 space-y-4">
-        <div>
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Indication</h4>
-          <p className={`text-sm font-medium leading-relaxed p-2.5 rounded-lg border transition-colors ${indicationClass}`}>
+
+        {/* Indication Row */}
+        <div className="px-4 py-3 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Indication</h4>
+          <p className={`text-sm font-medium leading-relaxed p-2 rounded border transition-colors ${indicationClass}`}>
             {data.indication}
           </p>
         </div>
-        
-        <div className={`pt-2 mt-2 border-t transition-colors ${dividerClass}`}>
-          <div className="flex items-start gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">ICD-10</span>
-            <div className="flex flex-wrap gap-1.5 flex-1">
-              {treeNodes.map((item: any, index: number) => (
-                <div key={`${item.mainCode}-${index}`} className="flex items-center gap-1">
-                  <Badge variant="outline" className={`font-mono font-bold ${badgeClass}`}>
-                    {item.fullCode}
-                  </Badge>
-                  <BranchViewer 
-                    mainCode={item.node.code} 
-                    mainDescription={item.node.description} 
-                    branches={item.node.branches}
-                    isCovered={isCovered}
-                  />
-                </div>
-              ))}
-            </div>
+
+        {/* ICD-10 Codes Row */}
+        <div className="px-4 py-3 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">ICD-10 Codes</h4>
+          <div className="flex flex-wrap gap-1.5">
+            {treeNodes.map((item: any, index: number) => (
+              <div key={`${item.mainCode}-${index}`} className="flex items-center gap-1">
+                <Badge variant="outline" className={`font-mono font-bold text-xs ${badgeClass}`}>
+                  {item.fullCode}
+                </Badge>
+                <BranchViewer 
+                  mainCode={item.node.code} 
+                  mainDescription={item.node.description} 
+                  branches={item.node.branches}
+                  isCovered={isCovered}
+                />
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Coverage Status Row */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Coverage Status</h4>
+          <Badge className={`font-mono text-xs font-bold ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
+            {isCovered ? 'COVERED' : 'NOT COVERED'}
+          </Badge>
         </div>
       </CardContent>
     </Card>
