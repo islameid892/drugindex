@@ -158,6 +158,16 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     return code;
   }, [treeData]);
 
+  // Get branch name from tree data
+  const getBranchName = useCallback((branchCode: string): string => {
+    for (const treeItem of treeData) {
+      if (treeItem.code === branchCode) {
+        return treeItem.description || branchCode;
+      }
+    }
+    return branchCode;
+  }, [treeData]);
+
   // Get related data for the selected item
   const relatedData = useMemo(() => {
     const result = {
@@ -387,11 +397,14 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                         onClick={() => toggleBranch(branch)}
                         className="w-full px-3 py-2 text-left hover:bg-purple-50 transition-colors flex items-center justify-between bg-purple-50 text-purple-900 border border-purple-200"
                       >
-                        <span className="font-mono text-sm">{branch}</span>
+                        <div className="flex-1 text-left">
+                          <div className="font-mono text-sm font-bold">{branch}</div>
+                          <div className="text-xs text-purple-700 mt-1">{getBranchName(branch)}</div>
+                        </div>
                         {expandedBranches.has(branch) ? (
-                          <ChevronUp className="h-4 w-4" />
+                          <ChevronUp className="h-4 w-4 ml-2" />
                         ) : (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4 ml-2" />
                         )}
                       </button>
                     </div>
