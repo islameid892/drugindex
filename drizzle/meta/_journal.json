@@ -15,6 +15,13 @@
       "when": 1770985988170,
       "tag": "0001_tranquil_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1770987762854,
+      "tag": "0002_lonely_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }

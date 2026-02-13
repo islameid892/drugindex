@@ -28,9 +28,9 @@ export type InsertUser = typeof users.$inferInsert;
 // Medications table
 export const medications = mysqlTable("medications", {
   id: int("id").autoincrement().primaryKey(),
-  scientificName: varchar("scientificName", { length: 255 }).notNull(),
+  scientificName: text("scientificName").notNull(),
   tradeNames: text("tradeNames").notNull(), // JSON array as string
-  indication: varchar("indication", { length: 255 }),
+  indication: text("indication"),
   icdCodes: text("icdCodes").notNull(), // JSON array as string
   coverageStatus: varchar("coverageStatus", { length: 50 }).default("COVERED").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

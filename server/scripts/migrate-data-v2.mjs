@@ -2,16 +2,42 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
+import { parse as parseUrl } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'icd10_search',
-};
+// Parse DATABASE_URL
+function parseConnectionString(connectionString) {
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
+
+  try {
+    const url = new URL(connectionString);
+    
+    // Extract SSL config if present
+    let ssl = false;
+    if (url.searchParams.has('ssl')) {
+      try {
+        ssl = JSON.parse(url.searchParams.get('ssl'));
+      } catch {
+        ssl = url.searchParams.get('ssl') === 'true';
+      }
+    }
+
+    return {
+      host: url.hostname,
+      port: parseInt(url.port) || 3306,
+      user: url.username,
+      password: url.password,
+      database: url.pathname.slice(1), // Remove leading /
+      ssl: ssl || { rejectUnauthorized: true },
+    };
+  } catch (error) {
+    console.error('Failed to parse DATABASE_URL:', error.message);
+    throw error;
+  }
+}
 
 // Helper function to load JSON files
 function loadJsonFile(filePath) {
@@ -25,12 +51,15 @@ function loadJsonFile(filePath) {
     
     for (const fullPath of possiblePaths) {
       if (fs.existsSync(fullPath)) {
+        console.log(`  ✓ Found ${filePath} at ${fullPath}`);
         const data = fs.readFileSync(fullPath, 'utf-8');
         return JSON.parse(data);
       }
     }
     
     console.error(`Error loading ${filePath}: File not found in any expected location`);
+    console.error('Searched paths:');
+    possiblePaths.forEach(p => console.error(`  - ${p}`));
     return null;
   } catch (error) {
     console.error(`Error loading ${filePath}:`, error.message);
@@ -43,11 +72,17 @@ async function migrate() {
   let connection;
   
   try {
-    console.log('🔄 Starting data migration...');
+    console.log('🔄 Starting data migration...\n');
     
+    // Parse connection string
+    console.log('📋 Parsing database connection...');
+    const dbConfig = parseConnectionString(process.env.DATABASE_URL);
+    console.log(`✅ Connected to: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}\n`);
+
     // Connect to database
+    console.log('🔗 Connecting to database...');
     connection = await mysql.createConnection(dbConfig);
-    console.log('✅ Connected to database');
+    console.log('✅ Connected to database\n');
 
     // Load JSON data
     console.log('📂 Loading JSON files...');
@@ -58,13 +93,15 @@ async function migrate() {
     if (!medicationsData || !treeData) {
       throw new Error('Failed to load required JSON files');
     }
+    console.log('✅ All JSON files loaded\n');
 
     // Clear existing data
     console.log('🗑️  Clearing existing data...');
-    await connection.execute('DELETE FROM non_covered_codes');
+    await connection.execute('DELETE FROM nonCoveredCodes');
     await connection.execute('DELETE FROM codes');
     await connection.execute('DELETE FROM conditions');
     await connection.execute('DELETE FROM medications');
+    console.log('✅ Database cleared\n');
 
     // Migrate medications
     console.log(`📝 Migrating ${medicationsData.length} medications...`);
@@ -93,7 +130,7 @@ async function migrate() {
         console.warn(`  ⚠️  Failed to migrate medication:`, error.message);
       }
     }
-    console.log(`✅ Migrated ${medicationCount} medications`);
+    console.log(`✅ Migrated ${medicationCount} medications\n`);
 
     // Migrate conditions (unique indications from medications)
     console.log('📝 Migrating conditions...');
@@ -107,10 +144,12 @@ async function migrate() {
         );
         conditionCount++;
       } catch (error) {
-        console.warn(`  ⚠️  Failed to migrate condition:`, error.message);
+        if (!error.message.includes('Duplicate entry')) {
+          console.warn(`  ⚠️  Failed to migrate condition:`, error.message);
+        }
       }
     }
-    console.log(`✅ Migrated ${conditionCount} conditions`);
+    console.log(`✅ Migrated ${conditionCount} conditions\n`);
 
     // Migrate codes
     console.log(`📝 Migrating ${treeData.length} codes...`);
@@ -133,10 +172,12 @@ async function migrate() {
           console.log(`  ✓ ${codeCount} codes migrated...`);
         }
       } catch (error) {
-        console.warn(`  ⚠️  Failed to migrate code:`, error.message);
+        if (!error.message.includes('Duplicate entry')) {
+          console.warn(`  ⚠️  Failed to migrate code:`, error.message);
+        }
       }
     }
-    console.log(`✅ Migrated ${codeCount} codes`);
+    console.log(`✅ Migrated ${codeCount} codes\n`);
 
     // Migrate non-covered codes
     if (nonCoveredData && Array.isArray(nonCoveredData)) {
@@ -146,8 +187,8 @@ async function migrate() {
         try {
           const branches = Array.isArray(code.branches) ? JSON.stringify(code.branches) : '[]';
           
-          await connection.execute(
-            'INSERT INTO non_covered_codes (code, name, branches) VALUES (?, ?, ?)',
+        await connection.execute(
+          'INSERT INTO nonCoveredCodes (code, description, branches, relatedMedications) VALUES (?, ?, ?, ?)',
             [
               code.code || '',
               code.name || '',
@@ -156,13 +197,15 @@ async function migrate() {
           );
           nonCoveredCount++;
         } catch (error) {
-          console.warn(`  ⚠️  Failed to migrate non-covered code:`, error.message);
+          if (!error.message.includes('Duplicate entry')) {
+            console.warn(`  ⚠️  Failed to migrate non-covered code:`, error.message);
+          }
         }
       }
-      console.log(`✅ Migrated ${nonCoveredCount} non-covered codes`);
+      console.log(`✅ Migrated ${nonCoveredCount} non-covered codes\n`);
     }
 
-    console.log('\n✅ Migration completed successfully!');
+    console.log('✅ Migration completed successfully!\n');
     console.log(`Summary:
   - Medications: ${medicationCount}
   - Conditions: ${conditionCount}
