@@ -449,10 +449,10 @@ export default function Home() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Trade Name</TableHead>
-                      <TableHead>Scientific Name</TableHead>
+                      <TableHead>Trade Name / Scientific Name</TableHead>
                       <TableHead>Indication</TableHead>
                       <TableHead>ICD-10 Codes</TableHead>
+                      <TableHead>Coverage Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
