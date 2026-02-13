@@ -148,6 +148,16 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     setExpandedBranches(new Set());
   }, []);
 
+  // Get code name from tree data
+  const getCodeName = useCallback((code: string): string => {
+    for (const treeItem of treeData) {
+      if (treeItem.code === code) {
+        return treeItem.description || treeItem.indication || code;
+      }
+    }
+    return code;
+  }, [treeData]);
+
   // Get related data for the selected item
   const relatedData = useMemo(() => {
     const result = {
@@ -327,8 +337,13 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
             {(type === 'codes' || type === 'non-covered') && (
               <div>
                 <h3 className="font-semibold mb-3 text-sm text-slate-700">Indication</h3>
-                <div className="text-sm p-3 rounded bg-green-50 text-green-900 border border-green-200 font-mono font-bold text-base">
-                  {selectedItem}
+                <div>
+                  <div className="text-sm p-2 rounded bg-green-50 text-green-900 border border-green-200">
+                    {getCodeName(selectedItem)}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-2 font-mono">
+                    Code: {selectedItem}
+                  </div>
                 </div>
               </div>
             )}
