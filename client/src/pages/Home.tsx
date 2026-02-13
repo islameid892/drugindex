@@ -70,6 +70,15 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const { favorites } = useFavorites();
 
+  // Set page title and meta tags for SEO
+  useEffect(() => {
+    document.title = "ICD-10 Medical Search Engine - Drug & Code Reference";
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Search ICD-10 medical codes, medications, and healthcare diagnosis codes. Find drug references and pharmaceutical information with coverage status.');
+    }
+  }, []);
+
   // تحميل البيانات مع دعم الضغط
   useEffect(() => {
     const loadData = async () => {
