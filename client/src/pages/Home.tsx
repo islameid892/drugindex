@@ -13,6 +13,7 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
 import { memo } from "react";
 import pako from 'pako';
+import { matchesSearchQuery } from '@/lib/arabicSearch';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -115,18 +116,18 @@ export default function Home() {
     const matchedMedications = mainData.filter(item => {
       const tradeName = item.tradeNames && Array.isArray(item.tradeNames) ? item.tradeNames.join(' ') : '';
       const scientificName = item.scientificName || '';
-      return tradeName.toLowerCase().includes(lowerQuery) ||
-             scientificName.toLowerCase().includes(lowerQuery);
+      return matchesSearchQuery(tradeName, query) ||
+             matchesSearchQuery(scientificName, query);
     });
     
     const matchedConditions = mainData.filter(item => {
       const indication = item.indication || '';
-      return indication.toLowerCase().includes(lowerQuery);
+      return matchesSearchQuery(indication, query);
     });
     
     const matchedCodes = mainData.filter(item => {
       const codes = item.icdCodes && Array.isArray(item.icdCodes) ? item.icdCodes.join(' ') : '';
-      return codes.toLowerCase().includes(lowerQuery);
+      return matchesSearchQuery(codes, query);
     });
     
     // دمج النتائج وإزالة التكرارات

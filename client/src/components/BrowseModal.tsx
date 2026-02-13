@@ -190,10 +190,45 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
       result.drugs = Array.from(new Set(result.drugs));
       result.conditions = Array.from(new Set(result.conditions));
       result.codes = Array.from(new Set(result.codes));
+    } else if (type === 'conditions') {
+      // Find all drugs with this condition
+      data.forEach((item: any) => {
+        if (item.indication === selectedItem) {
+          result.drugs.push(...(item.tradeNames || []));
+          result.codes.push(...(item.icdCodes || []));
+        }
+      });
+      result.drugs = Array.from(new Set(result.drugs));
+      result.codes = Array.from(new Set(result.codes));
+    } else if (type === 'codes') {
+      // Find all drugs with this code
+      data.forEach((item: any) => {
+        if (item.icdCodes && item.icdCodes.includes(selectedItem)) {
+          result.drugs.push(...(item.tradeNames || []));
+          if (item.indication) result.conditions.push(item.indication);
+        }
+      });
+      result.drugs = Array.from(new Set(result.drugs));
+      result.conditions = Array.from(new Set(result.conditions));
+    } else if (type === 'non-covered') {
+      // Find non-covered code info
+      nonCoveredData.forEach((item: any) => {
+        if (item.code === selectedItem) {
+          // Try to find related drugs from main data
+          data.forEach((drug: any) => {
+            if (drug.icdCodes && drug.icdCodes.includes(selectedItem)) {
+              result.drugs.push(...(drug.tradeNames || []));
+              if (drug.indication) result.conditions.push(drug.indication);
+            }
+          });
+        }
+      });
+      result.drugs = Array.from(new Set(result.drugs));
+      result.conditions = Array.from(new Set(result.conditions));
     }
     
     return result;
-  }, [selectedItem, type, data]);
+  }, [selectedItem, type, data, nonCoveredData]);
 
   const getTitle = () => {
     switch (type) {
@@ -240,7 +275,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
               
               {relatedData.conditions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-2 text-sm">Conditions ({relatedData.conditions.length})</h3>
+                  <h3 className="font-semibold mb-2 text-sm">Conditions / Indications ({relatedData.conditions.length})</h3>
                   <div className="space-y-2">
                     {relatedData.conditions.map((condition, idx) => (
                       <div key={idx} className="text-sm p-2 rounded bg-green-50 text-green-900">
