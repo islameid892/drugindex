@@ -192,17 +192,33 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
       result.codes = Array.from(new Set(result.codes));
     } else if (type === 'conditions') {
       // Find all drugs with this condition
-      data.forEach((item: any) => {
-        if (item.indication === selectedItem) {
-          result.drugs.push(...(item.tradeNames || []));
-          if (item.scientificName) result.conditions.push(item.scientificName);
-          if (item.icdCodes) result.codes.push(...item.icdCodes);
-        }
-      });
+      if (selectedItem) {
+        data.forEach((item: any) => {
+          if (item.indication === selectedItem) {
+            result.drugs.push(...(item.tradeNames || []));
+            if (item.scientificName) result.conditions.push(item.scientificName);
+            if (item.icdCodes) result.codes.push(...item.icdCodes);
+          }
+        });
+        
+        // Also check tree data for matching description
+        treeData.forEach((treeItem: any) => {
+          if (treeItem.description && treeItem.description.toLowerCase().includes(selectedItem.toLowerCase())) {
+            result.codes.push(treeItem.code);
+            if (treeItem.branches) {
+              treeItem.branches.forEach((branch: any) => {
+                const branchStr = typeof branch === 'string' ? branch : (branch?.code || '');
+                if (branchStr) result.branches.push(branchStr);
+              });
+            }
+          }
+        });
+      }
       
       result.drugs = Array.from(new Set(result.drugs));
       result.conditions = Array.from(new Set(result.conditions));
       result.codes = Array.from(new Set(result.codes));
+      result.branches = Array.from(new Set(result.branches));
     } else if (type === 'codes') {
       // Find code info from tree
       treeData.forEach((treeItem: any) => {
@@ -299,17 +315,54 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
           </DialogHeader>
           
           <div className="flex-1 h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 space-y-6 pr-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
-            {/* 1. Indication (for conditions) */}
-            {type === 'conditions' && relatedData.conditions.length > 0 && (
+            {/* 1. Indication (for conditions) - Display Related Codes */}
+            {type === 'conditions' && relatedData.codes.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-3 text-sm text-slate-700">Indication</h3>
+                <h3 className="font-semibold mb-3 text-sm text-slate-700">Indication (Related Codes)</h3>
                 <div className="space-y-2">
-                  {relatedData.conditions.map((condition: string, idx: number) => (
-                    <div key={idx} className="text-sm p-2 rounded bg-green-50 text-green-900 border border-green-200">
-                      {condition}
+                  {relatedData.codes.map((code: string, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between p-2 rounded bg-green-50 text-green-900 border border-green-200">
+                      <div className="flex-1">
+                        <div className="font-mono font-bold text-sm">{code}</div>
+                        <div className="text-xs text-green-700 mt-1">{getCodeName(code)}</div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleBranch(code)}
+                        className="ml-2 h-8 w-8 p-0 hover:bg-green-100"
+                      >
+                        {expandedBranches.has(code) ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
                   ))}
                 </div>
+                {/* Display branches for expanded codes */}
+                {Array.from(expandedBranches).map(expandedCode => {
+                   // Find branches for this code from treeData
+                   const codeItem = treeData.find((item: any) => item.code === expandedCode);
+                   if (!codeItem || !codeItem.branches || codeItem.branches.length === 0) return null;
+                   
+                   return (
+                     <div key={`branches-${expandedCode}`} className="mt-2 ml-4 space-y-1 border-l-2 border-green-200 pl-2">
+                       <div className="text-xs font-semibold text-slate-500 mb-1">Branches for {expandedCode}:</div>
+                       {codeItem.branches.map((branch: any, bIdx: number) => {
+                         const branchCode = typeof branch === 'string' ? branch : branch.code;
+                         const branchName = typeof branch === 'string' ? getBranchName(branch) : (branch.description || branchCode);
+                         return (
+                           <div key={bIdx} className="text-sm p-1.5 rounded bg-white border border-slate-100 shadow-sm">
+                             <span className="font-mono font-bold text-xs mr-2">{branchCode}</span>
+                             <span className="text-slate-700 text-xs">{branchName}</span>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   );
+                })}
               </div>
             )}
 
