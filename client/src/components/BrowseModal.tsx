@@ -165,7 +165,7 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-2xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
+      <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-4xl lg:max-w-5xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
         <DialogHeader className="pb-4 border-b flex flex-row items-center justify-between">
           <Button
             onClick={onClose}
