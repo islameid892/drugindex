@@ -501,6 +501,7 @@ export default function Home() {
           onClose={() => setBrowseModal({ isOpen: false, type: 'drugs' })}
           data={mainData}
           nonCoveredData={nonCoveredData}
+          treeData={treeData}
         />
       )}
     </div>

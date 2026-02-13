@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+'use client';
+
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, ArrowLeft, AlertCircle, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowLeft, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { matchesSearchQuery } from '@/lib/arabicSearch';
 
 interface BrowseModalProps {
   isOpen: boolean;
@@ -12,11 +15,12 @@ interface BrowseModalProps {
   type: 'drugs' | 'conditions' | 'codes' | 'non-covered';
   data: any[];
   nonCoveredData?: any[];
+  treeData?: any[];
 }
 
 type ViewMode = 'list' | 'details';
 
-export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredData = [] }: BrowseModalProps) {
+export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredData = [], treeData = [] }: BrowseModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLetters, setExpandedLetters] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -68,7 +72,6 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
   const nonCoveredCodes = useMemo(() => {
     if (type !== 'non-covered') return [];
     
-    // Extract codes from non-covered data
     const codes = new Set<string>();
     nonCoveredData.forEach((item: any) => {
       if (item.code) {
@@ -96,9 +99,8 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     sourceList.forEach((item: string) => {
       let firstLetter = item[0]?.toUpperCase() || '#';
       
-      // Handle numbers
       if (/^\d/.test(item)) {
-        firstLetter = item[0];
+        firstLetter = '0-9';
       }
       
       if (!groups[firstLetter]) {
@@ -110,21 +112,19 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     return groups;
   }, [sourceList]);
 
-  const groupLetters = Object.keys(groupedData).sort();
-
-  // Filter data based on search
+  // Filter based on search query
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) {
       return groupedData;
     }
     
-    const query = searchQuery.toLowerCase();
     const filtered: { [key: string]: string[] } = {};
     
     Object.entries(groupedData).forEach(([letter, items]) => {
-      const filteredItems = items.filter(item => 
-        item.toLowerCase().includes(query)
+      const filteredItems = items.filter(item =>
+        matchesSearchQuery(item, searchQuery)
       );
+      
       if (filteredItems.length > 0) {
         filtered[letter] = filteredItems;
       }
@@ -133,24 +133,18 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     return filtered;
   }, [groupedData, searchQuery]);
 
-  const filteredLetters = Object.keys(filteredGroups).sort();
+  const filteredLetters = useMemo(() => {
+    return Object.keys(filteredGroups).sort();
+  }, [filteredGroups]);
 
-  // Auto-expand all when searching
+  // Auto-expand when searching
   useEffect(() => {
     if (searchQuery.trim()) {
       setExpandedLetters(new Set(filteredLetters));
-    } else if (groupLetters.length > 0) {
-      // Reset to first letter when search is cleared
-      setExpandedLetters(new Set([groupLetters[0]]));
+    } else {
+      setExpandedLetters(new Set());
     }
-  }, [searchQuery]); // Only depend on searchQuery, not filteredLetters
-
-  // Initialize with first letter expanded
-  useEffect(() => {
-    if (groupLetters.length > 0 && expandedLetters.size === 0) {
-      setExpandedLetters(new Set([groupLetters[0]]));
-    }
-  }, [groupLetters]);
+  }, [searchQuery, filteredLetters]);
 
   const toggleLetter = (letter: string) => {
     const newExpanded = new Set(expandedLetters);
@@ -172,63 +166,111 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     setSelectedItem(null);
   };
 
-  // Get related data for selected item
+  // Get related data based on selected item
   const relatedData = useMemo(() => {
-    if (!selectedItem) return { drugs: [] as string[], conditions: [] as string[], codes: [] as string[] };
-    
-    const result = { drugs: [] as string[], conditions: [] as string[], codes: [] as string[] };
+    const result = {
+      drugs: [] as string[],
+      conditions: [] as string[],
+      codes: [] as string[],
+      branches: [] as string[]
+    };
     
     if (type === 'drugs') {
-      // Find all drugs with this scientific name
+      // Find all drugs with this active ingredient
       data.forEach((item: any) => {
         if (item.scientificName === selectedItem) {
           result.drugs.push(...(item.tradeNames || []));
           if (item.indication) result.conditions.push(item.indication);
-          result.codes.push(...(item.icdCodes || []));
+          if (item.icdCodes) result.codes.push(...item.icdCodes);
         }
       });
+      
+      // Get branches for all codes
+      if (result.codes.length > 0) {
+        const uniqueCodesSet = new Set(result.codes);
+        uniqueCodesSet.forEach((code: string) => {
+          treeData.forEach((treeItem: any) => {
+            if (treeItem.code === code && treeItem.branches) {
+              result.branches.push(...treeItem.branches);
+            }
+          });
+        });
+      }
+      
       result.drugs = Array.from(new Set(result.drugs));
       result.conditions = Array.from(new Set(result.conditions));
       result.codes = Array.from(new Set(result.codes));
+      result.branches = Array.from(new Set(result.branches));
     } else if (type === 'conditions') {
       // Find all drugs with this condition
       data.forEach((item: any) => {
         if (item.indication === selectedItem) {
           result.drugs.push(...(item.tradeNames || []));
-          result.codes.push(...(item.icdCodes || []));
+          if (item.scientificName) result.conditions.push(item.scientificName);
+          if (item.icdCodes) result.codes.push(...item.icdCodes);
         }
       });
+      
+      // Get branches for all codes
+      if (result.codes.length > 0) {
+        const uniqueCodesSet = new Set(result.codes);
+        uniqueCodesSet.forEach((code: string) => {
+          treeData.forEach((treeItem: any) => {
+            if (treeItem.code === code && treeItem.branches) {
+              result.branches.push(...treeItem.branches);
+            }
+          });
+        });
+      }
+      
       result.drugs = Array.from(new Set(result.drugs));
+      result.conditions = Array.from(new Set(result.conditions));
       result.codes = Array.from(new Set(result.codes));
+      result.branches = Array.from(new Set(result.branches));
     } else if (type === 'codes') {
+      // Find code info from tree
+      treeData.forEach((treeItem: any) => {
+        if (treeItem.code === selectedItem) {
+          if (treeItem.indication) result.conditions.push(treeItem.indication);
+          if (treeItem.branches) result.branches.push(...treeItem.branches);
+        }
+      });
+      
       // Find all drugs with this code
       data.forEach((item: any) => {
         if (item.icdCodes && item.icdCodes.includes(selectedItem)) {
           result.drugs.push(...(item.tradeNames || []));
-          if (item.indication) result.conditions.push(item.indication);
+          if (item.scientificName) result.conditions.push(item.scientificName);
         }
       });
+      
       result.drugs = Array.from(new Set(result.drugs));
       result.conditions = Array.from(new Set(result.conditions));
+      result.branches = Array.from(new Set(result.branches));
     } else if (type === 'non-covered') {
       // Find non-covered code info
       nonCoveredData.forEach((item: any) => {
         if (item.code === selectedItem) {
-          // Try to find related drugs from main data
-          data.forEach((drug: any) => {
-            if (drug.icdCodes && drug.icdCodes.includes(selectedItem)) {
-              result.drugs.push(...(drug.tradeNames || []));
-              if (drug.indication) result.conditions.push(drug.indication);
-            }
-          });
+          if (item.indication) result.conditions.push(item.indication);
+          if (item.branches) result.branches.push(...item.branches);
         }
       });
+      
+      // Try to find related drugs from main data
+      data.forEach((drug: any) => {
+        if (drug.icdCodes && drug.icdCodes.includes(selectedItem)) {
+          result.drugs.push(...(drug.tradeNames || []));
+          if (drug.scientificName) result.conditions.push(drug.scientificName);
+        }
+      });
+      
       result.drugs = Array.from(new Set(result.drugs));
       result.conditions = Array.from(new Set(result.conditions));
+      result.branches = Array.from(new Set(result.branches));
     }
     
     return result;
-  }, [selectedItem, type, data, nonCoveredData]);
+  }, [selectedItem, type, data, nonCoveredData, treeData]);
 
   const getTitle = () => {
     switch (type) {
@@ -243,8 +285,8 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
   if (viewMode === 'details' && selectedItem) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-full">
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -254,47 +296,72 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <DialogTitle className="text-lg">{selectedItem}</DialogTitle>
+              <DialogTitle className="text-lg truncate">{selectedItem}</DialogTitle>
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 px-6 py-4">
-            <div className="space-y-6">
+          <ScrollArea className="flex-1 overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 space-y-6">
               {relatedData.drugs.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-2 text-sm">Trade Names ({relatedData.drugs.length})</h3>
-                  <div className="space-y-2">
-                    {relatedData.drugs.map((drug, idx) => (
-                      <div key={idx} className="text-sm p-2 rounded bg-blue-50 text-blue-900">
-                        {drug}
-                      </div>
-                    ))}
+                  <h3 className="font-semibold mb-3 text-sm">Trade Names ({relatedData.drugs.length})</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {relatedData.drugs.map((drug: any, idx) => {
+                      const drugText = typeof drug === 'string' ? drug : (drug?.name || drug?.code || String(drug));
+                      return (
+                        <div key={idx} className="text-sm p-2 rounded bg-blue-50 text-blue-900 border border-blue-200">
+                          {drugText}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
               
               {relatedData.conditions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-2 text-sm">Conditions / Indications ({relatedData.conditions.length})</h3>
-                  <div className="space-y-2">
-                    {relatedData.conditions.map((condition, idx) => (
-                      <div key={idx} className="text-sm p-2 rounded bg-green-50 text-green-900">
-                        {condition}
-                      </div>
-                    ))}
+                  <h3 className="font-semibold mb-3 text-sm">Conditions / Active Ingredients ({relatedData.conditions.length})</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {relatedData.conditions.map((condition: any, idx) => {
+                      const conditionText = typeof condition === 'string' ? condition : (condition?.name || condition?.code || String(condition));
+                      return (
+                        <div key={idx} className="text-sm p-2 rounded bg-green-50 text-green-900 border border-green-200">
+                          {conditionText}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
               
               {relatedData.codes.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-2 text-sm">ICD-10 Codes ({relatedData.codes.length})</h3>
+                  <h3 className="font-semibold mb-3 text-sm">ICD-10 Codes ({relatedData.codes.length})</h3>
                   <div className="flex flex-wrap gap-2">
-                    {relatedData.codes.map((code, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {code}
-                      </Badge>
-                    ))}
+                    {relatedData.codes.map((code: any, idx) => {
+                      const codeText = typeof code === 'string' ? code : (code?.code || String(code));
+                      return (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {codeText}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {relatedData.branches.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-sm">Code Branches ({relatedData.branches.length})</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {relatedData.branches.map((branch: any, idx) => {
+                      const branchText = typeof branch === 'string' ? branch : (branch?.name || branch?.code || String(branch));
+                      return (
+                        <div key={idx} className="text-sm p-2 rounded bg-purple-50 text-purple-900 border border-purple-200">
+                          {branchText}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -307,7 +374,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-full">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-full">
         <DialogHeader className="px-4 sm:px-6 py-4 border-b">
           <DialogTitle className="text-lg sm:text-xl">{getTitle()}</DialogTitle>
         </DialogHeader>
@@ -326,7 +393,7 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
           </div>
         </div>
         
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-hidden">
           <div className="px-4 sm:px-6 py-3 space-y-2">
             {filteredLetters.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
