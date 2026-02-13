@@ -62,6 +62,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<"aggregated" | "detailed">("aggregated");
   const [mainData, setMainData] = useState<any[]>([]);
   const [treeData, setTreeData] = useState<any[]>([]);
+  const [nonCoveredData, setNonCoveredData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' | 'non-covered' }>({ isOpen: false, type: 'drugs' });
@@ -72,13 +73,15 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [main, tree] = await Promise.all([
+        const [main, tree, nonCovered] = await Promise.all([
           loadDataWithCompression('/data/main_data.json'),
-          loadDataWithCompression('/data/tree_data.json')
+          loadDataWithCompression('/data/tree_data.json'),
+          loadDataWithCompression('/data/non_covered_codes_full.json')
         ]);
         
         setMainData(main);
         setTreeData(tree);
+        setNonCoveredData(nonCovered);
         
         // حساب الإحصائيات
         setStats({
@@ -496,6 +499,7 @@ export default function Home() {
           type={browseModal.type}
           onClose={() => setBrowseModal({ isOpen: false, type: 'drugs' })}
           data={mainData}
+          nonCoveredData={nonCoveredData}
         />
       )}
     </div>
