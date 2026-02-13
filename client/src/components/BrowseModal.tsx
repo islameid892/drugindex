@@ -301,25 +301,18 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
           </DialogHeader>
           
           <div className="flex-1 h-full w-full overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 space-y-6 pr-4 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-slate-100">
-              {relatedData.drugs.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-3 text-sm">Trade Names ({relatedData.drugs.length})</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {relatedData.drugs.map((drug: any, idx) => {
-                      const drugText = typeof drug === 'string' ? drug : (drug?.name || drug?.code || String(drug));
-                      return (
-                        <div key={idx} className="text-sm p-2 rounded bg-blue-50 text-blue-900 border border-blue-200">
-                          {drugText}
-                        </div>
-                      );
-                    })}
-                  </div>
+              {/* 1. Trade Name / Scientific Name */}
+              <div>
+                <h3 className="font-semibold mb-3 text-sm text-slate-700">Trade Name / Scientific Name</h3>
+                <div className="text-base font-medium p-3 rounded bg-blue-50 text-blue-900 border border-blue-200">
+                  {selectedItem}
                 </div>
-              )}
+              </div>
               
+              {/* 2. Indication */}
               {relatedData.conditions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-3 text-sm">Conditions / Active Ingredients ({relatedData.conditions.length})</h3>
+                  <h3 className="font-semibold mb-3 text-sm text-slate-700">Indication ({relatedData.conditions.length})</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {relatedData.conditions.map((condition: any, idx) => {
                       const conditionText = typeof condition === 'string' ? condition : (condition?.name || condition?.code || String(condition));
@@ -333,9 +326,10 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                 </div>
               )}
               
+              {/* 3. ICD-10 Codes */}
               {relatedData.codes.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-3 text-sm">ICD-10 Codes ({relatedData.codes.length})</h3>
+                  <h3 className="font-semibold mb-3 text-sm text-slate-700">ICD-10 Codes ({relatedData.codes.length})</h3>
                   <div className="flex flex-wrap gap-2">
                     {relatedData.codes.map((code: any, idx) => {
                       const codeText = typeof code === 'string' ? code : (code?.code || String(code));
@@ -349,9 +343,27 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
                 </div>
               )}
               
+              {/* 4. Coverage Status */}
+              {relatedData.drugs.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-sm text-slate-700">Related Medications ({relatedData.drugs.length})</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {relatedData.drugs.map((drug: any, idx) => {
+                      const drugText = typeof drug === 'string' ? drug : (drug?.name || drug?.code || String(drug));
+                      return (
+                        <div key={idx} className="text-sm p-2 rounded bg-amber-50 text-amber-900 border border-amber-200">
+                          {drugText}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Code Branches */}
               {relatedData.branches.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-3 text-sm">Code Branches ({relatedData.branches.length})</h3>
+                  <h3 className="font-semibold mb-3 text-sm text-slate-700">Code Branches ({relatedData.branches.length})</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {relatedData.branches.map((branch: any, idx) => {
                       const branchText = typeof branch === 'string' ? branch : (branch?.name || branch?.code || String(branch));
