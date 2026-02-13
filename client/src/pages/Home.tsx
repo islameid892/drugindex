@@ -219,7 +219,7 @@ export default function Home() {
       <main className="flex-1 container py-12 space-y-12">
         {/* Hero Section */}
         {!query && !loading && (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 border border-sky-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 border border-sky-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700" id="hero-section">
             {/* Background Image */}
             <div 
               className="absolute inset-0 opacity-40"
@@ -240,11 +240,11 @@ export default function Home() {
                 <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database</span>
               </div>
               
-              <div className="space-y-3">
-                <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
+              <div className="space-y-4">
+                <h2 className="font-display text-5xl md:text-6xl text-slate-900 tracking-tight">
                   Find Codes & Medications
                 </h2>
-                <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                <p className="font-serif-elegant text-lg md:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed italic">
                   Search by scientific name, trade name, indication, or ICD-10 code. Get instant access to comprehensive medical coding information.
                 </p>
               </div>

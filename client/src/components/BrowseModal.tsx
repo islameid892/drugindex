@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search, AlertCircle } from 'lucide-react';
+import { Search, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface BrowseModalProps {
   isOpen: boolean;
@@ -165,8 +166,18 @@ export default function BrowseModal({ isOpen, onClose, type, data }: BrowseModal
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-full max-h-[100vh] h-screen flex flex-col w-full sm:max-w-2xl sm:max-h-[90vh] sm:h-auto rounded-t-3xl sm:rounded-lg fixed bottom-0 sm:fixed sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{getTitle()}</DialogTitle>
+        <DialogHeader className="pb-4 border-b flex flex-row items-center justify-between">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex-1 text-center">{getTitle()}</DialogTitle>
+          <div className="w-10" /> {/* Spacer for alignment */}
         </DialogHeader>
 
         {/* Search Bar */}

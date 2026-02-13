@@ -128,7 +128,22 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Display Font - Elegant Headlines */
+  .font-display {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  /* Serif Font - Elegant Body Text */
+  .font-serif-elegant {
+    font-family: 'Lora', serif;
+    font-weight: 500;
+    line-height: 1.6;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
