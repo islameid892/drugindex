@@ -254,7 +254,7 @@ export default function Home() {
             <div className="relative px-6 py-16 md:px-12 md:py-20 text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-sky-200 shadow-sm">
                 <Sparkles className="h-4 w-4 text-sky-600" />
-                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database</span>
+                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database at KSA Market</span>
               </div>
               
               <div className="space-y-4">
@@ -344,7 +344,7 @@ export default function Home() {
                       
                       <div className="text-left">
                         <h4 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Browse Codes</h4>
-                        <p className="text-sm text-slate-600 mt-1">View all ICD-10 codes and classifications</p>
+                        <p className="text-sm text-slate-600 mt-1">View all ICD-10 AM codes and classifications</p>
                       </div>
                       
                       <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
