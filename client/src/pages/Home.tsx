@@ -15,7 +15,6 @@ import { memo } from "react";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
 import { addFAQSchema, addOrganizationSchema } from '@/lib/structuredData';
-import { clearAllStorage } from '@/lib/indexedDB';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -82,9 +81,6 @@ export default function Home() {
     // Add structured data for better SEO
     addFAQSchema();
     addOrganizationSchema();
-    
-    // Clear all storage on first load to ensure fresh data
-    clearAllStorage().catch(console.warn);
   }, []);
 
   // تحميل البيانات مع دعم الضغط
