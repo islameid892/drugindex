@@ -296,10 +296,10 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
     });
   }, []);
 
-  if (viewMode === 'details' && selectedItem) {
+   if (viewMode === 'list') {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-full">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-full">
           <DialogHeader className="px-4 sm:px-6 py-4 border-b flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
