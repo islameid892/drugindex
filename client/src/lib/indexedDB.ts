@@ -208,3 +208,39 @@ export const preloadData = async (
 
   await Promise.all(promises);
 };
+
+
+/**
+ * Clear all browser storage (IndexedDB, localStorage, sessionStorage)
+ * Use this to force refresh of all cached data
+ */
+export const clearAllStorage = async (): Promise<void> => {
+  try {
+    // Clear IndexedDB
+    await clearCache();
+    console.log('Cleared IndexedDB cache');
+
+    // Clear localStorage
+    localStorage.clear();
+    console.log('Cleared localStorage');
+
+    // Clear sessionStorage
+    sessionStorage.clear();
+    console.log('Cleared sessionStorage');
+
+    // Delete all IndexedDB databases
+    if (indexedDB.databases) {
+      const dbs = await indexedDB.databases();
+      for (const db of dbs) {
+        if (db.name) {
+          indexedDB.deleteDatabase(db.name);
+        }
+      }
+      console.log('Deleted all IndexedDB databases');
+    }
+
+    console.log('All storage cleared successfully');
+  } catch (error) {
+    console.error('Failed to clear all storage:', error);
+  }
+};
