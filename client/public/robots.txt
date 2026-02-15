@@ -21,4 +21,4 @@ Disallow: /admin
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://icd10-search-engine.manus.space/sitemap.xml
+Sitemap: https://www.drugindex.click/sitemap.xml
