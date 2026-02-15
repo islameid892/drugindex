@@ -42,16 +42,13 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // Reset to page 1 when search query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, searchField]);
 
-  // Filter and sort data
   const filteredData = useMemo(() => {
     let result = data;
 
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((med) => {
@@ -73,7 +70,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
       });
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       let aValue = '';
       let bValue = '';
@@ -99,7 +95,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
     return result;
   }, [data, searchQuery, searchField, sortField, sortOrder]);
 
-  // Paginate data
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -108,7 +103,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  // Export to Excel
   const handleExportToExcel = () => {
     const exportData = filteredData.map((med) => ({
       'Trade Name': med.tradeName,
@@ -123,7 +117,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Medications');
 
-    // Set column widths
     worksheet['!cols'] = [
       { wch: 25 },
       { wch: 30 },
@@ -138,10 +131,8 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Controls */}
       <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
         <div className="space-y-4">
-          {/* Search Input */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -163,9 +154,7 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
             )}
           </div>
 
-          {/* Filter and Sort Controls */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search Field */}
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
                 ابحث في
@@ -183,7 +172,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
               </Select>
             </div>
 
-            {/* Sort Field */}
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
                 ترتيب حسب
@@ -200,7 +188,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
               </Select>
             </div>
 
-            {/* Sort Order */}
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
                 الترتيب
@@ -216,7 +203,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
               </Select>
             </div>
 
-            {/* Items Per Page */}
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
                 عدد الصفوف
@@ -235,7 +221,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
             </div>
           </div>
 
-          {/* Results Info and Export */}
           <div className="flex items-center justify-between pt-2">
             <div className="text-sm text-slate-600">
               عرض <span className="font-semibold">{paginatedData.length}</span> من{' '}
@@ -259,7 +244,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
         </div>
       </div>
 
-      {/* Results Table */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {filteredData.length === 0 ? (
           <div className="p-8 text-center text-slate-500">
@@ -280,7 +264,7 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
                 </TableHeader>
                 <TableBody>
                   {paginatedData.map((med) => (
-                    <TableRow key={med.id} className="hover:bg-slate-50">
+                    <TableRow key={`med-${med.id}`} className="hover:bg-slate-50">
                       <TableCell className="font-medium text-slate-900">
                         {med.tradeName}
                       </TableCell>
@@ -292,23 +276,32 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
                       </TableCell>
                       <TableCell className="text-slate-600 text-sm">
                         <div className="flex flex-wrap gap-1">
-                          {med.icdCodes.slice(0, 3).map((code) => (
-                            <span
-                              key={code}
-                              className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
-                            >
-                              {code}
-                            </span>
-                          ))}
-                          {med.icdCodes.length > 3 && (
-                            <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium">
-                              +{med.icdCodes.length - 3}
-                            </span>
+                          {med.icdCodes && med.icdCodes.length > 0 ? (
+                            <>
+                              {med.icdCodes.slice(0, 3).map((code, idx) => (
+                                <span
+                                  key={`icd-${med.id}-${idx}`}
+                                  className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
+                                >
+                                  {code}
+                                </span>
+                              ))}
+                              {med.icdCodes.length > 3 && (
+                                <span
+                                  key={`icd-more-${med.id}`}
+                                  className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium"
+                                >
+                                  +{med.icdCodes.length - 3}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-slate-400 text-xs">لا توجد أكواد</span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600 text-sm">
-                        {med.atcCode}
+                        {med.atcCode || '-'}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -316,7 +309,6 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
               </Table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50">
                 <div className="text-sm text-slate-600">
