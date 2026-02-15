@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Database, Pill, Activity, Search, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AdminDatabaseSearch } from "@/components/AdminDatabaseSearch";
+import pako from 'pako';
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
@@ -18,8 +20,27 @@ export default function AdminPanel() {
   const [codeSearchQuery, setCodeSearchQuery] = useState("");
   const [codeResults, setCodeResults] = useState<any[]>([]);
   const [codeSearching, setCodeSearching] = useState(false);
+  const [medicationsData, setMedicationsData] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
   
   const { data: stats, isLoading } = trpc.data.admin.getStats.useQuery();
+
+  // Load medications data for the database search
+  useEffect(() => {{
+    const loadData = async () => {{
+      setLoadingData(true);
+      try {{
+        const response = await fetch('/data/main_data.json');
+        const data = await response.json();
+        setMedicationsData(data);
+      }} catch (error) {{
+        console.error('Failed to load medications data:', error);
+      }} finally {{
+        setLoadingData(false);
+      }}
+    }};
+    loadData();
+  }}, []);
 
   // Check if user is admin (you'll need to add role field to user)
   const isAdmin = user?.role === "admin" || user?.email?.includes("admin");
@@ -166,8 +187,9 @@ export default function AdminPanel() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5 overflow-x-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="database-search">DB Search</TabsTrigger>
                 <TabsTrigger value="medications">Medications</TabsTrigger>
                 <TabsTrigger value="codes">Codes</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -203,6 +225,25 @@ export default function AdminPanel() {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="database-search" className="space-y-4 mt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Advanced Database Search</h3>
+                  <p className="text-slate-600 mb-4">
+                    Search, filter, and export medications from the database with advanced filtering options.
+                  </p>
+                  
+                  {loadingData ? (
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-slate-600">Loading medications data...</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <AdminDatabaseSearch data={medicationsData} />
+                  )}
                 </div>
               </TabsContent>
 
