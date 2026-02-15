@@ -57,17 +57,17 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
       result = result.filter((med) => {
         if (searchField === 'all') {
           return (
-            med.tradeName.toLowerCase().includes(query) ||
-            med.scientificName.toLowerCase().includes(query) ||
-            med.indication.toLowerCase().includes(query) ||
-            med.atcCode.toLowerCase().includes(query)
+            (med.tradeName || '').toLowerCase().includes(query) ||
+            (med.scientificName || '').toLowerCase().includes(query) ||
+            (med.indication || '').toLowerCase().includes(query) ||
+            (med.atcCode || '').toLowerCase().includes(query)
           );
         } else if (searchField === 'tradeName') {
-          return med.tradeName.toLowerCase().includes(query);
+          return (med.tradeName || '').toLowerCase().includes(query);
         } else if (searchField === 'scientificName') {
-          return med.scientificName.toLowerCase().includes(query);
+          return (med.scientificName || '').toLowerCase().includes(query);
         } else if (searchField === 'indication') {
-          return med.indication.toLowerCase().includes(query);
+          return (med.indication || '').toLowerCase().includes(query);
         }
         return true;
       });
@@ -79,20 +79,20 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
       let bValue = '';
 
       if (sortField === 'tradeName') {
-        aValue = a.tradeName;
-        bValue = b.tradeName;
+        aValue = a.tradeName || '';
+        bValue = b.tradeName || '';
       } else if (sortField === 'scientificName') {
-        aValue = a.scientificName;
-        bValue = b.scientificName;
+        aValue = a.scientificName || '';
+        bValue = b.scientificName || '';
       } else if (sortField === 'indication') {
-        aValue = a.indication;
-        bValue = b.indication;
+        aValue = a.indication || '';
+        bValue = b.indication || '';
       }
 
       if (sortOrder === 'asc') {
-        return aValue.localeCompare(bValue);
+        return (aValue || '').localeCompare(bValue || '');
       } else {
-        return bValue.localeCompare(aValue);
+        return (bValue || '').localeCompare(aValue || '');
       }
     });
 
