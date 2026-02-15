@@ -11,13 +11,15 @@ import DrugDetail from "./pages/DrugDetail";
 import CodeDetail from "./pages/CodeDetail";
 import ConditionDetail from "./pages/ConditionDetail";
 import AdminPanel from "./pages/AdminPanel";
+import Database from "./pages/Database";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/?"} component={Home} />
       <Route path={"/favorites"} component={Favorites} />
+      <Route path={"/database"} component={Database} />
       <Route path={"/drug/:name"} component={DrugDetail} />
       <Route path={"/code/:code"} component={CodeDetail} />
       <Route path={"/condition/:condition"} component={ConditionDetail} />

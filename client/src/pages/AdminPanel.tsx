@@ -42,8 +42,8 @@ export default function AdminPanel() {
     loadData();
   }}, []);
 
-  // Check if user is admin (you'll need to add role field to user)
-  const isAdmin = user?.role === "admin" || user?.email?.includes("admin");
+  // Check if user is admin or owner
+  const isAdmin = user?.role === "admin" || user?.email?.includes("admin") || user?.email?.includes("islam") || user?.name?.includes("Islam");
 
   if (!isAuthenticated) {
     return (
