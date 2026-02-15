@@ -263,8 +263,8 @@ export function AdminDatabaseSearch({ data }: AdminDatabaseSearchProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((med) => (
-                    <TableRow key={`med-${med.id}`} className="hover:bg-slate-50">
+                  {paginatedData.map((med, idx) => (
+                    <TableRow key={med.id ? `med-${med.id}` : `med-${idx}`} className="hover:bg-slate-50">
                       <TableCell className="font-medium text-slate-900">
                         {med.tradeName}
                       </TableCell>
