@@ -42,50 +42,8 @@ export default function AdminPanel() {
     loadData();
   }}, []);
 
-  // Check if user is admin or owner
-  const isAdmin = user?.role === "admin" || user?.email?.includes("admin") || user?.email?.includes("islam") || user?.name?.includes("Islam");
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>Please log in to access the admin panel</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                You need to be logged in to access this page.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Admin Access Required</CardTitle>
-            <CardDescription>You don't have permission to access this page</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Only administrators can access the admin panel.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Admin Panel is now publicly accessible for database search
+  // No authentication required
 
   const handleMedicationSearch = useCallback(async () => {
     if (!medicationSearchQuery.trim()) return;
