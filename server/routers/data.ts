@@ -11,6 +11,15 @@ import {
   searchNonCoveredCodes,
 } from "../db";
 
+// Input validation schemas with security measures
+const searchQuerySchema = z.object({
+  query: z.string()
+    .min(1, "Search query cannot be empty")
+    .max(200, "Search query is too long")
+    .trim()
+    .transform(val => val.replace(/[<>\"']/g, '')), // Remove potentially dangerous characters
+});
+
 export const dataRouter = router({
   // Medications
   medications: router({
@@ -19,7 +28,7 @@ export const dataRouter = router({
     }),
 
     search: publicProcedure
-      .input(z.object({ query: z.string() }))
+      .input(searchQuerySchema)
       .query(async ({ input }) => {
         return await searchMedications(input.query);
       }),
@@ -32,7 +41,7 @@ export const dataRouter = router({
     }),
 
     search: publicProcedure
-      .input(z.object({ query: z.string() }))
+      .input(searchQuerySchema)
       .query(async ({ input }) => {
         return await searchConditions(input.query);
       }),
@@ -45,7 +54,7 @@ export const dataRouter = router({
     }),
 
     search: publicProcedure
-      .input(z.object({ query: z.string() }))
+      .input(searchQuerySchema)
       .query(async ({ input }) => {
         return await searchCodes(input.query);
       }),
@@ -58,7 +67,7 @@ export const dataRouter = router({
     }),
 
     search: publicProcedure
-      .input(z.object({ query: z.string() }))
+      .input(searchQuerySchema)
       .query(async ({ input }) => {
         return await searchNonCoveredCodes(input.query);
       }),
@@ -67,6 +76,7 @@ export const dataRouter = router({
   // Admin operations
   admin: router({
     getStats: protectedProcedure.query(async () => {
+      // Only allow authenticated users (protectedProcedure ensures this)
       const medications = await getAllMedications();
       const conditions = await getAllConditions();
       const codes = await getAllCodes();
