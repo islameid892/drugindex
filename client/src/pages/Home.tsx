@@ -254,7 +254,7 @@ export default function Home() {
             <div className="relative px-6 py-16 md:px-12 md:py-20 text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-sky-200 shadow-sm">
                 <Sparkles className="h-4 w-4 text-sky-600" />
-                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database at KSA Market</span>
+                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database in KSA Market</span>
               </div>
               
               <div className="space-y-4">
