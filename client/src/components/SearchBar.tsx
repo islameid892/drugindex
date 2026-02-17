@@ -53,7 +53,8 @@ export function SearchBar({
   const handleClear = () => {
     onChange('');
     setIsDropdownOpen(false);
-    inputRef.current?.blur();
+    // Don't blur - keep focus on input
+    inputRef.current?.focus();
     // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(10);

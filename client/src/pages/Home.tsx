@@ -446,7 +446,7 @@ export default function Home() {
                   setShowSuggestions(true);
                 }} 
                 placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
-                autoFocus={false}
+                autoFocus={true}
               />
               <SearchSuggestions
                 query={query}
