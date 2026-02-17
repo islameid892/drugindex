@@ -34,16 +34,18 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 300, // Increased from 100 to 300 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers
+  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
 });
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Stricter limit for API endpoints
+  max: 200, // Increased from 50 to 200 requests per windowMs
   message: 'Too many API requests from this IP, please try again later.',
+  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
 });
 
 async function startServer() {
@@ -109,6 +111,10 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Set server timeout to prevent premature disconnections
+  server.setTimeout(120000); // 2 minutes
+  server.keepAliveTimeout = 65000; // 65 seconds
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
