@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { SearchBar } from "@/components/SearchBar";
+import { SearchSuggestions } from "@/components/SearchSuggestions";
 import { ResultCard } from "@/components/ResultCard";
 import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
@@ -65,6 +66,9 @@ export default function Home() {
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' | 'non-covered' }>({ isOpen: false, type: 'drugs' });
   const [currentPage, setCurrentPage] = useState(1);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'Ibuprofen']);
+  const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const { favorites } = useFavorites();
 
   // Load data with compression
@@ -301,12 +305,28 @@ export default function Home() {
               </div>
               
               {/* Search Bar in Hero */}
-              <div className="max-w-2xl mx-auto pt-4">
+              <div className="max-w-2xl mx-auto pt-4 relative">
                 <SearchBar 
                   value={query} 
-                  onChange={setQuery} 
+                  onChange={(val) => {
+                    setQuery(val);
+                    setShowSuggestions(true);
+                  }} 
                   placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
                   autoFocus={false}
+                />
+                <SearchSuggestions
+                  query={query}
+                  isOpen={showSuggestions && !query.trim()}
+                  onSelect={(suggestion) => {
+                    setQuery(suggestion);
+                    setShowSuggestions(false);
+                    if (!recentSearches.includes(suggestion)) {
+                      setRecentSearches([suggestion, ...recentSearches.slice(0, 4)]);
+                    }
+                  }}
+                  recentSearches={recentSearches}
+                  trendingSearches={trendingSearches}
                 />
               </div>
               
@@ -411,6 +431,36 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar Sticky when showing results */}
+        {query && (
+          <div className="sticky top-0 z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="max-w-2xl mx-auto">
+              <SearchBar 
+                value={query} 
+                onChange={(val) => {
+                  setQuery(val);
+                  setShowSuggestions(true);
+                }} 
+                placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
+                autoFocus={false}
+              />
+              <SearchSuggestions
+                query={query}
+                isOpen={showSuggestions && !query.trim()}
+                onSelect={(suggestion) => {
+                  setQuery(suggestion);
+                  setShowSuggestions(false);
+                  if (!recentSearches.includes(suggestion)) {
+                    setRecentSearches([suggestion, ...recentSearches.slice(0, 4)]);
+                  }
+                }}
+                recentSearches={recentSearches}
+                trendingSearches={trendingSearches}
+              />
             </div>
           </div>
         )}
