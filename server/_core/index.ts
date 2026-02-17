@@ -55,6 +55,14 @@ async function startServer() {
   // Trust proxy - important for rate limiting behind reverse proxies
   app.set('trust proxy', 1);
 
+  // HTTPS Enforcement Middleware - Redirect HTTP to HTTPS with 301 permanent redirect
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (process.env.NODE_ENV === 'production' && req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(301, `https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+
   // Security middleware - Helmet for setting various HTTP headers
   app.use(helmet({
     contentSecurityPolicy: {
@@ -68,10 +76,15 @@ async function startServer() {
       },
     },
     hsts: {
-      maxAge: 31536000, // 1 year in seconds
+      maxAge: 63072000, // 2 years in seconds
       includeSubDomains: true,
       preload: true,
     },
+    frameguard: {
+      action: 'deny',
+    },
+    noSniff: true,
+    xssFilter: true,
   }));
 
   // CORS configuration
