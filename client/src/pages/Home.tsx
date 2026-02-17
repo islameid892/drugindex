@@ -325,6 +325,7 @@ export default function Home() {
                       setRecentSearches([suggestion, ...recentSearches.slice(0, 4)]);
                     }
                   }}
+                  onClose={() => setShowSuggestions(false)}
                   recentSearches={recentSearches}
                   trendingSearches={trendingSearches}
                 />
@@ -458,6 +459,7 @@ export default function Home() {
                     setRecentSearches([suggestion, ...recentSearches.slice(0, 4)]);
                   }
                 }}
+                onClose={() => setShowSuggestions(false)}
                 recentSearches={recentSearches}
                 trendingSearches={trendingSearches}
               />

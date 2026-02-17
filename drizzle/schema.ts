@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -78,3 +78,27 @@ export type Code = typeof codes.$inferSelect;
 export type InsertCode = typeof codes.$inferInsert;
 export type NonCoveredCode = typeof nonCoveredCodes.$inferSelect;
 export type InsertNonCoveredCode = typeof nonCoveredCodes.$inferInsert;
+
+// Search Analytics table
+export const searchAnalytics = mysqlTable("searchAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  query: varchar("query", { length: 255 }).notNull(),
+  resultsCount: int("resultsCount").default(0).notNull(),
+  responseTime: int("responseTime").default(0).notNull(),
+  userId: int("userId"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// User Sessions table
+export const userSessions = mysqlTable("userSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  sessionStart: timestamp("sessionStart").defaultNow().notNull(),
+  sessionEnd: timestamp("sessionEnd"),
+  isActive: boolean("isActive").default(true),
+});
+
+export type SearchAnalytic = typeof searchAnalytics.$inferSelect;
+export type InsertSearchAnalytic = typeof searchAnalytics.$inferInsert;
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = typeof userSessions.$inferInsert;

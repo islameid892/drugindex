@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import { TrendingUp, Clock, Search } from "lucide-react";
+import { TrendingUp, Clock, Search, X } from "lucide-react";
 
 interface SearchSuggestionsProps {
   query: string;
   isOpen: boolean;
   onSelect: (suggestion: string) => void;
+  onClose: () => void;
   recentSearches: string[];
   trendingSearches: string[];
 }
@@ -13,6 +14,7 @@ export function SearchSuggestions({
   query,
   isOpen,
   onSelect,
+  onClose,
   recentSearches,
   trendingSearches,
 }: SearchSuggestionsProps) {
@@ -45,13 +47,25 @@ export function SearchSuggestions({
       ref={suggestionsRef}
       className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-40 overflow-hidden"
     >
+      {/* Header with Close Button */}
+      <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border-b border-border">
+        <p className="text-xs font-semibold text-muted-foreground">Suggestions</p>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-muted rounded transition-colors"
+          aria-label="Close suggestions"
+        >
+          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+        </button>
+      </div>
+
       {/* Recent Searches */}
       {filteredRecent.length > 0 && (
         <div className="border-b border-border">
           <div className="px-4 py-2 bg-muted/50">
             <p className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <Clock className="h-3 w-3" />
-              Recent Searches
+              Recent
             </p>
           </div>
           <div className="divide-y divide-border">
