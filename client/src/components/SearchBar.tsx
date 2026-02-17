@@ -78,6 +78,7 @@ export function SearchBar({
   return (
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       <div className="relative group">
+        {/* Search icon - positioned on the right */}
         <div className={cn(
           "absolute inset-y-0 right-0 pr-2 sm:pr-4 flex items-center pointer-events-none transition-all duration-300 z-10",
           isFocused || hasValue ? "text-sky-500" : "text-muted-foreground"
@@ -92,6 +93,8 @@ export function SearchBar({
             )}
           </div>
         </div>
+
+        {/* Input field */}
         <Input
           ref={inputRef}
           type="search"
@@ -124,24 +127,27 @@ export function SearchBar({
           </div>
         )}
 
-        <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-auto gap-1 sm:gap-2">
-          {value && (
-            <button
-              onClick={handleClear}
-              className="text-muted-foreground hover:text-foreground transition-colors p-0.5 sm:p-1 rounded hover:bg-accent/50 flex-shrink-0"
-              aria-label="Clear search"
-            >
-              <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-          {!value && (
+        {/* Clear button - positioned on the right next to search icon */}
+        {value && (
+          <button
+            onClick={handleClear}
+            className="absolute inset-y-0 right-12 sm:right-16 flex items-center text-muted-foreground hover:text-foreground transition-colors p-0.5 sm:p-1 rounded hover:bg-accent/50 flex-shrink-0"
+            aria-label="Clear search"
+          >
+            <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+
+        {/* Keyboard shortcut hint - only show when no value and no Arabic placeholder */}
+        {!value && (
+          <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
             <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">⌘</span>K
+              <span className="text-xs">CMD</span>K
             </kbd>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Autocomplete dropdown */}
         {suggestions.length > 0 && (
