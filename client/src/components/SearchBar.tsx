@@ -79,14 +79,14 @@ export function SearchBar({
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       <div className="relative group">
         <div className={cn(
-          "absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none transition-all duration-300",
+          "absolute inset-y-0 right-0 pr-2 sm:pr-4 flex items-center pointer-events-none transition-all duration-300 z-10",
           isFocused || hasValue ? "text-sky-500" : "text-muted-foreground"
         )}>
           <div className={cn(
-            "relative transition-all duration-300",
+            "relative transition-all duration-300 flex items-center justify-center",
             isFocused || hasValue ? "search-icon-active" : "search-icon-idle"
           )}>
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             {(isFocused || hasValue) && (
               <div className="absolute inset-0 rounded-full bg-sky-400/20 animate-pulse" />
             )}
@@ -106,7 +106,7 @@ export function SearchBar({
             value.trim().length > 0 && setIsDropdownOpen(true);
           }}
           onBlur={() => setIsFocused(false)}
-          className="pl-4 pr-14 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-sky-500/30 focus-visible:border-sky-500 transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
+          className="pl-3 sm:pl-4 pr-10 sm:pr-14 h-12 sm:h-14 text-base sm:text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-sky-500/30 focus-visible:border-sky-500 transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
           placeholder={placeholder}
         />
 
@@ -124,14 +124,14 @@ export function SearchBar({
           </div>
         )}
 
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-auto gap-2">
+        <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-auto gap-1 sm:gap-2">
           {value && (
             <button
               onClick={handleClear}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-accent/50"
+              className="text-muted-foreground hover:text-foreground transition-colors p-0.5 sm:p-1 rounded hover:bg-accent/50 flex-shrink-0"
               aria-label="Clear search"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
