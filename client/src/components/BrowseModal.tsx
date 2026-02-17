@@ -25,6 +25,17 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Clear state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery('');
+      setExpandedLetters(new Set());
+      setViewMode('list');
+      setSelectedItem(null);
+      setExpandedBranches(new Set());
+    }
+  }, [isOpen]);
+
   // Get unique active ingredients (scientific names) for drugs
   const uniqueIngredients = useMemo(() => {
     if (type !== 'drugs') return [];
