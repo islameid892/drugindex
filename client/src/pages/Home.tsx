@@ -4,9 +4,10 @@ import { ResultCard } from "@/components/ResultCard";
 import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
 import { PaginationControls } from "@/components/PaginationControls";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -14,7 +15,6 @@ import { Link } from "wouter";
 import { memo } from "react";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
-import { addFAQSchema, addOrganizationSchema } from '@/lib/structuredData';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -24,7 +24,6 @@ const MemoizedDetailedRow = memo(DetailedRow);
 // Helper function to load data with compression support
 const loadDataWithCompression = async (url: string): Promise<any> => {
   try {
-    // Try loading uncompressed version first (simpler and more reliable)
     const response = await fetch(url);
     if (response.ok) {
       return await response.json();
@@ -33,7 +32,6 @@ const loadDataWithCompression = async (url: string): Promise<any> => {
     console.warn(`Failed to load uncompressed data from ${url}:`, error);
   }
   
-  // If uncompressed fails, try compressed version
   try {
     const compressedUrl = url.endsWith('.json') ? url + '.gz' : url;
     const response = await fetch(compressedUrl);
@@ -42,14 +40,11 @@ const loadDataWithCompression = async (url: string): Promise<any> => {
     
     const arrayBuffer = await response.arrayBuffer();
     
-    // Try to decompress
     try {
       const decompressed = pako.ungzip(new Uint8Array(arrayBuffer));
       const text = new TextDecoder().decode(decompressed);
       return JSON.parse(text);
     } catch (decompressError) {
-      // If decompression fails, try parsing as JSON directly
-      // (server might have already decompressed it)
       const text = new TextDecoder().decode(new Uint8Array(arrayBuffer));
       return JSON.parse(text);
     }
@@ -69,21 +64,10 @@ export default function Home() {
   const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' | 'non-covered' }>({ isOpen: false, type: 'drugs' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDashboard, setShowDashboard] = useState(false);
   const { favorites } = useFavorites();
 
-  // Set page title and meta tags for SEO
-  useEffect(() => {
-    document.title = "ICD-10 Medical Search Engine - Drug & Code Reference";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Search ICD-10 medical codes, medications, and healthcare diagnosis codes. Find drug references and pharmaceutical information with coverage status.');
-    }
-    // Add structured data for better SEO
-    addFAQSchema();
-    addOrganizationSchema();
-  }, []);
-
-  // تحميل البيانات مع دعم الضغط
+  // Load data with compression
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -97,7 +81,6 @@ export default function Home() {
         setTreeData(tree);
         setNonCoveredData(nonCovered);
         
-        // حساب الإحصائيات
         setStats({
           medications: main.length,
           conditions: new Set(main.map((item: any) => item.indication)).size,
@@ -114,18 +97,17 @@ export default function Home() {
     loadData();
   }, []);
 
-  // إعادة تعيين الصفحة عند تغيير البحث
+  // Reset page when query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [query]);
 
-  // تصفية النتائج مع إظهار البيانات المرتبطة
+  // Filter results
   const filteredData = useMemo(() => {
     if (!query) return [];
     
     const lowerQuery = query.toLowerCase().trim();
     
-    // البحث عن الأدوية والحالات والأكواد المطابقة
     const matchedMedications = mainData.filter(item => {
       const tradeName = item.tradeNames && Array.isArray(item.tradeNames) ? item.tradeNames.join(' ') : '';
       const scientificName = item.scientificName || '';
@@ -143,7 +125,6 @@ export default function Home() {
       return matchesSearchQuery(codes, query);
     });
     
-    // دمج النتائج وإزالة التكرارات
     const allMatched = [...matchedMedications, ...matchedConditions, ...matchedCodes];
     
     const uniqueMatched = Array.from(
@@ -156,7 +137,7 @@ export default function Home() {
     return uniqueMatched;
   }, [query, mainData]);
 
-  // حساب البيانات المعروضة حسب الصفحة
+  // Paginate results
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -165,10 +146,46 @@ export default function Home() {
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
+  if (showDashboard) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10 flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+          <div className="container py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2.5 rounded-lg shadow-lg flex-shrink-0">
+                  <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-bold text-foreground">Analytics</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Performance & Insights</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowDashboard(false)}
+                className="gap-2"
+              >
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Back to Search</span>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <main className="flex-1 container py-8">
+          <AnalyticsDashboard />
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10 flex flex-col font-sans">
       {/* Header Section */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 shadow-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -176,32 +193,41 @@ export default function Home() {
                 <Stethoscope className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
               </div>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">ICD-10 Search Engine</h1>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium">Drug Reference & Medical Coding</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground tracking-tight leading-tight">ICD-10 Search Engine</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Drug Reference & Medical Coding</p>
                 <p className="text-xs mt-0.5 sm:mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
             
             {/* Desktop Stats and Favorites */}
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-600 hidden md:flex">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50">
+            <div className="flex items-center gap-3 text-xs font-medium text-foreground hidden md:flex">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950">
                 <Pill className="h-4 w-4 text-sky-600" />
-                <span className="font-semibold text-sky-900">{stats.medications.toLocaleString()}</span>
-                <span className="text-sky-700">Meds</span>
+                <span className="font-semibold text-sky-900 dark:text-sky-100">{stats.medications.toLocaleString()}</span>
+                <span className="text-sky-700 dark:text-sky-300">Meds</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950">
                 <Activity className="h-4 w-4 text-emerald-600" />
-                <span className="font-semibold text-emerald-900">{stats.conditions.toLocaleString()}</span>
-                <span className="text-emerald-700">Conditions</span>
+                <span className="font-semibold text-emerald-900 dark:text-emerald-100">{stats.conditions.toLocaleString()}</span>
+                <span className="text-emerald-700 dark:text-emerald-300">Conditions</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950">
                 <Database className="h-4 w-4 text-purple-600" />
-                <span className="font-semibold text-purple-900">{stats.codes.toLocaleString()}</span>
-                <span className="text-purple-700">Codes</span>
+                <span className="font-semibold text-purple-900 dark:text-purple-100">{stats.codes.toLocaleString()}</span>
+                <span className="text-purple-700 dark:text-purple-300">Codes</span>
               </div>
-              <div className="w-px h-6 bg-slate-200" />
+              <div className="w-px h-6 bg-border" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDashboard(true)}
+                className="gap-2 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </Button>
               <Link href="/favorites">
-                <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
+                <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
                   <Heart className="h-4 w-4" />
                   <span className="font-semibold">{favorites.length}</span>
                 </Button>
@@ -209,22 +235,30 @@ export default function Home() {
             </div>
 
             {/* Mobile Stats and Favorites */}
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 sm:hidden">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50">
+            <div className="flex items-center gap-2 text-xs font-medium text-foreground sm:hidden">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950">
                 <Pill className="h-3 w-3 text-sky-600" />
-                <span className="font-semibold text-sky-900 text-xs">{stats.medications}</span>
+                <span className="font-semibold text-sky-900 dark:text-sky-100 text-xs">{stats.medications}</span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950">
                 <Activity className="h-3 w-3 text-emerald-600" />
-                <span className="font-semibold text-emerald-900 text-xs">{stats.conditions}</span>
+                <span className="font-semibold text-emerald-900 dark:text-emerald-100 text-xs">{stats.conditions}</span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-950">
                 <Database className="h-3 w-3 text-purple-600" />
-                <span className="font-semibold text-purple-900 text-xs">{stats.codes}</span>
+                <span className="font-semibold text-purple-900 dark:text-purple-100 text-xs">{stats.codes}</span>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDashboard(true)}
+                className="gap-1 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950 h-8 px-2"
+              >
+                <BarChart3 className="h-3 w-3" />
+              </Button>
               <Link href="/favorites">
-                <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2">
-                  <Heart className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950 h-8 px-2">
+                  <Heart className="h-3 w-3" />
                   <span className="font-semibold text-xs">{favorites.length}</span>
                 </Button>
               </Link>
@@ -236,7 +270,7 @@ export default function Home() {
       <main className="flex-1 container py-12 space-y-12">
         {/* Hero Section */}
         {!query && !loading && (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 border border-sky-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700" id="hero-section">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 dark:from-sky-950 dark:via-emerald-950 dark:to-sky-900 border border-sky-100 dark:border-sky-800 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700" id="hero-section">
             {/* Background Image */}
             <div 
               className="absolute inset-0 opacity-40"
@@ -248,20 +282,20 @@ export default function Home() {
             />
             
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-sky-50/40" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/60 dark:from-black/40 via-transparent to-sky-50/40 dark:to-sky-950/40" />
             
             {/* Content */}
             <div className="relative px-6 py-16 md:px-12 md:py-20 text-center space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur border border-sky-200 shadow-sm">
-                <Sparkles className="h-4 w-4 text-sky-600" />
-                <span className="text-sm font-semibold text-sky-700">Comprehensive Medical Database in KSA Market</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-black/40 backdrop-blur border border-sky-200 dark:border-sky-800 shadow-sm">
+                <Sparkles className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                <span className="text-sm font-semibold text-sky-700 dark:text-sky-300">Comprehensive Medical Database</span>
               </div>
               
               <div className="space-y-4">
-                <h2 className="font-display text-5xl md:text-6xl text-slate-900 tracking-tight">
+                <h2 className="font-display text-5xl md:text-6xl text-foreground tracking-tight">
                   Find Codes & Medications
                 </h2>
-                <p className="font-serif-elegant text-lg md:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed italic">
+                <p className="font-serif-elegant text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed italic">
                   Search by scientific name, trade name, indication, or ICD-10 code. Get instant access to comprehensive medical coding information.
                 </p>
               </div>
@@ -277,17 +311,17 @@ export default function Home() {
               </div>
               
               {/* Browse by Category */}
-              <div className="mt-12 pt-8 border-t border-sky-200">
+              <div className="mt-12 pt-8 border-t border-sky-200 dark:border-sky-800">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Browse by Category</h3>
-                  <p className="text-slate-600">Quick access to drugs, conditions, and codes</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Browse by Category</h3>
+                  <p className="text-muted-foreground">Quick access to drugs, conditions, and codes</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
                   {/* Search Drugs Card */}
                   <button
                     onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
-                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-sky-300"
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950 dark:to-sky-900 border border-sky-200 dark:border-sky-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-sky-300 dark:hover:border-sky-700"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     
@@ -297,11 +331,11 @@ export default function Home() {
                       </div>
                       
                       <div className="text-left">
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Search Drugs</h4>
-                        <p className="text-sm text-slate-600 mt-1">Browse all medications alphabetically</p>
+                        <h4 className="text-lg font-bold text-foreground group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">Search Drugs</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Browse all medications alphabetically</p>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-sky-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         Explore <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
@@ -310,7 +344,7 @@ export default function Home() {
                   {/* Find Conditions Card */}
                   <button
                     onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
-                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-emerald-300"
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border border-emerald-200 dark:border-emerald-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-emerald-300 dark:hover:border-emerald-700"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     
@@ -320,11 +354,11 @@ export default function Home() {
                       </div>
                       
                       <div className="text-left">
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Find Conditions</h4>
-                        <p className="text-sm text-slate-600 mt-1">Discover medical conditions and diagnoses</p>
+                        <h4 className="text-lg font-bold text-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">Find Conditions</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Discover medical conditions and diagnoses</p>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         Explore <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
@@ -333,7 +367,7 @@ export default function Home() {
                   {/* Browse Codes Card */}
                   <button
                     onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
-                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-purple-300"
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border border-purple-200 dark:border-purple-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-purple-300 dark:hover:border-purple-700"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     
@@ -343,20 +377,20 @@ export default function Home() {
                       </div>
                       
                       <div className="text-left">
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Browse Codes</h4>
-                        <p className="text-sm text-slate-600 mt-1">View all ICD-10 AM codes and classifications</p>
+                        <h4 className="text-lg font-bold text-foreground group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">Browse Codes</h4>
+                        <p className="text-sm text-muted-foreground mt-1">View all ICD-10 AM codes and classifications</p>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-purple-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         Explore <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
                   </button>
-                  
-                  {/* Browse Non-Covered Codes Card */}
+
+                  {/* Non-Covered Codes Card */}
                   <button
                     onClick={() => setBrowseModal({ isOpen: true, type: 'non-covered' })}
-                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50 to-red-100 border border-red-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-red-300"
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border border-red-200 dark:border-red-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-red-300 dark:hover:border-red-700"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     
@@ -366,11 +400,11 @@ export default function Home() {
                       </div>
                       
                       <div className="text-left">
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-red-700 transition-colors">Non-Covered Codes</h4>
-                        <p className="text-sm text-slate-600 mt-1">Codes not covered by Saudi health insurance</p>
+                        <h4 className="text-lg font-bold text-foreground group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">Non-Covered Codes</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Codes not covered by Saudi health insurance</p>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-red-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         Explore <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
@@ -381,142 +415,101 @@ export default function Home() {
           </div>
         )}
 
-        {/* Search Section */}
+        {/* Search Results */}
         {query && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            {/* Search Bar */}
-            <SearchBar 
-              value={query} 
-              onChange={setQuery}
-              placeholder="Try 'Diabetes', 'Panadol', or 'E11'..."
-              autoFocus={true}
-            />
-
-            {/* Browse by Category */}
-            {!query && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <Button
-                onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
-                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold gap-2 h-12"
-              >
-                <Pill className="h-5 w-5" />
-                Browse Drugs
-              </Button>
-              <Button
-                onClick={() => setBrowseModal({ isOpen: true, type: 'conditions' })}
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold gap-2 h-12"
-              >
-                <Activity className="h-5 w-5" />
-                Browse Conditions
-              </Button>
-              <Button
-                onClick={() => setBrowseModal({ isOpen: true, type: 'codes' })}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold gap-2 h-12"
-              >
-                <Database className="h-5 w-5" />
-                Browse Codes
-              </Button>
-              <Button
-                onClick={() => setBrowseModal({ isOpen: true, type: 'non-covered' })}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold gap-2 h-12"
-              >
-                <Search className="h-5 w-5" />
-                Non-Covered Codes
-              </Button>
-            </div>
-            )}
-
-            {/* Results Count */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600 font-medium">
-                Found <span className="font-bold text-slate-900">{filteredData.length}</span> results
-              </p>
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
-                <TabsList>
-                  <TabsTrigger value="aggregated" className="gap-2">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="hidden sm:inline">Aggregated</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="detailed" className="gap-2">
-                    <List className="h-4 w-4" />
-                    <span className="hidden sm:inline">Detailed</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Results Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Search Results</h2>
+                <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                  Found <span className="font-semibold text-sky-600 dark:text-sky-400">{filteredData.length}</span> results for "<span className="font-semibold">{query}</span>"
+                </p>
+              </div>
+              
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode("aggregated")}
+                  className={`p-2 rounded transition-all ${viewMode === "aggregated" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  title="Aggregated View"
+                >
+                  <LayoutGrid className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("detailed")}
+                  className={`p-2 rounded transition-all ${viewMode === "detailed" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  title="Detailed View"
+                >
+                  <List className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Results Display */}
-            {filteredData.length === 0 ? (
-              <div className="text-center py-12 bg-slate-50 rounded-lg border border-slate-200">
-                <Search className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600 font-medium">No results found for "{query}"</p>
+            {/* Results Content */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
               </div>
-            ) : viewMode === "aggregated" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {paginatedData.map((item, idx) => (
-                  <MemoizedResultCard key={`${item.tradeNames?.[0]}-${idx}`} data={item} treeData={treeData} />
-                ))}
-              </div>
-            ) : (
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Trade Name / Scientific Name</TableHead>
-                      <TableHead>Indication</TableHead>
-                      <TableHead>ICD-10 Codes</TableHead>
-                      <TableHead>Coverage Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedData.map((item, idx) => (
-                      <MemoizedDetailedRow key={`${item.tradeNames?.[0]}-${idx}`} data={item} treeData={treeData} />
+            ) : paginatedData.length > 0 ? (
+              <>
+                {viewMode === "aggregated" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedData.map((item, index) => (
+                      <MemoizedResultCard key={index} data={item} treeData={treeData} />
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                ) : (
+                  <div className="space-y-2 overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Trade Name / Scientific Name</TableHead>
+                          <TableHead>Indication</TableHead>
+                          <TableHead>ICD-10 Codes</TableHead>
+                          <TableHead>Coverage</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedData.map((item, index) => (
+                          <MemoizedDetailedRow key={index} data={item} treeData={treeData} />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center py-8">
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No results found</h3>
+                <p className="text-muted-foreground">Try searching with different keywords</p>
               </div>
             )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <PaginationControls 
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center space-y-4">
-              <Loader2 className="h-12 w-12 text-sky-600 animate-spin mx-auto" />
-              <p className="text-slate-600 font-medium">Loading medical database...</p>
-            </div>
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-100 bg-slate-50 py-4">
-        <div className="container text-center text-xs text-slate-600 font-medium">
-          © 2026 Pharmacist Islam Mostafa Eid
-        </div>
-      </footer>
-
       {/* Browse Modal */}
-      {browseModal.isOpen && (
-        <BrowseModal 
-          isOpen={browseModal.isOpen}
-          type={browseModal.type}
-          onClose={() => setBrowseModal({ isOpen: false, type: 'drugs' })}
-          data={mainData}
-          nonCoveredData={nonCoveredData}
-          treeData={treeData}
-        />
-      )}
+      <BrowseModal
+        isOpen={browseModal.isOpen}
+        type={browseModal.type}
+        onClose={() => setBrowseModal({ ...browseModal, isOpen: false })}
+        data={browseModal.type === 'non-covered' ? nonCoveredData : mainData}
+        treeData={treeData}
+        nonCoveredData={nonCoveredData}
+      />
     </div>
   );
 }
