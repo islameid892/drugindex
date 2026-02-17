@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useRef, useEffect, useState } from "react";
 import { getAutocompleteSuggestions, suggestCorrection } from "@/lib/smartSearch";
 import { AutocompleteDropdown } from "@/components/AutocompleteDropdown";
+import "./SearchBar.css";
 
 interface SearchBarProps {
   value: string;
@@ -27,6 +28,8 @@ export function SearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [spellSuggestion, setSpellSuggestion] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [hasValue, setHasValue] = useState(false);
 
   useEffect(() => {
     if (autoFocus && inputRef.current) {
@@ -75,8 +78,19 @@ export function SearchBar({
   return (
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       <div className="relative group">
-        <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
-          <Search className="h-4 w-4" />
+        <div className={cn(
+          "absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none transition-all duration-300",
+          isFocused || hasValue ? "text-sky-500" : "text-muted-foreground"
+        )}>
+          <div className={cn(
+            "relative transition-all duration-300",
+            isFocused || hasValue ? "search-icon-active" : "search-icon-idle"
+          )}>
+            <Search className="h-5 w-5" />
+            {(isFocused || hasValue) && (
+              <div className="absolute inset-0 rounded-full bg-sky-400/20 animate-pulse" />
+            )}
+          </div>
         </div>
         <Input
           ref={inputRef}
@@ -84,10 +98,15 @@ export function SearchBar({
           value={value}
           onChange={(e) => {
             onChange(e.target.value);
+            setHasValue(e.target.value.length > 0);
             setIsDropdownOpen(true);
           }}
-          onFocus={() => value.trim().length > 0 && setIsDropdownOpen(true)}
-          className="pl-8 pr-16 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-primary/30 focus-visible:border-primary transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
+          onFocus={() => {
+            setIsFocused(true);
+            value.trim().length > 0 && setIsDropdownOpen(true);
+          }}
+          onBlur={() => setIsFocused(false)}
+          className="pl-4 pr-14 h-14 text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-sky-500/30 focus-visible:border-sky-500 transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
           placeholder={placeholder}
         />
 
@@ -105,7 +124,7 @@ export function SearchBar({
           </div>
         )}
 
-        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-auto gap-2">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-auto gap-2">
           {value && (
             <button
               onClick={handleClear}
@@ -117,9 +136,11 @@ export function SearchBar({
               </svg>
             </button>
           )}
-          <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-            <span className="text-xs">⌘</span>K
-          </kbd>
+          {!value && (
+            <kbd className="hidden sm:inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          )}
         </div>
 
         {/* Autocomplete dropdown */}
