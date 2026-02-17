@@ -41,9 +41,8 @@
     <link rel="alternate" hreflang="x-default" href="https://www.drugindex.click/" />
     
     <title>ICD-10 Medical Search Engine - Drug & Code Reference</title>
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5223653504603380"
-     crossorigin="anonymous"></script>
+    <!-- Google AdSense (async for non-blocking load) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5223653504603380" crossorigin="anonymous"></script>
     
     <!-- Structured Data (JSON-LD) for Search Engines -->
     <script type="application/ld+json">
@@ -79,9 +78,30 @@
     </script>
     
     <!-- Google Fonts: Elegant Typography -->
+    <!-- Font Loading Optimization -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Font Loading Optimization: Reduce layout shift -->
+    <style>
+      @font-face {
+        font-family: 'System Font';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+      body { font-family: 'Inter', 'System Font', sans-serif; }
+      h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', 'System Font', serif; }
+    </style>
+    
+    <!-- Performance Optimization: Preload critical resources -->
+    <link rel="preload" as="script" href="/src/main.tsx" />
+    
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
   </head>
 
   <body>

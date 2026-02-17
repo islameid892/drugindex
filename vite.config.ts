@@ -35,12 +35,21 @@ export default defineConfig({
         manualChunks: {
           'vendor': ['react', 'react-dom'],
           'ui': ['lucide-react'],
+          'utils': ['pako', 'wouter'],
         },
       },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
     cssCodeSplit: true,
+    // Core Web Vitals Optimizations
+    target: 'esnext',
+    reportCompressedSize: false,
+  },
+  // Performance optimizations
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'wouter', 'lucide-react'],
+    exclude: ['pako'],
   },
   server: {
     host: true,

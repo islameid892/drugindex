@@ -5,25 +5,59 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { Suspense, lazy } from "react";
 import Home from "./pages/Home";
-import Favorites from "./pages/Favorites";
-import DrugDetail from "./pages/DrugDetail";
-import CodeDetail from "./pages/CodeDetail";
-import ConditionDetail from "./pages/ConditionDetail";
-import AdminPanel from "./pages/AdminPanel";
-import Database from "./pages/Database";
+
+// Lazy load pages for better performance (Code Splitting)
+const Favorites = lazy(() => import("./pages/Favorites"));
+const DrugDetail = lazy(() => import("./pages/DrugDetail"));
+const CodeDetail = lazy(() => import("./pages/CodeDetail"));
+const ConditionDetail = lazy(() => import("./pages/ConditionDetail"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const Database = lazy(() => import("./pages/Database"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+  </div>
+);
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/?"} component={Home} />
-      <Route path={"/favorites"} component={Favorites} />
-      <Route path={"/database"} component={Database} />
-      <Route path={"/drug/:name"} component={DrugDetail} />
-      <Route path={"/code/:code"} component={CodeDetail} />
-      <Route path={"/condition/:condition"} component={ConditionDetail} />
-      <Route path={"/admin"} component={AdminPanel} />
+      <Route path={"/?"}component={Home} />
+      <Route path={"/favorites"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Favorites />
+        </Suspense>
+      )} />
+      <Route path={"/database"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Database />
+        </Suspense>
+      )} />
+      <Route path={"/drug/:name"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <DrugDetail />
+        </Suspense>
+      )} />
+      <Route path={"/code/:code"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <CodeDetail />
+        </Suspense>
+      )} />
+      <Route path={"/condition/:condition"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <ConditionDetail />
+        </Suspense>
+      )} />
+      <Route path={"/admin"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <AdminPanel />
+        </Suspense>
+      )} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

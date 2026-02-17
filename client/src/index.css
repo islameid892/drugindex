@@ -127,9 +127,30 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* CLS Prevention: Reserve space for scrollbar */
+  html {
+    scrollbar-gutter: stable;
+  }
+  
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
+    /* Prevent layout shifts from font loading */
+    font-display: swap;
+  }
+  
+  /* CLS Prevention: Fixed dimensions for images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* CLS Prevention: Reserve space for ads */
+  ins.adsbygoogle {
+    display: block;
+    min-height: 250px;
   }
   
   /* Display Font - Elegant Headlines */
