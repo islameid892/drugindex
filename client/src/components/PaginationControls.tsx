@@ -26,24 +26,44 @@ export function PaginationControls({ currentPage, totalPages, onPageChange }: Pa
 
   if (totalPages <= 1) return null;
 
-  // حساب الأرقام المراد عرضها على الـ Tablet
-  const getVisiblePages = () => {
+  // حساب الأرقام المراد عرضها (7 صفحات بالكتير)
+  const getVisiblePages = (maxPages: number = 7) => {
     const pages: (number | string)[] = [];
     
-    pages.push(1);
+    if (totalPages <= maxPages) {
+      // إذا كان عدد الصفحات أقل من 7، عرض كلها
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
     
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
+    // حساب نطاق الصفحات حول الصفحة الحالية
+    const halfWindow = Math.floor(maxPages / 2);
+    let start = Math.max(1, currentPage - halfWindow);
+    let end = Math.min(totalPages, start + maxPages - 1);
     
-    if (start > 2) pages.push('...');
+    // إذا كنا قريبين من النهاية، اضبط البداية
+    if (end === totalPages) {
+      start = Math.max(1, totalPages - maxPages + 1);
+    }
     
+    // أضف الصفحة الأولى إذا لم تكن مرئية
+    if (start > 1) {
+      pages.push(1);
+      if (start > 2) pages.push('...');
+    }
+    
+    // أضف الصفحات في النطاق
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
     
-    if (end < totalPages - 1) pages.push('...');
-    
-    if (totalPages > 1) pages.push(totalPages);
+    // أضف الصفحة الأخيرة إذا لم تكن مرئية
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push('...');
+      pages.push(totalPages);
+    }
     
     return pages;
   };
@@ -64,20 +84,26 @@ export function PaginationControls({ currentPage, totalPages, onPageChange }: Pa
         <span className={isMobile ? "hidden" : "inline"}>Previous</span>
       </Button>
 
-      {/* Desktop: Show all page numbers */}
+      {/* Desktop: Show max 7 page numbers */}
       {!isMobile && !isTablet && (
         <div className="flex items-center gap-1">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <Button
-              key={page}
-              onClick={() => onPageChange(page)}
-              variant={currentPage === page ? "default" : "outline"}
-              size="sm"
-              className={currentPage === page ? "bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700" : ""}
-            >
-              {page}
-            </Button>
-          ))}
+          {getVisiblePages(7).map((page, idx) => 
+            typeof page === 'string' ? (
+              <span key={`dots-${idx}`} className="px-1 text-slate-400 text-xs">
+                {page}
+              </span>
+            ) : (
+              <Button
+                key={page}
+                onClick={() => onPageChange(page)}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                className={currentPage === page ? "bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700" : ""}
+              >
+                {page}
+              </Button>
+            )
+          )}
         </div>
       )}
 
