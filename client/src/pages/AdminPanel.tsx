@@ -1,355 +1,380 @@
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useRouter } from "wouter";
-import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { BarChart3, Users, Database, Settings, LogOut, AlertCircle, CheckCircle2, Activity } from "lucide-react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, Database, Pill, Activity, Search, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AdminDatabaseSearch } from "@/components/AdminDatabaseSearch";
+import pako from 'pako';
 
 export default function AdminPanel() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const { user, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [medicationSearchQuery, setMedicationSearchQuery] = useState("");
+  const [medicationResults, setMedicationResults] = useState<any[]>([]);
+  const [medicationSearching, setMedicationSearching] = useState(false);
+  
+  const [codeSearchQuery, setCodeSearchQuery] = useState("");
+  const [codeResults, setCodeResults] = useState<any[]>([]);
+  const [codeSearching, setCodeSearching] = useState(false);
+  const [medicationsData, setMedicationsData] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+  
+  const { data: stats, isLoading } = trpc.data.admin.getStats.useQuery();
 
-  useEffect(() => {
-    if (!loading && (!isAuthenticated || user?.role !== "admin")) {
-      toast.error("Access Denied: Admin privileges required");
-      window.location.href = "/";
+  // Load medications data for the database search
+  useEffect(() => {{
+    const loadData = async () => {{
+      setLoadingData(true);
+      try {{
+        const response = await fetch('/data/main_data.json');
+        const data = await response.json();
+        setMedicationsData(data);
+      }} catch (error) {{
+        console.error('Failed to load medications data:', error);
+      }} finally {{
+        setLoadingData(false);
+      }}
+    }};
+    loadData();
+  }}, []);
+
+  // Admin Panel is now publicly accessible for database search
+  // No authentication required
+
+  const handleMedicationSearch = useCallback(async () => {
+    if (!medicationSearchQuery.trim()) return;
+    setMedicationSearching(true);
+    try {
+      const results = await fetch("/api/trpc/data.medications.search?input=" + encodeURIComponent(JSON.stringify({ query: medicationSearchQuery }))).then(r => r.json());
+      setMedicationResults(results.result?.data || []);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setMedicationResults([]);
+    } finally {
+      setMedicationSearching(false);
     }
-  }, [loading, isAuthenticated, user, router]);
+  }, [medicationSearchQuery]);
 
-  const statsQuery = trpc.admin.getSystemStats.useQuery();
-  const usersQuery = trpc.admin.getAllUsers.useQuery();
-  const auditLogsQuery = trpc.admin.getAuditLogs.useQuery({ limit: 50 });
-  const medicationsQuery = trpc.admin.getAllMedications.useQuery();
-  const conditionsQuery = trpc.admin.getAllConditions.useQuery();
-  const codesQuery = trpc.admin.getAllCodes.useQuery();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || user?.role !== "admin") {
-    return null;
-  }
-
-  const stats = statsQuery.data;
+  const handleCodeSearch = useCallback(async () => {
+    if (!codeSearchQuery.trim()) return;
+    setCodeSearching(true);
+    try {
+      const results = await fetch("/api/trpc/data.codes.search?input=" + encodeURIComponent(JSON.stringify({ query: codeSearchQuery }))).then(r => r.json());
+      setCodeResults(results.result?.data || []);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setCodeResults([]);
+    } finally {
+      setCodeSearching(false);
+    }
+  }, [codeSearchQuery]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm">
-        <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-700 p-2.5 rounded-lg shadow-lg">
-              <BarChart3 className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Admin Panel</h1>
-              <p className="text-sm text-slate-600">System Management & Analytics</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-              <p className="text-xs text-slate-600">Owner</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                logout();
-                window.location.href = "/";
-              }}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-slate-900">Admin Panel</h1>
+          <p className="text-slate-600">Manage medications, conditions, and ICD-10 codes</p>
         </div>
-      </header>
 
-      <main className="container py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Users</span>
-            </TabsTrigger>
-            <TabsTrigger value="database" className="gap-2">
-              <Database className="h-4 w-4" />
-              <span className="hidden sm:inline">Database</span>
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Audit</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                <Pill className="h-4 w-4" />
+                Medications
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.medicationsCount ?? 0).toLocaleString()}</div>
+              <p className="text-xs text-slate-500 mt-1">Total medications</p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-blue-900">Total Searches</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">{stats?.totalSearches.toLocaleString() || 0}</div>
-                  <p className="text-xs text-blue-700 mt-1">All-time searches</p>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Conditions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.conditionsCount ?? 0).toLocaleString()}</div>
+              <p className="text-xs text-slate-500 mt-1">Total conditions</p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-emerald-900">Active Users</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-emerald-600">{stats?.users.toLocaleString() || 0}</div>
-                  <p className="text-xs text-emerald-700 mt-1">Registered users</p>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                ICD-10 Codes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.codesCount ?? 0).toLocaleString()}</div>
+              <p className="text-xs text-slate-500 mt-1">Total codes</p>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-purple-900">Medications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">{stats?.medications.toLocaleString() || 0}</div>
-                  <p className="text-xs text-purple-700 mt-1">In database</p>
-                </CardContent>
-              </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                Non-Covered
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.nonCoveredCodesCount ?? 0).toLocaleString()}</div>
+              <p className="text-xs text-slate-500 mt-1">Non-covered codes</p>
+            </CardContent>
+          </Card>
+        </div>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-orange-900">Conditions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-orange-600">{stats?.conditions.toLocaleString() || 0}</div>
-                  <p className="text-xs text-orange-700 mt-1">Medical conditions</p>
-                </CardContent>
-              </Card>
+        {/* Tabs */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Management</CardTitle>
+            <CardDescription>Manage your medical database</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-5 overflow-x-auto">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="database-search">DB Search</TabsTrigger>
+                <TabsTrigger value="medications">Medications</TabsTrigger>
+                <TabsTrigger value="codes">Codes</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
 
-              <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-pink-900">ICD-10 Codes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-pink-600">{stats?.codes.toLocaleString() || 0}</div>
-                  <p className="text-xs text-pink-700 mt-1">Medical codes</p>
-                </CardContent>
-              </Card>
-            </div>
+              <TabsContent value="overview" className="space-y-4 mt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Database Overview</h3>
+                  <p className="text-slate-600">
+                    The database contains comprehensive medical information including medications, conditions, and ICD-10 codes.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="text-base">Data Source</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-slate-700">
+                          Currently loading from JSON files. Database is ready for data migration.
+                        </p>
+                      </CardContent>
+                    </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>System Health</CardTitle>
-                <CardDescription>Current system status and performance</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-50 border border-emerald-200">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                    <div>
-                      <p className="font-medium text-emerald-900">Database Connection</p>
-                      <p className="text-sm text-emerald-700">Connected and operational</p>
-                    </div>
+                    <Card className="bg-green-50 border-green-200">
+                      <CardHeader>
+                        <CardTitle className="text-base">Next Steps</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-slate-700">
+                          Run migration script to populate database with JSON data.
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <Badge className="bg-emerald-600">Active</Badge>
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-50 border border-emerald-200">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                    <div>
-                      <p className="font-medium text-emerald-900">API Server</p>
-                      <p className="text-sm text-emerald-700">All systems operational</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-600">Healthy</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage system users and their roles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Email</th>
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Role</th>
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {usersQuery.data?.map((u) => (
-                        <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-4">{u.name || "N/A"}</td>
-                          <td className="py-3 px-4">{u.email || "N/A"}</td>
-                          <td className="py-3 px-4">
-                            <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                              {u.role}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-slate-600">
-                            {new Date(u.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="database" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Medications</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {medicationsQuery.data?.length || 0}
-                  </div>
-                  <p className="text-sm text-slate-600">Total medications in database</p>
-                  <Button variant="outline" className="w-full" disabled>
-                    Manage Medications
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Conditions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {conditionsQuery.data?.length || 0}
-                  </div>
-                  <p className="text-sm text-slate-600">Total conditions in database</p>
-                  <Button variant="outline" className="w-full" disabled>
-                    Manage Conditions
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">ICD-10 Codes</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-3xl font-bold text-pink-600">
-                    {codesQuery.data?.length || 0}
-                  </div>
-                  <p className="text-sm text-slate-600">Total ICD-10 codes in database</p>
-                  <Button variant="outline" className="w-full" disabled>
-                    Manage Codes
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="audit" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Audit Logs</CardTitle>
-                <CardDescription>Track all administrative actions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {auditLogsQuery.data && auditLogsQuery.data.length > 0 ? (
-                    auditLogsQuery.data.map((log) => (
-                      <div key={log.id} className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium text-slate-900">{log.action}</p>
-                            <p className="text-xs text-slate-600">
-                              {log.entityType} {log.entityId && `#${log.entityId}`}
-                            </p>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))
+              <TabsContent value="database-search" className="space-y-4 mt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Advanced Database Search</h3>
+                  <p className="text-slate-600 mb-4">
+                    Search, filter, and export medications from the database with advanced filtering options.
+                  </p>
+                  
+                  {loadingData ? (
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-slate-600">Loading medications data...</p>
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <div className="text-center py-8">
-                      <AlertCircle className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-slate-600">No audit logs yet</p>
-                    </div>
+                    <AdminDatabaseSearch data={medicationsData} />
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>Configure system-wide settings and preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+              <TabsContent value="medications" className="space-y-4 mt-6">
                 <div className="space-y-4">
-                  <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
-                    <h3 className="font-medium text-slate-900 mb-2">Database Maintenance</h3>
-                    <p className="text-sm text-slate-600 mb-4">
-                      Perform database optimization and maintenance tasks
-                    </p>
-                    <Button variant="outline" disabled>
-                      Run Maintenance
+                  <h3 className="text-lg font-semibold text-slate-900">Medications Management</h3>
+                  <p className="text-slate-600 mb-4">
+                    Search and view medications in the database.
+                  </p>
+                  
+                  {/* Search Box */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Search by trade name, scientific name, or indication..."
+                        value={medicationSearchQuery}
+                        onChange={(e) => setMedicationSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && handleMedicationSearch()}
+                        className="pl-10"
+                      />
+                      {medicationSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setMedicationSearchQuery("");
+                            setMedicationResults([]);
+                          }}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleMedicationSearch}
+                      disabled={!medicationSearchQuery.trim() || medicationSearching}
+                    >
+                      {medicationSearching ? "Searching..." : "Search"}
                     </Button>
                   </div>
 
-                  <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
-                    <h3 className="font-medium text-slate-900 mb-2">Backup & Export</h3>
-                    <p className="text-sm text-slate-600 mb-4">
-                      Export database and system data for backup purposes
-                    </p>
-                    <Button variant="outline" disabled>
-                      Export Data
+                  {/* Search Results */}
+                  {medicationResults.length > 0 && (
+                    <div className="mt-6 space-y-3">
+                      <h4 className="font-semibold text-slate-900">Results ({medicationResults.length})</h4>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {medicationResults.map((med, idx) => (
+                          <Card key={idx} className="p-4">
+                            <div className="space-y-2">
+                              <div>
+                                <p className="font-medium text-slate-900">{med.tradeNames?.join(", ") || "N/A"}</p>
+                                <p className="text-sm text-slate-600">{med.scientificName}</p>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {med.indication || "No indication"}
+                                </span>
+                                {med.icdCodes?.map((code: string) => (
+                                  <span key={code} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    {code}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {medicationSearchQuery && medicationResults.length === 0 && !medicationSearching && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No medications found matching "{medicationSearchQuery}"
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="codes" className="space-y-4 mt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900">ICD-10 Codes Management</h3>
+                  <p className="text-slate-600 mb-4">
+                    Search and view ICD-10 codes in the database.
+                  </p>
+                  
+                  {/* Search Box */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Search by code or description..."
+                        value={codeSearchQuery}
+                        onChange={(e) => setCodeSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && handleCodeSearch()}
+                        className="pl-10"
+                      />
+                      {codeSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setCodeSearchQuery("");
+                            setCodeResults([]);
+                          }}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleCodeSearch}
+                      disabled={!codeSearchQuery.trim() || codeSearching}
+                    >
+                      {codeSearching ? "Searching..." : "Search"}
                     </Button>
                   </div>
 
-                  <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
-                    <h3 className="font-medium text-slate-900 mb-2">System Logs</h3>
-                    <p className="text-sm text-slate-600 mb-4">
-                      View and manage system logs and error reports
-                    </p>
-                    <Button variant="outline" disabled>
-                      View Logs
+                  {/* Search Results */}
+                  {codeResults.length > 0 && (
+                    <div className="mt-6 space-y-3">
+                      <h4 className="font-semibold text-slate-900">Results ({codeResults.length})</h4>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {codeResults.map((code, idx) => (
+                          <Card key={idx} className="p-4">
+                            <div className="space-y-2">
+                              <div>
+                                <p className="font-medium text-slate-900">{code.code}</p>
+                                <p className="text-sm text-slate-600">{code.description || "No description"}</p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {codeSearchQuery && codeResults.length === 0 && !codeSearching && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No codes found matching "{codeSearchQuery}"
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4 mt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Database Settings</h3>
+                  <p className="text-slate-600 mb-4">
+                    Configure database and migration settings.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <Button variant="outline" className="w-full">
+                      Run Data Migration
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Export Database to JSON
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Clear Database
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
