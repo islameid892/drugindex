@@ -71,6 +71,11 @@ export default function Home() {
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const { favorites } = useFavorites();
 
+  // Set page title for SEO
+  useEffect(() => {
+    document.title = "ICD-10 Search Engine - Drug & Medical Coding";
+  }, []);
+
   // Load data with compression
   useEffect(() => {
     const loadData = async () => {
