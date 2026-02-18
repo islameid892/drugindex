@@ -1,379 +1,351 @@
-import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Database, Pill, Activity, Search, X } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AdminDatabaseSearch } from "@/components/AdminDatabaseSearch";
-import pako from 'pako';
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Edit2, Search, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminPanel() {
-  const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [medicationSearchQuery, setMedicationSearchQuery] = useState("");
-  const [medicationResults, setMedicationResults] = useState<any[]>([]);
-  const [medicationSearching, setMedicationSearching] = useState(false);
-  
-  const [codeSearchQuery, setCodeSearchQuery] = useState("");
-  const [codeResults, setCodeResults] = useState<any[]>([]);
-  const [codeSearching, setCodeSearching] = useState(false);
-  const [medicationsData, setMedicationsData] = useState<any[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
-  
-  const { data: stats, isLoading } = trpc.data.admin.getStats.useQuery();
+  const { user, loading, isAuthenticated, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState("medications");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  // Load medications data for the database search
-  useEffect(() => {{
-    const loadData = async () => {{
-      setLoadingData(true);
-      try {{
-        const response = await fetch('/data/main_data.json');
-        const data = await response.json();
-        setMedicationsData(data);
-      }} catch (error) {{
-        console.error('Failed to load medications data:', error);
-      }} finally {{
-        setLoadingData(false);
-      }}
-    }};
-    loadData();
-  }}, []);
+  // Form states
+  const [formData, setFormData] = useState({
+    scientificName: "",
+    tradeNames: "",
+    indication: "",
+    icdCodes: "",
+  });
 
-  // Admin Panel is now publicly accessible for database search
-  // No authentication required
-
-  const handleMedicationSearch = useCallback(async () => {
-    if (!medicationSearchQuery.trim()) return;
-    setMedicationSearching(true);
-    try {
-      const results = await fetch("/api/trpc/data.medications.search?input=" + encodeURIComponent(JSON.stringify({ query: medicationSearchQuery }))).then(r => r.json());
-      setMedicationResults(results.result?.data || []);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setMedicationResults([]);
-    } finally {
-      setMedicationSearching(false);
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      window.location.href = "/";
     }
-  }, [medicationSearchQuery]);
+  }, [loading, isAuthenticated]);
 
-  const handleCodeSearch = useCallback(async () => {
-    if (!codeSearchQuery.trim()) return;
-    setCodeSearching(true);
-    try {
-      const results = await fetch("/api/trpc/data.codes.search?input=" + encodeURIComponent(JSON.stringify({ query: codeSearchQuery }))).then(r => r.json());
-      setCodeResults(results.result?.data || []);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setCodeResults([]);
-    } finally {
-      setCodeSearching(false);
+  // Redirect if not admin
+  useEffect(() => {
+    if (!loading && isAuthenticated && user?.role !== "admin") {
+      window.location.href = "/";
     }
-  }, [codeSearchQuery]);
+  }, [loading, isAuthenticated, user?.role]);
+
+  // tRPC queries
+  const medicationsQuery = trpc.admin.getAllMedications.useQuery(undefined, {
+    enabled: isAuthenticated && user?.role === "admin",
+  });
+
+  // tRPC mutations
+  const addMedicationMutation = trpc.admin.addMedication.useMutation({
+    onSuccess: () => {
+      toast.success("Medication added successfully");
+      medicationsQuery.refetch();
+      setFormData({ scientificName: "", tradeNames: "", indication: "", icdCodes: "" });
+      setShowAddForm(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  const deleteMedicationMutation = trpc.admin.deleteMedication.useMutation({
+    onSuccess: () => {
+      toast.success("Medication deleted successfully");
+      medicationsQuery.refetch();
+    },
+    onError: (error: any) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== "admin") {
+    return null;
+  }
+
+  const handleAddMedication = async () => {
+    if (!formData.scientificName.trim()) {
+      toast.error("Please enter scientific name");
+      return;
+    }
+
+    try {
+      await addMedicationMutation.mutateAsync({
+        scientificName: formData.scientificName,
+        tradeNames: formData.tradeNames,
+        indication: formData.indication,
+        icdCodes: formData.icdCodes,
+      });
+    } catch (error) {
+      console.error("Error adding medication:", error);
+    }
+  };
+
+  const handleDeleteMedication = (id: number) => {
+    if (confirm("Are you sure you want to delete this medication?")) {
+      deleteMedicationMutation.mutate({ id });
+    }
+  };
+
+  const medications = medicationsQuery.data || [];
+  const filteredMedications = medications.filter((med: any) =>
+    med.scientificName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-slate-900">Admin Panel</h1>
-          <p className="text-slate-600">Manage medications, conditions, and ICD-10 codes</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+            <p className="text-sm text-slate-600">Manage medications, conditions, and codes</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-600">
+              Welcome, <strong>{user?.name || user?.email}</strong>
+            </span>
+            <Button onClick={() => logout()} variant="outline" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <Pill className="h-4 w-4" />
-                Medications
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">Total Medications</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.medicationsCount ?? 0).toLocaleString()}</div>
-              <p className="text-xs text-slate-500 mt-1">Total medications</p>
+              <div className="text-3xl font-bold text-sky-600">{medications.length}</div>
+              <p className="text-xs text-slate-500 mt-1">In database</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Conditions
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">Total Conditions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.conditionsCount ?? 0).toLocaleString()}</div>
-              <p className="text-xs text-slate-500 mt-1">Total conditions</p>
+              <div className="text-3xl font-bold text-emerald-600">540</div>
+              <p className="text-xs text-slate-500 mt-1">In database</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                ICD-10 Codes
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">Total ICD-10 Codes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.codesCount ?? 0).toLocaleString()}</div>
-              <p className="text-xs text-slate-500 mt-1">Total codes</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                Non-Covered
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{isLoading ? "..." : (stats?.nonCoveredCodesCount ?? 0).toLocaleString()}</div>
-              <p className="text-xs text-slate-500 mt-1">Non-covered codes</p>
+              <div className="text-3xl font-bold text-purple-600">40,316</div>
+              <p className="text-xs text-slate-500 mt-1">In database</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Management</CardTitle>
-            <CardDescription>Manage your medical database</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5 overflow-x-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="database-search">DB Search</TabsTrigger>
-                <TabsTrigger value="medications">Medications</TabsTrigger>
-                <TabsTrigger value="codes">Codes</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="medications">Medications</TabsTrigger>
+            <TabsTrigger value="conditions">Conditions</TabsTrigger>
+            <TabsTrigger value="codes">ICD-10 Codes</TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="overview" className="space-y-4 mt-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Database Overview</h3>
-                  <p className="text-slate-600">
-                    The database contains comprehensive medical information including medications, conditions, and ICD-10 codes.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <Card className="bg-blue-50 border-blue-200">
-                      <CardHeader>
-                        <CardTitle className="text-base">Data Source</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-slate-700">
-                          Currently loading from JSON files. Database is ready for data migration.
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-green-50 border-green-200">
-                      <CardHeader>
-                        <CardTitle className="text-base">Next Steps</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-slate-700">
-                          Run migration script to populate database with JSON data.
-                        </p>
-                      </CardContent>
-                    </Card>
+          {/* Medications Tab */}
+          <TabsContent value="medications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Medications Management</CardTitle>
+                    <CardDescription>Add, edit, and delete medications</CardDescription>
                   </div>
+                  <Button onClick={() => setShowAddForm(!showAddForm)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Medication
+                  </Button>
                 </div>
-              </TabsContent>
+              </CardHeader>
 
-              <TabsContent value="database-search" className="space-y-4 mt-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Advanced Database Search</h3>
-                  <p className="text-slate-600 mb-4">
-                    Search, filter, and export medications from the database with advanced filtering options.
-                  </p>
-                  
-                  {loadingData ? (
-                    <Card>
-                      <CardContent className="pt-6">
-                        <p className="text-slate-600">Loading medications data...</p>
-                      </CardContent>
-                    </Card>
+              {/* Add Form */}
+              {showAddForm && (
+                <CardContent className="border-t pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Scientific Name *</label>
+                      <Input
+                        placeholder="e.g., Paracetamol"
+                        value={formData.scientificName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, scientificName: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Trade Names (comma-separated)</label>
+                      <Input
+                        placeholder="e.g., Panadol, Tylenol"
+                        value={formData.tradeNames}
+                        onChange={(e) =>
+                          setFormData({ ...formData, tradeNames: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Indication</label>
+                      <Input
+                        placeholder="e.g., Pain relief"
+                        value={formData.indication}
+                        onChange={(e) =>
+                          setFormData({ ...formData, indication: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">ICD-10 Codes (comma-separated)</label>
+                      <Input
+                        placeholder="e.g., R51, R50.9"
+                        value={formData.icdCodes}
+                        onChange={(e) =>
+                          setFormData({ ...formData, icdCodes: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleAddMedication}
+                        disabled={addMedicationMutation.isPending}
+                      >
+                        {addMedicationMutation.isPending ? "Adding..." : "Add Medication"}
+                      </Button>
+                      <Button onClick={() => setShowAddForm(false)} variant="outline">
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+
+              {/* Search */}
+              <CardContent className="border-t pt-6">
+                <div className="relative mb-6">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search medications..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Medications List */}
+                <div className="space-y-3">
+                  {medicationsQuery.isLoading ? (
+                    <div className="text-center py-8 text-slate-500">Loading medications...</div>
+                  ) : filteredMedications.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">No medications found</div>
                   ) : (
-                    <AdminDatabaseSearch data={medicationsData} />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="medications" className="space-y-4 mt-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Medications Management</h3>
-                  <p className="text-slate-600 mb-4">
-                    Search and view medications in the database.
-                  </p>
-                  
-                  {/* Search Box */}
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input
-                        placeholder="Search by trade name, scientific name, or indication..."
-                        value={medicationSearchQuery}
-                        onChange={(e) => setMedicationSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleMedicationSearch()}
-                        className="pl-10"
-                      />
-                      {medicationSearchQuery && (
-                        <button
-                          onClick={() => {
-                            setMedicationSearchQuery("");
-                            setMedicationResults([]);
-                          }}
-                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleMedicationSearch}
-                      disabled={!medicationSearchQuery.trim() || medicationSearching}
-                    >
-                      {medicationSearching ? "Searching..." : "Search"}
-                    </Button>
-                  </div>
-
-                  {/* Search Results */}
-                  {medicationResults.length > 0 && (
-                    <div className="mt-6 space-y-3">
-                      <h4 className="font-semibold text-slate-900">Results ({medicationResults.length})</h4>
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {medicationResults.map((med, idx) => (
-                          <Card key={idx} className="p-4">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="font-medium text-slate-900">{med.tradeNames?.join(", ") || "N/A"}</p>
-                                <p className="text-sm text-slate-600">{med.scientificName}</p>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                  {med.indication || "No indication"}
-                                </span>
-                                {med.icdCodes?.map((code: string) => (
-                                  <span key={code} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    {code}
-                                  </span>
-                                ))}
-                              </div>
+                    filteredMedications.map((med: any) => (
+                      <div
+                        key={med.id}
+                        className="flex items-start justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-900">{med.scientificName}</h3>
+                          {med.tradeNames && (
+                            <p className="text-sm text-slate-600 mt-1">
+                              Trade names: {Array.isArray(med.tradeNames) ? med.tradeNames.join(", ") : med.tradeNames}
+                            </p>
+                          )}
+                          {med.indication && (
+                            <p className="text-sm text-slate-600">Indication: {med.indication}</p>
+                          )}
+                          {med.icdCodes && (
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                              {Array.isArray(med.icdCodes)
+                                ? med.icdCodes.map((code: string) => (
+                                    <Badge key={code} variant="secondary">
+                                      {code}
+                                    </Badge>
+                                  ))
+                                : null}
                             </div>
-                          </Card>
-                        ))}
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button size="sm" variant="outline" className="gap-1">
+                            <Edit2 className="h-3 w-3" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="gap-1"
+                            onClick={() => handleDeleteMedication(med.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {medicationSearchQuery && medicationResults.length === 0 && !medicationSearching && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        No medications found matching "{medicationSearchQuery}"
-                      </AlertDescription>
-                    </Alert>
+                    ))
                   )}
                 </div>
-              </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              <TabsContent value="codes" className="space-y-4 mt-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900">ICD-10 Codes Management</h3>
-                  <p className="text-slate-600 mb-4">
-                    Search and view ICD-10 codes in the database.
-                  </p>
-                  
-                  {/* Search Box */}
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input
-                        placeholder="Search by code or description..."
-                        value={codeSearchQuery}
-                        onChange={(e) => setCodeSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleCodeSearch()}
-                        className="pl-10"
-                      />
-                      {codeSearchQuery && (
-                        <button
-                          onClick={() => {
-                            setCodeSearchQuery("");
-                            setCodeResults([]);
-                          }}
-                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleCodeSearch}
-                      disabled={!codeSearchQuery.trim() || codeSearching}
-                    >
-                      {codeSearching ? "Searching..." : "Search"}
-                    </Button>
-                  </div>
-
-                  {/* Search Results */}
-                  {codeResults.length > 0 && (
-                    <div className="mt-6 space-y-3">
-                      <h4 className="font-semibold text-slate-900">Results ({codeResults.length})</h4>
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {codeResults.map((code, idx) => (
-                          <Card key={idx} className="p-4">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="font-medium text-slate-900">{code.code}</p>
-                                <p className="text-sm text-slate-600">{code.description || "No description"}</p>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {codeSearchQuery && codeResults.length === 0 && !codeSearching && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        No codes found matching "{codeSearchQuery}"
-                      </AlertDescription>
-                    </Alert>
-                  )}
+          {/* Conditions Tab */}
+          <TabsContent value="conditions">
+            <Card>
+              <CardHeader>
+                <CardTitle>Conditions Management</CardTitle>
+                <CardDescription>Coming soon</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-slate-500">
+                  Conditions management interface coming soon
                 </div>
-              </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              <TabsContent value="settings" className="space-y-4 mt-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Database Settings</h3>
-                  <p className="text-slate-600 mb-4">
-                    Configure database and migration settings.
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <Button variant="outline" className="w-full">
-                      Run Data Migration
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      Export Database to JSON
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      Clear Database
-                    </Button>
-                  </div>
+          {/* Codes Tab */}
+          <TabsContent value="codes">
+            <Card>
+              <CardHeader>
+                <CardTitle>ICD-10 Codes Management</CardTitle>
+                <CardDescription>Coming soon</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-slate-500">
+                  ICD-10 codes management interface coming soon
                 </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
