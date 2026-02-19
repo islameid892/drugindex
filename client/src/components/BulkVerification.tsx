@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, Download, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
 
 interface BulkResult {
   input: string;
@@ -19,40 +20,26 @@ interface BulkResult {
 export function BulkVerification() {
   const [input, setInput] = useState('');
   const [results, setResults] = useState<BulkResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const verifyMutation = trpc.bulk.verifyBatch.useMutation({
+    onSuccess: (data) => {
+      setResults(Array.isArray(data) ? data : []);
+    },
+    onError: (error) => {
+      console.error('Verification failed:', error);
+    },
+  });
 
   const handleVerify = useCallback(async () => {
     if (!input.trim()) return;
-
-    setIsLoading(true);
 
     const items = input
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0);
 
-    try {
-      const response = await fetch('/api/trpc/bulk.verifyBatch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          json: { items },
-        }),
-        credentials: 'include',
-      });
-
-      if (!response.ok) throw new Error('Verification failed');
-      
-      const result = await response.json();
-      setResults(result.result.data as BulkResult[]);
-    } catch (error) {
-      console.error('Verification failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [input]);
+    verifyMutation.mutate({ items });
+  }, [input, verifyMutation]);
 
   const handleExportCSV = useCallback(() => {
     if (results.length === 0) return;
@@ -103,10 +90,10 @@ export function BulkVerification() {
           <div className="flex gap-2">
             <Button
               onClick={handleVerify}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || verifyMutation.isPending}
               className="flex items-center gap-2"
             >
-              {isLoading ? (
+              {verifyMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Verifying...

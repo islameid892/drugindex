@@ -11,7 +11,7 @@ export const bulkRouter = router({
     .input(z.object({
       items: z.array(z.string()),
     }))
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const results = [];
 
       for (const item of input.items) {

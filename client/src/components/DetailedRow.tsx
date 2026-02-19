@@ -56,9 +56,10 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
   const badgeClass = isCovered 
     ? 'bg-white text-slate-700 border-slate-300' 
     : 'bg-white text-red-700 border-red-300';
-  const statusBadgeClass = isCovered 
-    ? 'bg-sky-50 text-sky-700 border-sky-200' 
+  const statusBadgeClass = isCovered
+    ? 'bg-sky-50 text-sky-700 border-sky-200'
     : 'bg-white text-red-700 border-red-300';
+
   return (
     <TableRow className={`transition-colors group ${rowHoverClass}`}>
       {/* Trade Name / Scientific Name */}
