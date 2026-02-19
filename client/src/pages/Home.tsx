@@ -6,6 +6,7 @@ import { DetailedRow } from "@/components/DetailedRow";
 import BrowseModal from "@/components/BrowseModal";
 import { PaginationControls } from "@/components/PaginationControls";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import { BulkVerification } from "@/components/BulkVerification";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3 } from "lucide-react";
@@ -67,6 +68,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showBulkVerification, setShowBulkVerification] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'Ibuprofen']);
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const { favorites } = useFavorites();

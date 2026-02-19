@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { dataRouter } from "./routers/data";
 import { adminRouter } from "./routers/admin";
+import { bulkRouter } from "./routers/bulk";
 import { getTotalSearches, getAverageResponseTime, getActiveUsers, getPopularSearches, getCoverageRate, recordSearch } from "./db";
 import { z } from "zod";
 
@@ -12,6 +13,7 @@ export const appRouter = router({
   system: systemRouter,
   data: dataRouter,
   admin: adminRouter,
+  bulk: bulkRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
