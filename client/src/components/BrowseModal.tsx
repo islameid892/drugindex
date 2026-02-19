@@ -161,21 +161,46 @@ export default function BrowseModal({ isOpen, onClose, type, data, nonCoveredDat
 
   // Get code name from tree data
   const getCodeName = useCallback((code: string): string => {
+    // First, try to find exact code match
     for (const treeItem of treeData) {
       if (treeItem.code === code) {
         return treeItem.description || treeItem.indication || code;
       }
     }
+    
+    // If no exact match, try to find parent code (e.g., D07.2 for D07.28)
+    const parentCode = code.substring(0, code.lastIndexOf('.'));
+    if (parentCode && parentCode !== code) {
+      for (const treeItem of treeData) {
+        if (treeItem.code === parentCode) {
+          return treeItem.description || parentCode;
+        }
+      }
+    }
+    
+    // If still no match, return the code itself
     return code;
   }, [treeData]);
 
   // Get branch name from tree data
   const getBranchName = useCallback((branchCode: string): string => {
+    // First, try to find exact code match
     for (const treeItem of treeData) {
       if (treeItem.code === branchCode) {
         return treeItem.description || branchCode;
       }
     }
+    
+    // If no exact match, try to find parent code
+    const parentCode = branchCode.substring(0, branchCode.lastIndexOf('.'));
+    if (parentCode && parentCode !== branchCode) {
+      for (const treeItem of treeData) {
+        if (treeItem.code === parentCode) {
+          return treeItem.description || parentCode;
+        }
+      }
+    }
+    
     return branchCode;
   }, [treeData]);
 
