@@ -9,7 +9,7 @@ import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { BulkVerification } from "@/components/BulkVerification";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3 } from "lucide-react";
+import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3, Upload } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -345,7 +345,7 @@ export default function Home() {
                   <p className="text-muted-foreground">Quick access to drugs, conditions, and codes</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
                   {/* Search Drugs Card */}
                   <button
                     onClick={() => setBrowseModal({ isOpen: true, type: 'drugs' })}
@@ -411,6 +411,29 @@ export default function Home() {
                       
                       <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         Explore <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Bulk Verification Card */}
+                  <button
+                    onClick={() => setShowBulkVerification(true)}
+                    className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border border-orange-200 dark:border-orange-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-orange-300 dark:hover:border-orange-700"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <Upload className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <div className="text-left">
+                        <h4 className="text-lg font-bold text-foreground group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">Bulk Verify</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Check multiple codes at once</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        Verify <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
                   </button>
@@ -569,6 +592,50 @@ export default function Home() {
         treeData={treeData}
         nonCoveredData={nonCoveredData}
       />
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-muted/50 mt-16">
+        <div className="container py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <p className="text-sm text-muted-foreground">
+                ICD-10 Search Engine - Drug Reference & Medical Coding
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Created by <span className="font-semibold text-foreground">Islam Mostafa Eid</span>
+              </p>
+            </div>
+            <div className="text-center md:text-right">
+              <p className="text-sm text-muted-foreground">
+                Copyright 2026 All rights reserved
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Empowering Healthcare Professionals
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Bulk Verification Modal */}
+      {showBulkVerification && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">Bulk Code Verification</h2>
+              <button
+                onClick={() => setShowBulkVerification(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                X
+              </button>
+            </div>
+            <div className="p-4">
+              <BulkVerification />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
