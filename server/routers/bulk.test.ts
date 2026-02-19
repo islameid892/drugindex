@@ -33,32 +33,32 @@ function createTestContext(): TrpcContext {
 
 describe('Bulk Verification Router', () => {
   describe('verifyBatch', () => {
-    it('should verify a batch of mixed medications and codes', async () => {
+    it('should verify a batch of ICD-10 codes', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['Metformin', 'D07.28', 'Panadol'],
+        items: ['D07.28', 'E11.9', 'A01.00'],
       });
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(3);
     });
 
-    it('should identify medications correctly', async () => {
+    it('should identify all items as codes', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['Metformin'],
+        items: ['D07.28'],
       });
 
       expect(result.length).toBe(1);
-      expect(result[0].type).toBe('medication');
-      expect(result[0].input).toBe('Metformin');
+      expect(result[0].type).toBe('code');
+      expect(result[0].input).toBe('D07.28');
     });
 
-    it('should identify ICD-10 codes correctly', async () => {
+    it('should identify valid ICD-10 codes correctly', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
@@ -83,16 +83,16 @@ describe('Bulk Verification Router', () => {
       expect(result.length).toBe(0);
     });
 
-    it('should mark items as found or not found', async () => {
+    it('should mark invalid codes as not found', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['NonExistentDrug123', 'AnotherFakeDrug456'],
+        items: ['INVALID', 'XYZ123'],
       });
 
       expect(result.length).toBe(2);
-      // Both should be not found
+      // Invalid codes should not be found
       expect(result.every(r => !r.found)).toBe(true);
     });
 
@@ -101,7 +101,7 @@ describe('Bulk Verification Router', () => {
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['Metformin'],
+        items: ['D07.28'],
       });
 
       expect(result.length).toBe(1);
@@ -109,12 +109,12 @@ describe('Bulk Verification Router', () => {
       expect(typeof result[0].isCovered).toBe('boolean');
     });
 
-    it('should include details for found items', async () => {
+    it('should include code name in details for found codes', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['Metformin'],
+        items: ['D07.28'],
       });
 
       expect(result.length).toBe(1);
@@ -129,7 +129,7 @@ describe('Bulk Verification Router', () => {
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['d07.28', 'E11.9'],
+        items: ['d07.28', 'e11.9'],
       });
 
       expect(result.length).toBe(2);
@@ -137,18 +137,19 @@ describe('Bulk Verification Router', () => {
       expect(result[1].type).toBe('code');
     });
 
-    it('should process multiple items in sequence', async () => {
+    it('should process multiple codes in sequence', async () => {
       const ctx = createTestContext();
       const caller = appRouter.createCaller(ctx);
 
       const result = await caller.bulk.verifyBatch({
-        items: ['Metformin', 'D07.28', 'Panadol', 'E11.9', 'Aspirin'],
+        items: ['D07.28', 'E11.9', 'A01.00', 'B02.9', 'C01.0'],
       });
 
       expect(result.length).toBe(5);
       result.forEach(item => {
         expect(item).toHaveProperty('input');
         expect(item).toHaveProperty('type');
+        expect(item.type).toBe('code');
         expect(item).toHaveProperty('found');
         expect(item).toHaveProperty('isCovered');
         expect(item).toHaveProperty('details');
@@ -160,15 +161,16 @@ describe('Bulk Verification Router', () => {
       const caller = appRouter.createCaller(ctx);
 
       const result1 = await caller.bulk.verifyBatch({
-        items: ['Metformin'],
+        items: ['D07.28'],
       });
 
       const result2 = await caller.bulk.verifyBatch({
-        items: ['Metformin'],
+        items: ['D07.28'],
       });
 
       expect(result1[0].found).toBe(result2[0].found);
       expect(result1[0].isCovered).toBe(result2[0].isCovered);
+      expect(result1[0].details.name).toBe(result2[0].details.name);
     });
   });
 });

@@ -6,14 +6,11 @@ import { trpc } from '@/lib/trpc';
 
 interface BulkResult {
   input: string;
-  type: 'medication' | 'code' | 'unknown';
+  type: 'code';
   found: boolean;
   isCovered: boolean;
   details: {
     name?: string;
-    scientificName?: string;
-    indication?: string;
-    codes?: string[];
   };
 }
 
@@ -44,14 +41,12 @@ export function BulkVerification() {
   const handleExportCSV = useCallback(() => {
     if (results.length === 0) return;
 
-    const headers = ['Input', 'Type', 'Found', 'Coverage Status', 'Name', 'Details'];
+    const headers = ['Code', 'Found', 'Coverage Status', 'Code Name'];
     const rows = results.map(r => [
       r.input,
-      r.type,
       r.found ? 'Yes' : 'No',
       r.found ? (r.isCovered ? 'Covered' : 'Not Covered') : 'N/A',
-      r.details.name || '',
-      r.details.scientificName || r.details.indication || ''
+      r.details.name || ''
     ]);
 
     const csv = [
@@ -73,16 +68,16 @@ export function BulkVerification() {
       <Card className="p-6">
         <h2 className="text-2xl font-bold mb-4">Bulk Code Verification</h2>
         <p className="text-sm text-slate-600 mb-4">
-          Paste multiple medication names or ICD-10 codes (one per line) to check their coverage status in batch.
+          Paste multiple ICD-10 codes (one per line) to check their coverage status in batch.
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-2">Enter Medications or Codes</label>
+            <label className="block text-sm font-semibold mb-2">Enter ICD-10 Codes</label>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Example:&#10;Metformin&#10;D07.28&#10;Panadol&#10;E11.9"
+              placeholder="Example:&#10;D07.28&#10;E11.9&#10;A01.00&#10;B02.9"
               className="w-full h-32 p-3 border border-slate-300 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -128,8 +123,7 @@ export function BulkVerification() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold">Input</th>
-                  <th className="text-left py-2 px-3 font-semibold">Type</th>
+                  <th className="text-left py-2 px-3 font-semibold">Code</th>
                   <th className="text-left py-2 px-3 font-semibold">Status</th>
                   <th className="text-left py-2 px-3 font-semibold">Coverage</th>
                   <th className="text-left py-2 px-3 font-semibold">Details</th>
@@ -138,14 +132,7 @@ export function BulkVerification() {
               <tbody>
                 {results.map((result, idx) => (
                   <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-3 px-3 font-mono text-xs">{result.input}</td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        result.type === 'code' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {result.type}
-                      </span>
-                    </td>
+                    <td className="py-3 px-3 font-mono font-semibold text-blue-700">{result.input}</td>
                     <td className="py-3 px-3">
                       {result.found ? (
                         <div className="flex items-center gap-1 text-green-700">
@@ -170,17 +157,9 @@ export function BulkVerification() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-xs">
+                    <td className="py-3 px-3 text-sm">
                       {result.details.name && (
-                        <div>
-                          <div className="font-semibold">{result.details.name}</div>
-                          {result.details.scientificName && (
-                            <div className="text-slate-600">{result.details.scientificName}</div>
-                          )}
-                          {result.details.indication && (
-                            <div className="text-slate-500 italic">{result.details.indication}</div>
-                          )}
-                        </div>
+                        <div className="font-medium text-slate-700">{result.details.name}</div>
                       )}
                     </td>
                   </tr>

@@ -94,3 +94,11 @@
 - [x] Submit to Baidu Search Console
 - [x] Monitor search engine indexing status
 - [x] Set up Google Analytics 4 tracking
+
+
+## Phase 9: Bulk Verification Enhancement
+- [x] Modify Bulk Verification to accept only ICD-10 codes (no medications or diagnoses)
+- [x] Update backend validation to reject non-code inputs
+- [x] Update UI to show code name in Details column
+- [x] Test with various ICD-10 codes
+- [x] Verify CSV export shows code names correctly
