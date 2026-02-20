@@ -124,5 +124,6 @@
 
 ## Phase 12: Bug Fixes for Bulk Verification
 - [x] Fix camera OCR - extracted codes should be added to textarea
-- [x] Fix "Not Found" issue - codes should be found in database
+- [x] Fix "Not Found" issue - codes should be found in database (RESOLVED: loaded 40,316 codes)
 - [x] Enlarge code search input and add autocomplete suggestions
+- [x] Details column now shows code descriptions correctly

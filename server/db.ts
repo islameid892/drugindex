@@ -147,18 +147,24 @@ export async function getAllCodes() {
 
 export async function searchCodes(query: string) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    console.log('DB connection failed');
+    return [];
+  }
   const upperQuery = query.toUpperCase();
-  // Try exact match first
+  console.log('Searching code:', upperQuery);
+  
   let result = await db.select().from(codes).where(
     eq(codes.code, upperQuery)
   ).limit(1);
   
-  // If no exact match, try partial match
+  console.log('Exact match:', result.length);
+  
   if (result.length === 0) {
     result = await db.select().from(codes).where(
       like(codes.code, `%${upperQuery}%`)
     ).limit(100);
+    console.log('Partial match:', result.length);
   }
   
   return result;

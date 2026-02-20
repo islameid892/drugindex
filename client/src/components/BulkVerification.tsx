@@ -34,18 +34,25 @@ export function BulkVerification() {
 
   const ocrMutation = trpc.ocr.extractCodes.useMutation({
     onSuccess: (data) => {
+      console.log('OCR extraction successful:', data);
       const extractedCodes = data.codes || [];
+      console.log('Extracted codes:', extractedCodes);
       
       if (extractedCodes.length > 0) {
         // Add extracted codes to textarea
-        const newCodes = extractedCodes.filter(
-          (code: string) => !input.includes(code)
-        );
-        
-        if (newCodes.length > 0) {
-          const additionalCodes = newCodes.join('\n');
-          setInput(input ? `${input}\n${additionalCodes}` : additionalCodes);
-        }
+        setInput(prevInput => {
+          const newCodes = extractedCodes.filter(
+            (code: string) => !prevInput.includes(code)
+          );
+          
+          if (newCodes.length > 0) {
+            const additionalCodes = newCodes.join('\n');
+            const updatedInput = prevInput ? `${prevInput}\n${additionalCodes}` : additionalCodes;
+            console.log('Updated input:', updatedInput);
+            return updatedInput;
+          }
+          return prevInput;
+        });
       }
       setIsProcessingImage(false);
     },
@@ -89,13 +96,19 @@ export function BulkVerification() {
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
+    console.log('File selected:', file.name, file.type, file.size);
     setIsProcessingImage(true);
     
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64Image = event.target?.result as string;
+      console.log('Base64 image created, length:', base64Image.length);
+      console.log('Calling OCR mutation...');
       ocrMutation.mutate({ image: base64Image });
     };
     reader.onerror = () => {
@@ -188,6 +201,7 @@ export function BulkVerification() {
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
+                key={Date.now()}
               />
             </div>
           </div>
@@ -305,8 +319,10 @@ export function BulkVerification() {
                       )}
                     </td>
                     <td className="py-3 px-3 text-sm">
-                      {result.details.name && (
+                      {result.details?.name ? (
                         <div className="font-medium text-slate-700">{result.details.name}</div>
+                      ) : (
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
                   </tr>
