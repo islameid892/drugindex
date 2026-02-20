@@ -127,3 +127,13 @@
 - [x] Fix "Not Found" issue - codes should be found in database (RESOLVED: loaded 40,316 codes)
 - [x] Enlarge code search input and add autocomplete suggestions
 - [x] Details column now shows code descriptions correctly
+
+
+## Phase 13: Camera Image Upload & OCR Implementation
+- [x] Review current camera button implementation
+- [x] Fix camera input file handling
+- [x] Integrate with OCR API to extract text from images
+- [x] Parse extracted text to find ICD-10 codes
+- [x] Add extracted codes to textarea automatically
+- [x] Upload images to S3 before sending to LLM vision API
+- [x] Verify codes are correctly identified and added

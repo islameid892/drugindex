@@ -1,6 +1,7 @@
 import { router, publicProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { invokeLLM } from '../_core/llm';
+import { storagePut } from '../storage';
 
 export const ocrRouter = router({
   extractCodes: publicProcedure
@@ -9,6 +10,26 @@ export const ocrRouter = router({
     }))
     .mutation(async ({ input }) => {
       try {
+        // Upload the base64 image to S3 first
+        const base64Data = input.image.split(',')[1] || input.image;
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Determine MIME type from base64 header
+        let mimeType = 'image/jpeg';
+        if (input.image.includes('data:image/png')) {
+          mimeType = 'image/png';
+        } else if (input.image.includes('data:image/webp')) {
+          mimeType = 'image/webp';
+        }
+
+        const { url: imageUrl } = await storagePut(
+          `ocr-uploads/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`,
+          buffer,
+          mimeType
+        );
+
+        console.log('Image uploaded to S3:', imageUrl);
+
         // Use LLM with vision to extract ICD-10 codes from the image
         const response = await invokeLLM({
           messages: [
@@ -18,7 +39,19 @@ export const ocrRouter = router({
             },
             {
               role: 'user',
-              content: `Please extract all ICD-10 codes from this image. Return only a JSON array of codes. Image: ${input.image}`
+              content: [
+                {
+                  type: 'text',
+                  text: 'Please extract all ICD-10 codes from this image. Return only a JSON array of codes.'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: imageUrl,
+                    detail: 'high'
+                  }
+                }
+              ]
             }
           ],
           response_format: {
@@ -59,6 +92,7 @@ export const ocrRouter = router({
           typeof code === 'string' && /^[A-Z]\d{2}(\.\d{1,2})?$/i.test(code)
         ).map((code: any) => code.toUpperCase());
 
+        console.log('Extracted codes:', validCodes);
         return { codes: validCodes };
       } catch (error) {
         console.error('OCR extraction failed:', error);
