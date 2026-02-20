@@ -102,8 +102,9 @@ export async function getAllMedications() {
 export async function searchMedications(query: string) {
   const db = await getDb();
   if (!db) return [];
+  const lowerQuery = query.toLowerCase();
   return await db.select().from(medications).where(
-    like(medications.scientificName, `%${query}%`)
+    like(medications.scientificName, `%${lowerQuery}%`)
   ).limit(100);
 }
 
@@ -124,8 +125,9 @@ export async function getAllConditions() {
 export async function searchConditions(query: string) {
   const db = await getDb();
   if (!db) return [];
+  const lowerQuery = query.toLowerCase();
   return await db.select().from(conditions).where(
-    like(conditions.name, `%${query}%`)
+    like(conditions.name, `%${lowerQuery}%`)
   ).limit(100);
 }
 
@@ -146,8 +148,9 @@ export async function getAllCodes() {
 export async function searchCodes(query: string) {
   const db = await getDb();
   if (!db) return [];
+  const lowerQuery = query.toLowerCase();
   return await db.select().from(codes).where(
-    like(codes.code, `%${query}%`)
+    like(codes.code, `%${lowerQuery}%`)
   ).limit(100);
 }
 
@@ -168,8 +171,9 @@ export async function getAllNonCoveredCodes() {
 export async function searchNonCoveredCodes(query: string) {
   const db = await getDb();
   if (!db) return [];
+  const lowerQuery = query.toLowerCase();
   return await db.select().from(nonCoveredCodes).where(
-    like(nonCoveredCodes.code, `%${query}%`)
+    like(nonCoveredCodes.code, `%${lowerQuery}%`)
   ).limit(100);
 }
 

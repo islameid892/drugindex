@@ -102,3 +102,12 @@
 - [x] Update UI to show code name in Details column
 - [x] Test with various ICD-10 codes
 - [x] Verify CSV export shows code names correctly
+
+
+## Phase 10: Case-Insensitive Search Implementation
+- [x] Update backend search functions for case-insensitive matching
+- [x] Fix main search bar to handle case-insensitive queries
+- [x] Fix browse modals search to handle case-insensitive queries
+- [x] Fix database search to handle case-insensitive queries
+- [x] Test all search features with mixed case inputs
+- [x] Verify no performance degradation
