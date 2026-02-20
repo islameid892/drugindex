@@ -148,10 +148,20 @@ export async function getAllCodes() {
 export async function searchCodes(query: string) {
   const db = await getDb();
   if (!db) return [];
-  const lowerQuery = query.toLowerCase();
-  return await db.select().from(codes).where(
-    like(codes.code, `%${lowerQuery}%`)
-  ).limit(100);
+  const upperQuery = query.toUpperCase();
+  // Try exact match first
+  let result = await db.select().from(codes).where(
+    eq(codes.code, upperQuery)
+  ).limit(1);
+  
+  // If no exact match, try partial match
+  if (result.length === 0) {
+    result = await db.select().from(codes).where(
+      like(codes.code, `%${upperQuery}%`)
+    ).limit(100);
+  }
+  
+  return result;
 }
 
 export async function getCodeById(id: number) {
@@ -171,10 +181,20 @@ export async function getAllNonCoveredCodes() {
 export async function searchNonCoveredCodes(query: string) {
   const db = await getDb();
   if (!db) return [];
-  const lowerQuery = query.toLowerCase();
-  return await db.select().from(nonCoveredCodes).where(
-    like(nonCoveredCodes.code, `%${lowerQuery}%`)
-  ).limit(100);
+  const upperQuery = query.toUpperCase();
+  // Try exact match first
+  let result = await db.select().from(nonCoveredCodes).where(
+    eq(nonCoveredCodes.code, upperQuery)
+  ).limit(1);
+  
+  // If no exact match, try partial match
+  if (result.length === 0) {
+    result = await db.select().from(nonCoveredCodes).where(
+      like(nonCoveredCodes.code, `%${upperQuery}%`)
+    ).limit(100);
+  }
+  
+  return result;
 }
 
 export async function getNonCoveredCodeById(id: number) {

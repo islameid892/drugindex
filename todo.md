@@ -120,3 +120,9 @@
 - [x] Test code search and add functionality
 - [x] Test camera OCR feature with various image types
 - [x] Verify Details column now shows code names correctly
+
+
+## Phase 12: Bug Fixes for Bulk Verification
+- [x] Fix camera OCR - extracted codes should be added to textarea
+- [x] Fix "Not Found" issue - codes should be found in database
+- [x] Enlarge code search input and add autocomplete suggestions

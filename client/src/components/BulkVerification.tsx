@@ -35,12 +35,17 @@ export function BulkVerification() {
   const ocrMutation = trpc.ocr.extractCodes.useMutation({
     onSuccess: (data) => {
       const extractedCodes = data.codes || [];
-      const newCodes = extractedCodes.filter(
-        (code: string) => !codes.includes(code)
-      );
       
-      if (newCodes.length > 0) {
-        setCodes([...codes, ...newCodes]);
+      if (extractedCodes.length > 0) {
+        // Add extracted codes to textarea
+        const newCodes = extractedCodes.filter(
+          (code: string) => !input.includes(code)
+        );
+        
+        if (newCodes.length > 0) {
+          const additionalCodes = newCodes.join('\n');
+          setInput(input ? `${input}\n${additionalCodes}` : additionalCodes);
+        }
       }
       setIsProcessingImage(false);
     },
@@ -98,7 +103,7 @@ export function BulkVerification() {
       setIsProcessingImage(false);
     };
     reader.readAsDataURL(file);
-  }, [codes, ocrMutation]);
+  }, [ocrMutation]);
 
   const handleExportCSV = useCallback(() => {
     if (results.length === 0) return;
@@ -148,7 +153,7 @@ export function BulkVerification() {
                   }
                 }}
                 placeholder="e.g., D07.28"
-                className="flex-1"
+                className="flex-1 h-10 text-base"
               />
               <Button
                 onClick={handleAddCode}
@@ -213,12 +218,12 @@ export function BulkVerification() {
 
           {/* Manual Input Section */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold">Or Paste Multiple Codes (Optional)</label>
+            <label className="block text-sm font-semibold">Paste Multiple Codes (Optional)</label>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Example:&#10;D07.28&#10;E11.9&#10;A01.00&#10;B02.9"
-              className="w-full h-24 p-3 border border-slate-300 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full h-32 p-3 border border-slate-300 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
