@@ -111,3 +111,12 @@
 - [x] Fix database search to handle case-insensitive queries
 - [x] Test all search features with mixed case inputs
 - [x] Verify no performance degradation
+
+
+## Phase 11: Bulk Verification Enhancements
+- [x] Fix Details column to display code names from tree data
+- [x] Add code search box above textarea with + button to add codes individually
+- [x] Implement camera/image upload feature with OCR to extract codes from photos
+- [x] Test code search and add functionality
+- [x] Test camera OCR feature with various image types
+- [x] Verify Details column now shows code names correctly
