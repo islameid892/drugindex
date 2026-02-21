@@ -169,3 +169,12 @@
 - [x] Add FAQ route to App.tsx
 - [x] Integrate FAQ into navigation and sitemap
 - [x] Test all SEO files and FAQ page
+
+
+## Phase 17: Infographics Integration
+- [x] Create InfographicsSection component with card layout and modal
+- [x] Copy infographic images to public folder
+- [x] Add InfographicsSection to Home page after hero section
+- [x] Implement preview cards with thumbnails
+- [x] Implement modal/lightbox for full-size infographic viewing
+- [x] Test infographics display and interaction

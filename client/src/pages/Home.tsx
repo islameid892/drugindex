@@ -16,6 +16,7 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
 import { memo } from "react";
 import Footer from "@/components/Footer";
+import InfographicsSection from "@/components/InfographicsSection";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
 
@@ -496,6 +497,11 @@ export default function Home() {
               />
             </div>
           </div>
+        )}
+
+        {/* Infographics Section */}
+        {!query && !loading && (
+          <InfographicsSection />
         )}
 
         {/* Search Results */}
