@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
 import { ResultCard } from "@/components/ResultCard";
@@ -19,6 +19,7 @@ import Footer from "@/components/Footer";
 import InfographicsSection from "@/components/InfographicsSection";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
+import { trpc } from '@/lib/trpc';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -110,6 +111,10 @@ export default function Home() {
     loadData();
   }, []);
 
+  // Track search mutation
+  const trackSearchMutation = trpc.analytics.trackSearch.useMutation();
+  const lastTrackedQuery = useRef('');
+
   // Reset page when query changes
   useEffect(() => {
     setCurrentPage(1);
@@ -158,6 +163,23 @@ export default function Home() {
   }, [filteredData, currentPage]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+  // Track search when user stops typing (debounced)
+  useEffect(() => {
+    if (!query || query.trim().length < 2) return;
+    if (query === lastTrackedQuery.current) return;
+
+    const timer = setTimeout(() => {
+      lastTrackedQuery.current = query;
+      trackSearchMutation.mutate({
+        query: query.trim(),
+        resultCount: filteredData.length,
+        responseTime: 0,
+      });
+    }, 1500); // Track after 1.5s of no typing
+
+    return () => clearTimeout(timer);
+  }, [query, filteredData.length]);
 
   if (showDashboard) {
     return (

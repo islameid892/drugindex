@@ -1,4 +1,4 @@
-import { eq, like } from "drizzle-orm";
+import { eq, like, sql, desc, gte, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, medications, conditions, codes, nonCoveredCodes, searchAnalytics, userSessions, type Medication, type Condition, type Code, type NonCoveredCode, type InsertSearchAnalytic } from "../drizzle/schema";
 import { count } from "drizzle-orm";
@@ -211,7 +211,9 @@ export async function getNonCoveredCodeById(id: number) {
 }
 
 
-// Analytics functions
+// ===== Analytics functions =====
+
+// Record a search event with response time
 export async function recordSearch(data: InsertSearchAnalytic) {
   const db = await getDb();
   if (!db) return undefined;
@@ -224,62 +226,226 @@ export async function recordSearch(data: InsertSearchAnalytic) {
   }
 }
 
+// Get total number of searches (all time)
 export async function getTotalSearches() {
   const db = await getDb();
   if (!db) return 0;
-  const result = await db.select({ count: count() }).from(searchAnalytics);
-  return result[0]?.count || 0;
+  try {
+    const result = await db.select({ count: count() }).from(searchAnalytics);
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("[Database] Failed to get total searches:", error);
+    return 0;
+  }
 }
 
+// Get total searches in the last N days
+export async function getTotalSearchesSince(days: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  try {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const result = await db.select({ count: count() })
+      .from(searchAnalytics)
+      .where(gte(searchAnalytics.timestamp, since));
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("[Database] Failed to get recent searches:", error);
+    return 0;
+  }
+}
+
+// Get real average response time from search analytics
 export async function getAverageResponseTime() {
   const db = await getDb();
   if (!db) return 0;
   try {
-    const result = await db.select({ avg: count() }).from(searchAnalytics).limit(1);
-    return Math.round(Math.random() * 300 + 100); // Mock for now
+    const result = await db.select({
+      avg: sql<number>`COALESCE(AVG(${searchAnalytics.responseTime}), 0)`
+    }).from(searchAnalytics);
+    return Math.round(result[0]?.avg || 0);
   } catch (error) {
+    console.error("[Database] Failed to get avg response time:", error);
     return 0;
   }
 }
 
+// Get unique users count (from users table)
 export async function getActiveUsers() {
   const db = await getDb();
   if (!db) return 0;
   try {
-    const result = await db.select({ count: count() }).from(userSessions).limit(1);
-    return Math.round(Math.random() * 500 + 100); // Mock for now
+    const result = await db.select({ count: count() }).from(users);
+    return result[0]?.count || 0;
   } catch (error) {
+    console.error("[Database] Failed to get active users:", error);
     return 0;
   }
 }
 
-export async function getPopularSearches(days: number = 7) {
+// Get unique searchers (distinct userId from searchAnalytics in last N days)
+export async function getUniqueSearchers(days: number = 7) {
+  const db = await getDb();
+  if (!db) return 0;
+  try {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const result = await db.select({
+      count: sql<number>`COUNT(DISTINCT ${searchAnalytics.userId})`
+    })
+      .from(searchAnalytics)
+      .where(gte(searchAnalytics.timestamp, since));
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("[Database] Failed to get unique searchers:", error);
+    return 0;
+  }
+}
+
+// Get top searched terms (real data from DB)
+export async function getPopularSearches(limit: number = 10) {
   const db = await getDb();
   if (!db) return [];
   try {
-    const result = await db.select({ query: searchAnalytics.query, count: count() })
+    const result = await db.select({
+      query: searchAnalytics.query,
+      count: count()
+    })
       .from(searchAnalytics)
       .groupBy(searchAnalytics.query)
-      .orderBy(count())
-      .limit(10);
-    return result;
+      .orderBy(desc(count()))
+      .limit(limit);
+    return result.map(r => ({ term: r.query, count: r.count }));
   } catch (error) {
+    console.error("[Database] Failed to get popular searches:", error);
     return [];
   }
 }
 
+// Get search trend for last N days (daily counts)
+export async function getSearchTrend(days: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    
+    // Use raw SQL to avoid only_full_group_by issue
+    const result = await db.execute(
+      sql`SELECT DATE(\`timestamp\`) as search_date, COUNT(*) as search_count FROM \`searchAnalytics\` WHERE \`timestamp\` >= ${since} GROUP BY search_date ORDER BY search_date`
+    ) as any;
+    
+    // Parse raw results
+    const rows = (result[0] || result || []) as Array<{ search_date: string; search_count: number }>;
+    
+    // Fill in missing days with 0
+    const trendMap = new Map<string, number>();
+    rows.forEach((r: any) => {
+      // search_date might be a Date object or string
+      const dateStr = r.search_date instanceof Date 
+        ? r.search_date.toISOString().split('T')[0] 
+        : String(r.search_date);
+      trendMap.set(dateStr, Number(r.search_count) || 0);
+    });
+    
+    const trend: Array<{ date: string; searches: number }> = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      trend.push({
+        date: `${dayName} ${d.getDate()}/${d.getMonth() + 1}`,
+        searches: trendMap.get(dateStr) || 0
+      });
+    }
+    
+    return trend;
+  } catch (error) {
+    console.error("[Database] Failed to get search trend:", error);
+    return [];
+  }
+}
+
+// Get real database statistics
+export async function getDatabaseStats() {
+  const db = await getDb();
+  if (!db) return { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
+  try {
+    const [codesCount, nonCoveredCount, medsCount, conditionsCount] = await Promise.all([
+      db.select({ count: count() }).from(codes),
+      db.select({ count: count() }).from(nonCoveredCodes),
+      db.select({ count: count() }).from(medications),
+      db.select({ count: count() }).from(conditions),
+    ]);
+    
+    return {
+      totalCodes: codesCount[0]?.count || 0,
+      totalNonCovered: nonCoveredCount[0]?.count || 0,
+      totalMedications: medsCount[0]?.count || 0,
+      totalConditions: conditionsCount[0]?.count || 0,
+    };
+  } catch (error) {
+    console.error("[Database] Failed to get database stats:", error);
+    return { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
+  }
+}
+
+// Get coverage rate from real data
 export async function getCoverageRate() {
+  const db = await getDb();
+  if (!db) return { covered: 0, uncovered: 0, rate: 0 };
+  try {
+    const [totalCodesResult, nonCoveredResult] = await Promise.all([
+      db.select({ count: count() }).from(codes),
+      db.select({ count: count() }).from(nonCoveredCodes),
+    ]);
+    
+    const totalCodes = totalCodesResult[0]?.count || 0;
+    const nonCovered = nonCoveredResult[0]?.count || 0;
+    const covered = totalCodes - nonCovered;
+    const rate = totalCodes > 0 ? Math.round((covered / totalCodes) * 100) : 0;
+    
+    return { covered, uncovered: nonCovered, rate };
+  } catch (error) {
+    console.error("[Database] Failed to get coverage rate:", error);
+    return { covered: 0, uncovered: 0, rate: 0 };
+  }
+}
+
+// Get searches per hour for today (for performance insights)
+export async function getTodaySearchVolume() {
   const db = await getDb();
   if (!db) return 0;
   try {
-    const total = await db.select({ count: count() }).from(medications);
-    const covered = await db.select({ count: count() }).from(medications).where(
-      eq(medications.coverageStatus, "COVERED")
-    );
-    const totalCount = total[0]?.count || 1;
-    const coveredCount = covered[0]?.count || 0;
-    return Math.round((coveredCount / totalCount) * 100);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await db.select({ count: count() })
+      .from(searchAnalytics)
+      .where(gte(searchAnalytics.timestamp, today));
+    return result[0]?.count || 0;
   } catch (error) {
     return 0;
+  }
+}
+
+// Get recent searches (last N)
+export async function getRecentSearches(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const result = await db.select({
+      query: searchAnalytics.query,
+      resultsCount: searchAnalytics.resultsCount,
+      responseTime: searchAnalytics.responseTime,
+      timestamp: searchAnalytics.timestamp,
+    })
+      .from(searchAnalytics)
+      .orderBy(desc(searchAnalytics.timestamp))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    return [];
   }
 }
