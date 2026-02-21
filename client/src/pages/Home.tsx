@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
 import { memo } from "react";
+import Footer from "@/components/Footer";
 import pako from 'pako';
 import { matchesSearchQuery } from '@/lib/arabicSearch';
 
@@ -593,29 +594,7 @@ export default function Home() {
         nonCoveredData={nonCoveredData}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-muted/50 mt-16">
-        <div className="container py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left">
-              <p className="text-sm text-muted-foreground">
-                ICD-10 Search Engine - Drug Reference & Medical Coding
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Created by <span className="font-semibold text-foreground">Islam Mostafa Eid</span>
-              </p>
-            </div>
-            <div className="text-center md:text-right">
-              <p className="text-sm text-muted-foreground">
-                Copyright 2026 All rights reserved
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Empowering Healthcare Professionals
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Bulk Verification Modal */}
       {showBulkVerification && (

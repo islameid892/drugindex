@@ -17,6 +17,8 @@ const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const Database = lazy(() => import("./pages/Database"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const ContactUs = lazy(() => import("./pages/ContactUs"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -38,6 +40,16 @@ function Router() {
       <Route path={"/contact"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <ContactUs />
+        </Suspense>
+      )} />
+      <Route path={"/privacy"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <PrivacyPolicy />
+        </Suspense>
+      )} />
+      <Route path={"/terms"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <TermsOfService />
         </Suspense>
       )} />
       <Route path={"/favorites"} component={() => (
