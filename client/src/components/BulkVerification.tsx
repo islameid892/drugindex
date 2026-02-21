@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, Download, Loader2, CheckCircle2, XCircle, Plus, Camera, X } from 'lucide-react';
+import { Upload, Download, Loader2, CheckCircle2, XCircle, Plus, Camera, X, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 
@@ -31,6 +31,7 @@ export function BulkVerification() {
   const [codes, setCodes] = useState<string[]>([]);
   const [results, setResults] = useState<BulkResult[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [cameraError, setCameraError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   
@@ -71,12 +72,20 @@ export function BulkVerification() {
           }
           return prevInput;
         });
+        setCameraError('');
+        alert(`✓ Successfully extracted ${extractedCodes.length} code(s) from image`);
+      } else {
+        setCameraError('No ICD-10 codes found in the image. Please try another image.');
+        alert('No ICD-10 codes found in the image. Please try another image.');
       }
       setIsProcessingImage(false);
     },
     onError: (error) => {
       console.error('OCR processing failed:', error);
       setIsProcessingImage(false);
+      const errorMsg = 'Failed to process image. Please try again or use manual entry.';
+      setCameraError(errorMsg);
+      alert(errorMsg);
     },
   });
 
@@ -171,23 +180,69 @@ export function BulkVerification() {
   }, [input, codes, verifyMutation]);
 
   const handleCameraCapture = useCallback(() => {
-    fileInputRef.current?.click();
+    setCameraError('');
+    if (fileInputRef.current) {
+      // Reset the input value to allow selecting the same file twice
+      fileInputRef.current.value = '';
+      fileInputRef.current.accept = 'image/*';
+      fileInputRef.current.click();
+    }
   }, []);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
       console.log('No file selected');
+      setCameraError('');
+      return;
+    }
+
+    // Validate file is an image
+    if (!file.type.startsWith('image/')) {
+      const errorMsg = 'Please select a valid image file (JPG, PNG, WebP, etc.)';
+      setCameraError(errorMsg);
+      alert(errorMsg);
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSizeInBytes = 10 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      const errorMsg = 'Image is too large. Please select an image smaller than 10MB.';
+      setCameraError(errorMsg);
+      alert(errorMsg);
       return;
     }
 
     setIsProcessingImage(true);
+    setCameraError('');
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64Data = event.target?.result as string;
-      console.log('Image loaded, sending to OCR...');
-      ocrMutation.mutate({ image: base64Data });
+    
+    reader.onerror = () => {
+      console.error('Failed to read file');
+      setIsProcessingImage(false);
+      const errorMsg = 'Failed to read image file. Please try again.';
+      setCameraError(errorMsg);
+      alert(errorMsg);
     };
+    
+    reader.onload = async (event) => {
+      try {
+        const base64Data = event.target?.result as string;
+        if (!base64Data) {
+          throw new Error('Failed to convert image to base64');
+        }
+        console.log('Image loaded, sending to OCR...');
+        ocrMutation.mutate({ image: base64Data });
+      } catch (error) {
+        console.error('Error processing image:', error);
+        setIsProcessingImage(false);
+        const errorMsg = 'Error processing image. Please try again.';
+        setCameraError(errorMsg);
+        alert(errorMsg);
+      }
+    };
+    
     reader.readAsDataURL(file);
   }, [ocrMutation]);
 
@@ -260,15 +315,28 @@ export function BulkVerification() {
 
             <Button
               onClick={handleCameraCapture}
+              disabled={isProcessingImage}
               variant="outline"
               size="sm"
-              title="Upload image to extract codes via OCR"
+              title="Upload image to extract codes via OCR (supports camera or gallery)"
             >
-              <Camera className="h-4 w-4" />
+              {isProcessingImage ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Camera Error Message */}
+      {cameraError && (
+        <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-red-700">{cameraError}</div>
+        </div>
+      )}
 
       {/* Selected Codes List */}
       {codes.length > 0 && (
@@ -379,19 +447,20 @@ export function BulkVerification() {
         </div>
       )}
 
-      {/* Hidden file input for camera */}
+      {/* Hidden file input for camera - supports both capture and gallery */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
         className="hidden"
+        capture="environment"
       />
 
       {isProcessingImage && (
-        <div className="flex items-center justify-center gap-2 text-slate-600">
+        <div className="flex items-center justify-center gap-2 text-slate-600 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Processing image...
+          Processing image with OCR...
         </div>
       )}
     </div>
