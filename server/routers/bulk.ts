@@ -6,6 +6,29 @@ import {
 } from '../db';
 
 export const bulkRouter = router({
+  suggestions: publicProcedure
+    .input(z.object({
+      query: z.string().min(1),
+      limit: z.number().min(1).max(20).default(10)
+    }))
+    .query(async ({ input }) => {
+      if (!input.query || input.query.length === 0) return [];
+      
+      const searchQuery = input.query.toUpperCase();
+      try {
+        const codes = await searchCodes(searchQuery);
+        return codes
+          .slice(0, input.limit)
+          .map(code => ({
+            code: code.code,
+            description: code.description
+          }));
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        return [];
+      }
+    }),
+
   verifyBatch: publicProcedure
     .input(z.object({
       items: z.array(z.string()),

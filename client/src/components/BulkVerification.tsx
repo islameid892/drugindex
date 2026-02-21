@@ -1,4 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+'use client';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, Download, Loader2, CheckCircle2, XCircle, Plus, Camera, X } from 'lucide-react';
@@ -15,13 +17,22 @@ interface BulkResult {
   };
 }
 
+interface Suggestion {
+  code: string;
+  description: string;
+}
+
 export function BulkVerification() {
   const [input, setInput] = useState('');
   const [codeSearch, setCodeSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [codes, setCodes] = useState<string[]>([]);
   const [results, setResults] = useState<BulkResult[]>([]);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   
   const verifyMutation = trpc.bulk.verifyBatch.useMutation({
     onSuccess: (data) => {
@@ -32,6 +43,14 @@ export function BulkVerification() {
     },
   });
 
+  const suggestionsQuery = trpc.bulk.suggestions.useQuery(
+    { query: codeSearch, limit: 10 },
+    {
+      enabled: codeSearch.length > 0,
+      staleTime: 0,
+    }
+  );
+
   const ocrMutation = trpc.ocr.extractCodes.useMutation({
     onSuccess: (data) => {
       console.log('OCR extraction successful:', data);
@@ -39,7 +58,6 @@ export function BulkVerification() {
       console.log('Extracted codes:', extractedCodes);
       
       if (extractedCodes.length > 0) {
-        // Add extracted codes to textarea
         setInput(prevInput => {
           const newCodes = extractedCodes.filter(
             (code: string) => !prevInput.includes(code)
@@ -62,12 +80,74 @@ export function BulkVerification() {
     },
   });
 
+  // Update suggestions when query changes
+  useEffect(() => {
+    if (suggestionsQuery.data) {
+      setSuggestions(suggestionsQuery.data);
+      setSelectedSuggestionIndex(-1);
+    }
+  }, [suggestionsQuery.data]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleCodeSearchChange = (value: string) => {
+    setCodeSearch(value.toUpperCase());
+    setShowSuggestions(value.length > 0);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleSelectSuggestion = (suggestion: Suggestion) => {
+    setCodeSearch(suggestion.code);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          handleSelectSuggestion(suggestions[selectedSuggestionIndex]);
+        } else {
+          handleAddCode();
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        break;
+    }
+  };
+
   const handleAddCode = useCallback(() => {
     const trimmedCode = codeSearch.trim().toUpperCase();
     if (trimmedCode && /^[A-Z]\d{2}(\.\d{1,2})?$/.test(trimmedCode)) {
       if (!codes.includes(trimmedCode)) {
         setCodes([...codes, trimmedCode]);
         setCodeSearch('');
+        setSuggestions([]);
+        setShowSuggestions(false);
       }
     }
   }, [codeSearch, codes]);
@@ -101,251 +181,218 @@ export function BulkVerification() {
       return;
     }
 
-    console.log('File selected:', file.name, file.type, file.size);
     setIsProcessingImage(true);
-    
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64Image = event.target?.result as string;
-      console.log('Base64 image created, length:', base64Image.length);
-      console.log('Calling OCR mutation...');
-      ocrMutation.mutate({ image: base64Image });
-    };
-    reader.onerror = () => {
-      console.error('Failed to read image file');
-      setIsProcessingImage(false);
+    reader.onload = async (event) => {
+      const base64Data = event.target?.result as string;
+      console.log('Image loaded, sending to OCR...');
+      ocrMutation.mutate({ image: base64Data });
     };
     reader.readAsDataURL(file);
   }, [ocrMutation]);
 
-  const handleExportCSV = useCallback(() => {
+  const handleExportCSV = () => {
     if (results.length === 0) return;
 
-    const headers = ['Code', 'Found', 'Coverage Status', 'Code Name'];
-    const rows = results.map(r => [
-      r.input,
-      r.found ? 'Yes' : 'No',
-      r.found ? (r.isCovered ? 'Covered' : 'Not Covered') : 'N/A',
-      r.details.name || ''
-    ]);
+    const csvResult = trpc.bulk.exportResults.useQuery({
+      results,
+      format: 'csv'
+    });
 
-    const csv = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bulk-verification-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }, [results]);
+    if (csvResult.data) {
+      const blob = new Blob([csvResult.data.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = csvResult.data.filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Bulk Code Verification</h2>
-        <p className="text-sm text-slate-600 mb-6">
-          Add ICD-10 codes individually or paste multiple codes to check their coverage status in batch.
-        </p>
-
-        <div className="space-y-4">
-          {/* Code Search and Add Section */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold">Search and Add ICD-10 Code</label>
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                value={codeSearch}
-                onChange={(e) => setCodeSearch(e.target.value.toUpperCase())}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddCode();
-                  }
-                }}
-                placeholder="e.g., D07.28"
-                className="flex-1 h-10 text-base"
-              />
-              <Button
-                onClick={handleAddCode}
-                disabled={!codeSearch.trim()}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-              <Button
-                onClick={handleCameraCapture}
-                disabled={isProcessingImage}
-                variant="outline"
-                className="flex items-center gap-2"
-                title="Capture codes from image using camera"
-              >
-                {isProcessingImage ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-4 w-4" />
-                    Camera
-                  </>
-                )}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                key={Date.now()}
-              />
-            </div>
-          </div>
-
-          {/* Added Codes Display */}
-          {codes.length > 0 && (
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold">Added Codes ({codes.length})</label>
-              <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                {codes.map((code, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
-                  >
-                    <span>{code}</span>
-                    <button
-                      onClick={() => handleRemoveCode(idx)}
-                      className="hover:text-blue-900 transition-colors"
-                      title="Remove code"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Manual Input Section */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold">Paste Multiple Codes (Optional)</label>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Example:&#10;D07.28&#10;E11.9&#10;A01.00&#10;B02.9"
-              className="w-full h-32 p-3 border border-slate-300 rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Action Buttons */}
+    <div className="space-y-6">
+      {/* Code Search with Autocomplete */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-700">Add ICD-10 Codes</label>
+        <div className="relative" ref={suggestionsRef}>
           <div className="flex gap-2">
-            <Button
-              onClick={handleVerify}
-              disabled={(codes.length === 0 && !input.trim()) || verifyMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              {verifyMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4" />
-                  Verify Batch
-                </>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Type code (e.g., E11, D07.28)..."
+                value={codeSearch}
+                onChange={(e) => handleCodeSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => codeSearch.length > 0 && setShowSuggestions(true)}
+                className="h-10 text-base"
+              />
+              
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={suggestion.code}
+                      onClick={() => handleSelectSuggestion(suggestion)}
+                      className={`px-4 py-2 cursor-pointer transition-colors ${
+                        index === selectedSuggestionIndex
+                          ? 'bg-sky-100 text-sky-900'
+                          : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="font-semibold text-slate-900">{suggestion.code}</div>
+                      <div className="text-sm text-slate-600">{suggestion.description}</div>
+                    </div>
+                  ))}
+                </div>
               )}
+            </div>
+            
+            <Button
+              onClick={handleAddCode}
+              disabled={!codeSearch.trim()}
+              className="bg-sky-600 hover:bg-sky-700 text-white"
+              size="sm"
+            >
+              <Plus className="h-4 w-4" />
+              Add
             </Button>
 
-            {results.length > 0 && (
-              <Button
-                onClick={handleExportCSV}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
-            )}
+            <Button
+              onClick={handleCameraCapture}
+              variant="outline"
+              size="sm"
+              title="Upload image to extract codes via OCR"
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Results Section */}
+      {/* Selected Codes List */}
+      {codes.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-700">Selected Codes ({codes.length})</label>
+          <div className="flex flex-wrap gap-2">
+            {codes.map((code, index) => (
+              <div
+                key={index}
+                className="bg-sky-50 border border-sky-200 rounded-lg px-3 py-1 flex items-center gap-2"
+              >
+                <span className="font-semibold text-sky-900">{code}</span>
+                <button
+                  onClick={() => handleRemoveCode(index)}
+                  className="text-sky-600 hover:text-sky-900"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Paste Multiple Codes */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-700">Paste Multiple Codes (Optional)</label>
+        <textarea
+          placeholder="Paste codes here (one per line)..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="w-full h-32 p-3 border border-slate-200 rounded-lg font-mono text-sm"
+        />
+      </div>
+
+      {/* Verify Button */}
+      <Button
+        onClick={handleVerify}
+        disabled={verifyMutation.isPending || (codes.length === 0 && input.trim().length === 0)}
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+      >
+        {verifyMutation.isPending ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Verifying...
+          </>
+        ) : (
+          'Verify Batch'
+        )}
+      </Button>
+
+      {/* Results */}
       {results.length > 0 && (
-        <Card className="p-6">
-          <h3 className="text-lg font-bold mb-4">Verification Results ({results.length})</h3>
-          
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold text-slate-900">Results ({results.length})</h3>
+            <Button
+              onClick={handleExportCSV}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold">Code</th>
-                  <th className="text-left py-2 px-3 font-semibold">Status</th>
-                  <th className="text-left py-2 px-3 font-semibold">Coverage</th>
-                  <th className="text-left py-2 px-3 font-semibold">Details</th>
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="px-4 py-2 text-left font-semibold">Code</th>
+                  <th className="px-4 py-2 text-left font-semibold">Found</th>
+                  <th className="px-4 py-2 text-left font-semibold">Coverage</th>
+                  <th className="px-4 py-2 text-left font-semibold">Details</th>
                 </tr>
               </thead>
               <tbody>
-                {results.map((result, idx) => (
-                  <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-3 px-3 font-mono font-semibold text-blue-700">{result.input}</td>
-                    <td className="py-3 px-3">
+                {results.map((result, index) => (
+                  <tr key={index} className="border-b border-slate-200 hover:bg-slate-50">
+                    <td className="px-4 py-2 font-mono font-semibold text-slate-900">{result.input}</td>
+                    <td className="px-4 py-2">
                       {result.found ? (
-                        <div className="flex items-center gap-1 text-green-700">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Found
-                        </div>
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                       ) : (
-                        <div className="flex items-center gap-1 text-red-700">
-                          <XCircle className="h-4 w-4" />
-                          Not Found
-                        </div>
+                        <XCircle className="h-5 w-5 text-red-600" />
                       )}
                     </td>
-                    <td className="py-3 px-3">
-                      {result.found && (
+                    <td className="px-4 py-2">
+                      {result.found ? (
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          result.isCovered 
-                            ? 'bg-green-100 text-green-700' 
+                          result.isCovered
+                            ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-red-100 text-red-700'
                         }`}>
                           {result.isCovered ? 'Covered' : 'Not Covered'}
                         </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-sm">
-                      {result.details?.name ? (
-                        <div className="font-medium text-slate-700">{result.details.name}</div>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-500">-</span>
                       )}
                     </td>
+                    <td className="px-4 py-2 text-slate-700">{result.details.name || '-'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
 
-          <div className="mt-4 p-3 bg-slate-50 rounded-lg flex gap-4 text-sm">
-            <div>
-              <span className="font-semibold">Total:</span> {results.length}
-            </div>
-            <div>
-              <span className="font-semibold">Found:</span> {results.filter(r => r.found).length}
-            </div>
-            <div>
-              <span className="font-semibold">Covered:</span> {results.filter(r => r.found && r.isCovered).length}
-            </div>
-            <div>
-              <span className="font-semibold">Not Covered:</span> {results.filter(r => r.found && !r.isCovered).length}
-            </div>
-          </div>
-        </Card>
+      {/* Hidden file input for camera */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
+      {isProcessingImage && (
+        <div className="flex items-center justify-center gap-2 text-slate-600">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Processing image...
+        </div>
       )}
     </div>
   );
