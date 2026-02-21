@@ -137,3 +137,19 @@
 - [x] Add extracted codes to textarea automatically
 - [x] Upload images to S3 before sending to LLM vision API
 - [x] Verify codes are correctly identified and added
+
+
+## Phase 14: About Us & Contact Us Pages (SEO)
+- [ ] Create About Us page with project information
+- [ ] Create Contact Us page with contact form
+- [ ] Add navigation links to both pages in header/footer
+- [ ] Test pages functionality
+- [ ] Verify SEO meta tags and structure
+
+
+## Phase 14: About Us & Contact Us Pages (SEO)
+- [x] Create About Us page with project information and qualifications
+- [x] Create Contact Us page with contact form
+- [x] Add navigation links to both pages in App.tsx routes
+- [ ] Test pages functionality
+- [ ] Verify SEO meta tags and structure

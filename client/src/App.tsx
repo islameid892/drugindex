@@ -15,6 +15,8 @@ const CodeDetail = lazy(() => import("./pages/CodeDetail"));
 const ConditionDetail = lazy(() => import("./pages/ConditionDetail"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const Database = lazy(() => import("./pages/Database"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const ContactUs = lazy(() => import("./pages/ContactUs"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -28,6 +30,16 @@ function Router() {
   return (
     <Switch>
       <Route path={"/?"}component={Home} />
+      <Route path={"/about"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <AboutUs />
+        </Suspense>
+      )} />
+      <Route path={"/contact"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <ContactUs />
+        </Suspense>
+      )} />
       <Route path={"/favorites"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Favorites />
