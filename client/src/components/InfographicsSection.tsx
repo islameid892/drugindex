@@ -15,7 +15,7 @@ const infographics: Infographic[] = [
     id: "coding",
     title: "Streamlining Healthcare: From Coding Chaos to Instant Approval",
     description: "Discover how ICD-10 Search Engine transforms manual coding processes, reduces insurance rejections by 85%, and ensures same-day approval rates.",
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/cRiNVhJYdLWeYBBv.png",
+    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/dTFqLwvEeGMiLutY.png",
     alt: "Healthcare coding transformation infographic"
   },
   {
