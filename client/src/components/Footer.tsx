@@ -38,6 +38,10 @@ export default function Footer() {
             <Link href="/terms">
               <a className="text-slate-600 hover:text-sky-600 transition-colors">Terms</a>
             </Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/tools/image-to-pdf">
+              <a className="text-slate-600 hover:text-sky-600 transition-colors">Tools</a>
+            </Link>
           </div>
 
           {/* Right Section */}
