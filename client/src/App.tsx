@@ -20,6 +20,7 @@ const ContactUs = lazy(() => import("./pages/ContactUs"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -56,6 +57,11 @@ function Router() {
       <Route path={"/faq"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <FAQ />
+        </Suspense>
+      )} />
+      <Route path={"/tools/image-to-pdf"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <ImageToPDF />
         </Suspense>
       )} />
       <Route path={"/favorites"} component={() => (

@@ -218,3 +218,14 @@
 - [x] Add proper loading states and error handling
 - [x] Write tests for analytics functions (17 tests)
 - [x] All 65 tests passing
+
+
+## Phase 21: Image to PDF Converter Tool
+- [x] Create ImageToPDF page component
+- [x] Add image upload functionality
+- [x] Implement image preview and reordering
+- [x] Add PDF conversion using backend (pdf-lib)
+- [x] Implement download functionality
+- [x] Add to Tools navigation and Home page
+- [x] Support multiple image formats (JPG, PNG, WebP, GIF)
+- [x] All tests passing (65 total tests)

@@ -6,6 +6,7 @@ import { dataRouter } from "./routers/data";
 import { adminRouter } from "./routers/admin";
 import { bulkRouter } from "./routers/bulk";
 import { ocrRouter } from "./routers/ocr";
+import { toolsRouter } from "./routers/tools";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -29,6 +30,7 @@ export const appRouter = router({
   admin: adminRouter,
   bulk: bulkRouter,
   ocr: ocrRouter,
+  tools: toolsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
