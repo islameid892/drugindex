@@ -229,3 +229,15 @@
 - [x] Add to Tools navigation and Home page
 - [x] Support multiple image formats (JPG, PNG, WebP, GIF)
 - [x] All tests passing (65 total tests)
+
+## Phase 22: Fix Image-to-PDF & Add Merge PDF Tool
+- [x] Fix Image-to-PDF slow performance (moved conversion to client-side with pdf-lib)
+- [x] Fix download not working after conversion (now instant download)
+- [x] Install pdf-lib on client-side for fast processing
+- [x] Add success state with persistent download button
+- [x] Build Merge PDF tool (combine multiple PDFs into one)
+- [x] Create Tools landing page with both tools
+- [x] Test Image-to-PDF with multiple images - working perfectly
+- [x] Test Merge PDF with multiple PDF files
+- [x] Fixed pako/vite module resolution issues
+- [x] All 65 tests passing

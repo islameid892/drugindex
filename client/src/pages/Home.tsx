@@ -17,7 +17,7 @@ import { Link } from "wouter";
 import { memo } from "react";
 import Footer from "@/components/Footer";
 import InfographicsSection from "@/components/InfographicsSection";
-import pako from 'pako';
+
 import { matchesSearchQuery } from '@/lib/arabicSearch';
 import { trpc } from '@/lib/trpc';
 
@@ -46,8 +46,26 @@ const loadDataWithCompression = async (url: string): Promise<any> => {
     const arrayBuffer = await response.arrayBuffer();
     
     try {
-      const decompressed = pako.ungzip(new Uint8Array(arrayBuffer));
-      const text = new TextDecoder().decode(decompressed);
+      // Use native DecompressionStream API (supported in all modern browsers)
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      writer.write(new Uint8Array(arrayBuffer));
+      writer.close();
+      const reader = ds.readable.getReader();
+      const chunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
+      const result = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.length;
+      }
+      const text = new TextDecoder().decode(result);
       return JSON.parse(text);
     } catch (decompressError) {
       const text = new TextDecoder().decode(new Uint8Array(arrayBuffer));

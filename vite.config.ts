@@ -35,7 +35,7 @@ export default defineConfig({
         manualChunks: {
           'vendor': ['react', 'react-dom'],
           'ui': ['lucide-react'],
-          'utils': ['pako', 'wouter'],
+          'utils': ['wouter'],
         },
       },
     },
@@ -48,8 +48,8 @@ export default defineConfig({
   },
   // Performance optimizations
   optimizeDeps: {
-    include: ['react', 'react-dom', 'wouter', 'lucide-react'],
-    exclude: ['pako'],
+    include: ['react', 'react-dom', 'wouter', 'lucide-react', 'pdf-lib'],
+
   },
   server: {
     host: true,

@@ -21,6 +21,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
+const MergePDF = lazy(() => import("./pages/MergePDF"));
+const Tools = lazy(() => import("./pages/Tools"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -59,9 +61,19 @@ function Router() {
           <FAQ />
         </Suspense>
       )} />
+      <Route path={"/tools"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Tools />
+        </Suspense>
+      )} />
       <Route path={"/tools/image-to-pdf"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <ImageToPDF />
+        </Suspense>
+      )} />
+      <Route path={"/tools/merge-pdf"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <MergePDF />
         </Suspense>
       )} />
       <Route path={"/favorites"} component={() => (
