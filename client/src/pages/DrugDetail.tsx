@@ -7,6 +7,7 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 import { BranchViewer } from "@/components/BranchViewer";
 import { useState, useEffect } from "react";
+import { updatePageSchema } from "@/lib/jsonLdSchemas";
 
 export default function DrugDetail() {
   const { name } = useParams<{ name: string }>();
@@ -31,6 +32,25 @@ export default function DrugDetail() {
         );
         setDrugs(filtered);
         setTreeData(tree);
+        
+        // Add JSON-LD schema for first drug
+        if (filtered.length > 0) {
+          const drug = filtered[0];
+          updatePageSchema('drug', {
+            name: drug.scientificName,
+            description: drug.indication || 'Medical drug information',
+            indication: drug.indication || '',
+            activeIngredient: drug.scientificName,
+            url: `https://drugindex.click/drug/${encodeURIComponent(drug.scientificName)}`,
+          });
+          
+          // Update page title
+          document.title = `${drug.scientificName} - ICD-10 Search Engine`;
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', `${drug.scientificName} - ${drug.indication || 'Medical drug information'}`);
+          }
+        }
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -54,6 +74,14 @@ export default function DrugDetail() {
   }
 
   if (drugs.length === 0) {
+    // Clear schema if drug not found
+    useEffect(() => {
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    }, []);
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
         <div className="max-w-4xl mx-auto">

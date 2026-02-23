@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { updatePageSchema } from "@/lib/jsonLdSchemas";
 
 export default function ConditionDetail() {
   const { condition } = useParams<{ condition: string }>();
@@ -21,6 +22,20 @@ export default function ConditionDetail() {
           item.indication.toLowerCase().includes(decodedCondition.toLowerCase())
         );
         setDrugs(filtered);
+        
+        // Add JSON-LD schema for medical condition
+        updatePageSchema('condition', {
+          name: decodedCondition,
+          description: `Medical condition: ${decodedCondition} with ${filtered.length} treatment option(s)`,
+          url: `https://drugindex.click/condition/${encodeURIComponent(decodedCondition)}`,
+        });
+        
+        // Update page title
+        document.title = `${decodedCondition} - ICD-10 Search Engine`;
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', `Medical condition: ${decodedCondition} with ${filtered.length} treatment option(s)`);
+        }
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {

@@ -251,3 +251,13 @@
 - [x] Add noindex to admin page to prevent indexing
 - [x] Update App.tsx to update SEO tags on route change
 - [x] All TypeScript checks passing
+
+
+## Phase 24: Structured Data (JSON-LD) for Rich Snippets
+- [x] Create JSON-LD schema utilities for drugs, codes, conditions (jsonLdSchemas.ts)
+- [x] Add MedicalEntity schema to drug detail pages (DrugDetail.tsx)
+- [x] Add MedicalCode schema to ICD-10 code pages (CodeDetail.tsx)
+- [x] Add MedicalCondition schema to condition pages (ConditionDetail.tsx)
+- [x] Create comprehensive testing guide (STRUCTURED_DATA_TESTING_GUIDE.md)
+- [x] Dynamic page titles and meta descriptions for all detail pages
+- [x] All TypeScript checks passing

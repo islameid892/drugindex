@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { updatePageSchema } from "@/lib/jsonLdSchemas";
 
 export default function CodeDetail() {
   const { code } = useParams<{ code: string }>();
@@ -21,6 +22,20 @@ export default function CodeDetail() {
           Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === decodedCode)
         );
         setDrugs(filtered);
+        
+        // Add JSON-LD schema for ICD-10 code
+        updatePageSchema('code', {
+          code: decodedCode,
+          description: `ICD-10 code ${decodedCode} with ${filtered.length} medication(s)`,
+          url: `https://drugindex.click/code/${encodeURIComponent(decodedCode)}`,
+        });
+        
+        // Update page title
+        document.title = `ICD-10 Code ${decodedCode} - ICD-10 Search Engine`;
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', `ICD-10 code ${decodedCode} with ${filtered.length} medication(s)`);
+        }
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -61,7 +76,7 @@ export default function CodeDetail() {
             <div
               key={idx}
               className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/drug/${encodeURIComponent(drug.scientific_name)}`)}
+              onClick={() => navigate(`/drug/${encodeURIComponent(drug.scientificName)}`)}
             >
               <div className="flex items-start justify-between">
                 <div>
