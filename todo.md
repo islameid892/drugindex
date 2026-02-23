@@ -241,3 +241,13 @@
 - [x] Test Merge PDF with multiple PDF files
 - [x] Fixed pako/vite module resolution issues
 - [x] All 65 tests passing
+
+
+## Phase 23: Fix Google Search Console Indexing Issues
+- [x] Diagnose 403 errors preventing Google crawling (SPA canonical tag issue)
+- [x] Add dynamic canonical tags to all pages (seoHelpers.ts)
+- [x] Fix robots.txt to allow proper crawling (added all routes)
+- [x] Verify hreflang tags for duplicate pages (dynamic hreflang in App.tsx)
+- [x] Add noindex to admin page to prevent indexing
+- [x] Update App.tsx to update SEO tags on route change
+- [x] All TypeScript checks passing

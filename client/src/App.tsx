@@ -1,12 +1,13 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import Home from "./pages/Home";
+import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -32,6 +33,24 @@ const PageLoader = () => (
 );
 
 function Router() {
+  const [location] = useLocation();
+  
+  // Update SEO tags on route change
+  useEffect(() => {
+    updateCanonicalTag(location);
+    updateHrefLangTags(location);
+    
+    // Add noindex to admin page
+    if (location === '/admin') {
+      addNoIndexTag();
+    } else {
+      removeNoIndexTag();
+    }
+    
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+  }, [location]);
+  
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
