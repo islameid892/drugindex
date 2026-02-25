@@ -39,8 +39,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   );
 
   const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput || "", limit: 100 },
-    { enabled: true }
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput || "", limit: 50 },
+    { enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) }
   );
 
   const searchQuery = trpc.advancedSearch.search.useQuery(

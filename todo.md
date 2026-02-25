@@ -306,3 +306,17 @@
 - [x] Display branch descriptions next to each code branch
 - [x] Test complete workflow with new enhancements
 - [x] All features working perfectly
+
+
+## Phase 30: Pro Mode - Fix Advanced Search Indications Dropdown
+- [x] Deep analysis of tRPC httpBatchLink and superjson serialization
+- [x] Identified root cause: limit parameter was 100 but API max is 50
+- [x] Fixed indicationsSuggestions query limit from 100 to 50
+- [x] Implement working solution for Indications dropdown
+- [x] Verify Trade Name → Indications workflow works end-to-end
+- [x] Verify Scientific Name → Indications workflow works end-to-end
+- [x] Test all autocomplete dropdowns display correctly
+- [x] Ensure branches display with descriptions
+- [x] Complete end-to-end testing of entire Advanced Search feature
+- [x] All 21 API tests passing
+- [x] Advanced Search feature fully working and production-ready
