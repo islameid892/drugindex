@@ -149,7 +149,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-3">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Advanced Search</DialogTitle>
@@ -159,15 +159,15 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-8 py-6">
           {/* Step 1: Scientific Name & Trade Name */}
           {step === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Scientific Name Field */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
-                  <h3 className="font-semibold text-sm">Scientific Name</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
+                  <h3 className="font-semibold text-lg">Scientific Name</h3>
                 </div>
                 
                 <div className="relative">
@@ -184,7 +184,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                   
                   {/* Scientific Name Suggestions Dropdown */}
                   {showScientificDropdown && debouncedScientificNameInput.length > 0 && scientificName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[500px] overflow-y-auto">
                       {scientificNameSuggestions.isLoading && (
                         <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -220,9 +220,9 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
               {/* Trade Name Field */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</div>
-                  <h3 className="font-semibold text-sm">Trade Name <span className="text-gray-500 font-normal">(Optional)</span></h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">2</div>
+                  <h3 className="font-semibold text-lg">Trade Name <span className="text-gray-500 font-normal">(Optional)</span></h3>
                 </div>
 
                 <div className="relative">
@@ -239,7 +239,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
                   {/* Trade Name Suggestions Dropdown */}
                   {showTradeNameDropdown && debouncedTradeNameInput.length > 0 && tradeName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[500px] overflow-y-auto">
                       {tradeNameSuggestions.isLoading && (
                         <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -284,9 +284,9 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
           {/* Step 2: Indications */}
           {step === 2 && (scientificName || tradeName) && (
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</div>
-                <h3 className="font-semibold text-sm">Select Indications</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold">3</div>
+                <h3 className="font-semibold text-lg">Select Indications</h3>
               </div>
 
               <div className="relative mb-3">
@@ -304,7 +304,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
                 {/* Indications Suggestions Dropdown */}
                 {showIndicationDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[600px] overflow-y-auto">
                     {indicationsSuggestions.isLoading && (
                       <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
