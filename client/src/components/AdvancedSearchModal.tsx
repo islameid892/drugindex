@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,23 @@ import { ChevronDown, ChevronUp, Search, X, Loader2, ArrowRight } from "lucide-r
 interface AdvancedSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// Custom debounce hook for better performance
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
 export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProps) {
@@ -27,25 +44,46 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   const [showTradeNameDropdown, setShowTradeNameDropdown] = useState(false);
   const [showIndicationDropdown, setShowIndicationDropdown] = useState(false);
 
-  // API Queries
+  // Debounce inputs for better performance (300ms delay)
+  const debouncedScientificNameInput = useDebounce(scientificNameInput, 300);
+  const debouncedTradeNameInput = useDebounce(tradeNameInput, 300);
+  const debouncedIndicationInput = useDebounce(indicationInput, 300);
+
+  // API Queries with debounced inputs
   const scientificNameSuggestions = trpc.advancedSearch.scientificNameSuggestions.useQuery(
-    { query: scientificNameInput, limit: 8 },
-    { enabled: scientificNameInput.length > 0 }
+    { query: debouncedScientificNameInput, limit: 8 },
+    { 
+      enabled: debouncedScientificNameInput.length > 0,
+      staleTime: 30000, // Cache for 30 seconds
+      gcTime: 60000, // Keep in cache for 1 minute
+    }
   );
 
   const tradeNameSuggestions = trpc.advancedSearch.tradeNameSuggestions.useQuery(
-    { scientificName: scientificName || "", query: tradeNameInput, limit: 10 },
-    { enabled: tradeNameInput.length > 0 }
+    { scientificName: scientificName || "", query: debouncedTradeNameInput, limit: 10 },
+    { 
+      enabled: debouncedTradeNameInput.length > 0,
+      staleTime: 30000,
+      gcTime: 60000,
+    }
   );
 
   const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput || "", limit: 50 },
-    { enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) }
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: debouncedIndicationInput || "", limit: 50 },
+    { 
+      enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0),
+      staleTime: 30000,
+      gcTime: 60000,
+    }
   );
 
   const searchQuery = trpc.advancedSearch.search.useQuery(
     { scientificName, tradeNames: tradeName ? [tradeName] : [], indications },
-    { enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) && indications.length > 0 }
+    { 
+      enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) && indications.length > 0,
+      staleTime: 30000,
+      gcTime: 60000,
+    }
   );
 
   // Update results when search query completes
@@ -111,7 +149,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-3">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Advanced Search</DialogTitle>
@@ -145,22 +183,25 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                   />
                   
                   {/* Scientific Name Suggestions Dropdown */}
-                  {showScientificDropdown && scientificNameInput.length > 0 && scientificName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {showScientificDropdown && debouncedScientificNameInput.length > 0 && scientificName.length === 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto">
                       {scientificNameSuggestions.isLoading && (
-                        <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
+                        <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading...
+                        </div>
                       )}
                       {scientificNameSuggestions.data?.length === 0 && !scientificNameSuggestions.isLoading && (
-                        <div className="px-3 py-2 text-xs text-gray-500 text-center">No results found</div>
+                        <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
                       )}
                       {scientificNameSuggestions.data?.map(item => (
                         <button
                           key={item.name}
                           onClick={() => handleSelectScientificName(item.name)}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b last:border-b-0 text-xs flex justify-between items-center"
+                          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 text-sm flex justify-between items-center transition-colors"
                         >
                           <span className="font-medium">{item.name}</span>
-                          <span className="text-gray-500 text-xs">{item.count}</span>
+                          <span className="text-gray-500 text-xs bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
                         </button>
                       ))}
                     </div>
@@ -168,10 +209,10 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                 </div>
 
                 {scientificName && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs flex items-center justify-between">
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-sm flex items-center justify-between">
                     <span>✓ Selected: <strong>{scientificName}</strong></span>
                     <button onClick={() => { setScientificName(""); setScientificNameInput(""); }} className="text-green-700 hover:text-green-900">
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
@@ -197,19 +238,22 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                   />
 
                   {/* Trade Name Suggestions Dropdown */}
-                  {showTradeNameDropdown && tradeNameInput.length > 0 && tradeName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {showTradeNameDropdown && debouncedTradeNameInput.length > 0 && tradeName.length === 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto">
                       {tradeNameSuggestions.isLoading && (
-                        <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
+                        <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading...
+                        </div>
                       )}
                       {tradeNameSuggestions.data?.length === 0 && !tradeNameSuggestions.isLoading && (
-                        <div className="px-3 py-2 text-xs text-gray-500 text-center">No results found</div>
+                        <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
                       )}
                       {tradeNameSuggestions.data?.map(item => (
                         <button
                           key={item.name}
                           onClick={() => handleSelectTradeName(item.name)}
-                          className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b last:border-b-0 text-xs flex justify-between items-center"
+                          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 text-sm transition-colors"
                         >
                           <span className="font-medium">{item.name}</span>
                         </button>
@@ -219,10 +263,10 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                 </div>
 
                 {tradeName && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs flex items-center justify-between">
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-sm flex items-center justify-between">
                     <span>✓ Selected: <strong>{tradeName}</strong></span>
                     <button onClick={() => { setTradeName(""); setTradeNameInput(""); }} className="text-green-700 hover:text-green-900">
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
@@ -230,7 +274,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
               {/* Info message */}
               {!scientificName && !tradeName && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
                   Fill in either Scientific Name or Trade Name to continue
                 </div>
               )}
@@ -260,12 +304,15 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
                 {/* Indications Suggestions Dropdown */}
                 {showIndicationDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-64 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-96 overflow-y-auto">
                     {indicationsSuggestions.isLoading && (
-                      <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
+                      <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </div>
                     )}
                     {!indicationsSuggestions.isLoading && indicationsSuggestions.data?.length === 0 && (
-                      <div className="px-3 py-2 text-xs text-gray-500 text-center">No results found</div>
+                      <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
                     )}
                     {indicationsSuggestions.data && indicationsSuggestions.data.map(item => (
                       <button
@@ -275,7 +322,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                           setIndicationInput("");
                           setShowIndicationDropdown(false);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-green-50 border-b last:border-b-0 text-xs"
+                        className="w-full text-left px-4 py-3 hover:bg-green-50 border-b last:border-b-0 text-sm transition-colors"
                       >
                         {item.indication}
                       </button>
@@ -286,14 +333,14 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
               {/* Selected Indications */}
               {indications.length > 0 && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-                  <div className="text-xs font-semibold text-green-900 mb-2">Selected Indications ({indications.length}):</div>
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
+                  <div className="text-sm font-semibold text-green-900 mb-2">Selected Indications ({indications.length}):</div>
                   <div className="flex flex-wrap gap-2">
                     {indications.map(indication => (
-                      <div key={indication} className="bg-green-200 text-green-900 px-2 py-1 rounded text-xs flex items-center gap-1">
+                      <div key={indication} className="bg-green-200 text-green-900 px-3 py-1.5 rounded text-sm flex items-center gap-2">
                         {indication}
                         <button onClick={() => handleToggleIndication(indication)} className="hover:text-green-700">
-                          <X className="h-3 w-3" />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                     ))}
@@ -304,32 +351,32 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               {/* Results */}
               {searchQuery.data?.codes && (
                 <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-semibold text-sm mb-3">ICD-10 Codes ({results.length})</h4>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
                     {results.map((result: any) => (
-                      <div key={result.code} className="border rounded p-3 bg-gray-50">
+                      <div key={result.code} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                         <button
                           onClick={() => toggleBranches(result.code)}
-                          className="w-full flex items-center justify-between hover:bg-gray-100 p-2 rounded"
+                          className="w-full flex items-center justify-between p-2 rounded"
                         >
                           <div className="text-left">
-                            <div className="font-semibold text-sm">{result.code}</div>
-                            <div className="text-xs text-gray-600">{result.name}</div>
+                            <div className="font-semibold text-base">{result.code}</div>
+                            <div className="text-sm text-gray-600 mt-1">{result.name}</div>
                           </div>
                           {expandedCodes.has(result.code) ? (
-                            <ChevronUp className="h-4 w-4 text-gray-500" />
+                            <ChevronUp className="h-5 w-5 text-gray-500" />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                            <ChevronDown className="h-5 w-5 text-gray-500" />
                           )}
                         </button>
 
                         {/* Branches */}
                         {expandedCodes.has(result.code) && result.branches && result.branches.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-1 border-l-2 border-blue-200 pl-3">
+                          <div className="mt-3 ml-4 space-y-2 border-l-2 border-blue-300 pl-4">
                             {Array.isArray(result.branches) && result.branches.map((branch: any) => (
-                              <div key={branch.code} className="text-xs">
+                              <div key={branch.code} className="text-sm py-1">
                                 <div className="font-medium text-blue-700">{branch.code}</div>
-                                <div className="text-gray-600">{branch.description || branch.name || 'No description'}</div>
+                                <div className="text-gray-600 mt-0.5">{branch.description || branch.name || 'No description'}</div>
                               </div>
                             ))}
                           </div>
@@ -346,22 +393,22 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
         {/* Footer Buttons */}
         <div className="border-t p-4 flex justify-between gap-2">
           {step === 2 && (
-            <Button variant="outline" onClick={handleBack} className="text-xs">
+            <Button variant="outline" onClick={handleBack} className="text-sm">
               ← Back
             </Button>
           )}
           <div className="flex-1" />
-          <Button variant="outline" onClick={handleClose} className="text-xs">
+          <Button variant="outline" onClick={handleClose} className="text-sm">
             Close
           </Button>
           {step === 1 && (scientificName || tradeName) && (
-            <Button onClick={() => setStep(2)} className="text-xs bg-blue-600 hover:bg-blue-700">
-              Next <ArrowRight className="h-3 w-3 ml-1" />
+            <Button onClick={() => setStep(2)} className="text-sm bg-blue-600 hover:bg-blue-700">
+              Next <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           )}
           {step === 2 && indications.length > 0 && (
-            <Button onClick={() => {}} disabled={searchQuery.isLoading} className="text-xs bg-green-600 hover:bg-green-700">
-              {searchQuery.isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3 mr-1" />}
+            <Button onClick={() => {}} disabled={searchQuery.isLoading} className="text-sm bg-green-600 hover:bg-green-700">
+              {searchQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-1" />}
               Search
             </Button>
           )}
