@@ -291,3 +291,10 @@
 - [x] All autocomplete dropdowns working perfectly
 - [x] Selection from suggestions working flawlessly
 - [x] Results display and expandable branches working
+
+
+## Phase 27: Bug Fixes - Trade Name & Indications Dropdowns
+- [ ] Fix Trade Name autocomplete dropdown not showing suggestions
+- [ ] Fix Indications autocomplete dropdown not showing suggestions
+- [ ] Debug API queries for trade names and indications
+- [ ] Test all dropdowns work properly

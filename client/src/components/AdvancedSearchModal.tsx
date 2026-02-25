@@ -34,13 +34,13 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   );
 
   const tradeNameSuggestions = trpc.advancedSearch.tradeNameSuggestions.useQuery(
-    { scientificName, query: tradeNameInput, limit: 10 },
-    { enabled: scientificName.length > 0 && tradeNameInput.length > 0 }
+    { scientificName: scientificName || "", query: tradeNameInput, limit: 10 },
+    { enabled: tradeNameInput.length > 0 }
   );
 
   const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName, tradeNames: tradeName ? [tradeName] : [], query: indicationInput, limit: 10 },
-    { enabled: (scientificName.length > 0 || tradeName.length > 0) && indicationInput.length > 0 }
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput, limit: 10 },
+    { enabled: indicationInput.length > 0 }
   );
 
   const searchQuery = trpc.advancedSearch.search.useQuery(
@@ -113,7 +113,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-3">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Advanced Search</DialogTitle>
