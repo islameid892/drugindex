@@ -26,7 +26,6 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   const [showScientificDropdown, setShowScientificDropdown] = useState(false);
   const [showTradeNameDropdown, setShowTradeNameDropdown] = useState(false);
   const [showIndicationDropdown, setShowIndicationDropdown] = useState(false);
-  const [indicationFocused, setIndicationFocused] = useState(false);
 
   // API Queries
   const scientificNameSuggestions = trpc.advancedSearch.scientificNameSuggestions.useQuery(
@@ -40,8 +39,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   );
 
   const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput, limit: 100 },
-    { enabled: step === 2 }
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput || "", limit: 100 },
+    { enabled: true }
   );
 
   const searchQuery = trpc.advancedSearch.search.useQuery(
@@ -61,7 +60,6 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     setScientificNameInput("");
     setShowScientificDropdown(false);
     setIndications([]);
-    // Auto-advance to indications step
     setStep(2);
   };
 
@@ -70,7 +68,6 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     setTradeNameInput("");
     setShowTradeNameDropdown(false);
     setIndications([]);
-    // Auto-advance to indications step
     setStep(2);
   };
 
@@ -256,58 +253,56 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                     setIndicationInput(e.target.value);
                     setShowIndicationDropdown(true);
                   }}
-                  onFocus={() => {
-                    setShowIndicationDropdown(true);
-                    setIndicationFocused(true);
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setIndicationFocused(false), 200);
-                  }}
+                  onFocus={() => setShowIndicationDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowIndicationDropdown(false), 200)}
                   className="h-10 text-sm"
                 />
-              </div>
 
-              {/* Indications Suggestions Dropdown */}
-              {showIndicationDropdown && indicationFocused && (
-                <div className="absolute left-4 right-4 bg-white border rounded shadow-lg z-50 max-h-64 overflow-y-auto mt-1">
-                  {indicationsSuggestions.isLoading && (
-                    <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
-                  )}
-                  {indicationsSuggestions.data?.length === 0 && !indicationsSuggestions.isLoading && (
-                    <div className="px-3 py-2 text-xs text-gray-500 text-center">No results found</div>
-                  )}
-                  {indicationsSuggestions.data?.map(item => (
-                    <button
-                      key={item.indication}
-                      onClick={() => {
-                        handleToggleIndication(item.indication);
-                        setIndicationInput("");
-                        setShowIndicationDropdown(false);
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-green-50 border-b last:border-b-0 text-xs"
-                    >
-                      {item.indication}
-                    </button>
-                  ))}
-                </div>
-              )}
+                {/* Indications Suggestions Dropdown */}
+                {showIndicationDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-64 overflow-y-auto">
+                    {indicationsSuggestions.isLoading && (
+                      <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
+                    )}
+                    {!indicationsSuggestions.isLoading && indicationsSuggestions.data?.length === 0 && (
+                      <div className="px-3 py-2 text-xs text-gray-500 text-center">No results found</div>
+                    )}
+                    {indicationsSuggestions.data && indicationsSuggestions.data.map(item => (
+                      <button
+                        key={item.indication}
+                        onClick={() => {
+                          handleToggleIndication(item.indication);
+                          setIndicationInput("");
+                          setShowIndicationDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-green-50 border-b last:border-b-0 text-xs"
+                      >
+                        {item.indication}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Selected Indications */}
               {indications.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {indications.map(ind => (
-                    <span key={ind} className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs flex items-center gap-2">
-                      {ind}
-                      <button onClick={() => handleToggleIndication(ind)} className="hover:text-green-900">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                  <div className="text-xs font-semibold text-green-900 mb-2">Selected Indications ({indications.length}):</div>
+                  <div className="flex flex-wrap gap-2">
+                    {indications.map(indication => (
+                      <div key={indication} className="bg-green-200 text-green-900 px-2 py-1 rounded text-xs flex items-center gap-1">
+                        {indication}
+                        <button onClick={() => handleToggleIndication(indication)} className="hover:text-green-700">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Results Section */}
-              {indications.length > 0 && searchQuery.data?.codes && (
+              {/* Results */}
+              {searchQuery.data?.codes && (
                 <div className="mt-6 pt-6 border-t">
                   <h4 className="font-semibold text-sm mb-3">ICD-10 Codes ({results.length})</h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
