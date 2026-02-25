@@ -26,6 +26,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   const [showScientificDropdown, setShowScientificDropdown] = useState(false);
   const [showTradeNameDropdown, setShowTradeNameDropdown] = useState(false);
   const [showIndicationDropdown, setShowIndicationDropdown] = useState(false);
+  const [indicationFocused, setIndicationFocused] = useState(false);
 
   // API Queries
   const scientificNameSuggestions = trpc.advancedSearch.scientificNameSuggestions.useQuery(
@@ -39,8 +40,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   );
 
   const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput, limit: 10 },
-    { enabled: indicationInput.length > 0 }
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: indicationInput, limit: 100 },
+    { enabled: step === 2 }
   );
 
   const searchQuery = trpc.advancedSearch.search.useQuery(
@@ -255,14 +256,20 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                     setIndicationInput(e.target.value);
                     setShowIndicationDropdown(true);
                   }}
-                  onFocus={() => setShowIndicationDropdown(true)}
+                  onFocus={() => {
+                    setShowIndicationDropdown(true);
+                    setIndicationFocused(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setIndicationFocused(false), 200);
+                  }}
                   className="h-10 text-sm"
                 />
               </div>
 
               {/* Indications Suggestions Dropdown */}
-              {showIndicationDropdown && indicationInput.length > 0 && (
-                <div className="absolute left-4 right-4 bg-white border rounded shadow-lg z-50 max-h-48 overflow-y-auto">
+              {showIndicationDropdown && indicationFocused && (
+                <div className="absolute left-4 right-4 bg-white border rounded shadow-lg z-50 max-h-64 overflow-y-auto mt-1">
                   {indicationsSuggestions.isLoading && (
                     <div className="px-3 py-2 text-xs text-gray-500 text-center">Loading...</div>
                   )}
@@ -327,7 +334,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                             {Array.isArray(result.branches) && result.branches.map((branch: any) => (
                               <div key={branch.code} className="text-xs">
                                 <div className="font-medium text-blue-700">{branch.code}</div>
-                                <div className="text-gray-600">{branch.name}</div>
+                                <div className="text-gray-600">{branch.description || branch.name || 'No description'}</div>
                               </div>
                             ))}
                           </div>

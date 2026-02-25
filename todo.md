@@ -294,7 +294,15 @@
 
 
 ## Phase 27: Bug Fixes - Trade Name & Indications Dropdowns
-- [ ] Fix Trade Name autocomplete dropdown not showing suggestions
-- [ ] Fix Indications autocomplete dropdown not showing suggestions
-- [ ] Debug API queries for trade names and indications
-- [ ] Test all dropdowns work properly
+- [x] Fix Trade Name autocomplete dropdown not showing suggestions
+- [x] Fix Indications autocomplete dropdown not showing suggestions
+- [x] Debug API queries for trade names and indications
+- [x] Test all dropdowns work properly
+- [x] Increased modal size for better visibility
+- [x] All autocomplete dropdowns working perfectly
+
+## Phase 28: Advanced Search UX Enhancements
+- [x] Show all indications in dropdown when field is focused (without typing)
+- [x] Display branch descriptions next to each code branch
+- [x] Test complete workflow with new enhancements
+- [x] All features working perfectly
