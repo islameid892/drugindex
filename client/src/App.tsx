@@ -8,6 +8,7 @@ import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { Suspense, lazy, useEffect } from "react";
 import Home from "./pages/Home";
 import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
+import { AdvancedSearchFAB } from "./components/AdvancedSearchFAB";
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -148,6 +149,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <AdvancedSearchFAB />
           </TooltipProvider>
         </FavoritesProvider>
       </ThemeProvider>

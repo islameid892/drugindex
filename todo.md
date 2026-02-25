@@ -261,3 +261,17 @@
 - [x] Create comprehensive testing guide (STRUCTURED_DATA_TESTING_GUIDE.md)
 - [x] Dynamic page titles and meta descriptions for all detail pages
 - [x] All TypeScript checks passing
+
+
+## Phase 25: Advanced Search Feature (Drug Index)
+- [x] Design Advanced Search API endpoints (scientific name, trade names, indications autocomplete)
+- [x] Implement database queries for smart suggestions
+- [x] Create Advanced Search modal component with progressive disclosure
+- [x] Build Step 1: Scientific Name search with autocomplete
+- [x] Build Step 2: Trade Names multi-select with autocomplete
+- [x] Build Step 3: Indications multi-select with autocomplete (alphabetically sorted)
+- [x] Build results display with ICD-10 codes and expandable branches
+- [x] Create FAB button (Bottom Right) with "Search Advanced" label
+- [x] Implement modal open/close functionality
+- [x] Write comprehensive tests for Advanced Search API (21 tests)
+- [x] All tests passing (21/21)
