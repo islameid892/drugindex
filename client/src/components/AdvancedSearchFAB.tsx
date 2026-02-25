@@ -15,7 +15,7 @@ export function AdvancedSearchFAB() {
       >
         <Search className="h-6 w-6" />
         <span className="text-sm font-semibold hidden group-hover:inline-block max-w-xs">
-          Search Advanced
+          Advanced Search
         </span>
       </button>
 

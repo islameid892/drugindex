@@ -150,10 +150,10 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col">
-        <DialogHeader className="border-b pb-3">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">Advanced Search</DialogTitle>
-            <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+        <DialogHeader className="border-b pb-4 pt-4 px-8">
+          <div className="flex items-center justify-between w-full">
+            <DialogTitle className="text-3xl font-bold">Advanced Search</DialogTitle>
+            <span className="text-sm font-semibold bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
               Step {step} of 2
             </span>
           </div>
@@ -391,24 +391,24 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
         </div>
 
         {/* Footer Buttons */}
-        <div className="border-t p-4 flex justify-between gap-2">
+        <div className="border-t p-6 flex justify-between gap-3">
           {step === 2 && (
-            <Button variant="outline" onClick={handleBack} className="text-sm">
+            <Button variant="outline" onClick={handleBack} className="text-base px-6 py-2">
               ← Back
             </Button>
           )}
           <div className="flex-1" />
-          <Button variant="outline" onClick={handleClose} className="text-sm">
+          <Button variant="outline" onClick={handleClose} className="text-base px-6 py-2">
             Close
           </Button>
           {step === 1 && (scientificName || tradeName) && (
-            <Button onClick={() => setStep(2)} className="text-sm bg-blue-600 hover:bg-blue-700">
-              Next <ArrowRight className="h-4 w-4 ml-1" />
+            <Button onClick={() => setStep(2)} className="text-base px-6 py-2 bg-blue-600 hover:bg-blue-700">
+              Next <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           )}
           {step === 2 && indications.length > 0 && (
-            <Button onClick={() => {}} disabled={searchQuery.isLoading} className="text-sm bg-green-600 hover:bg-green-700">
-              {searchQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-1" />}
+            <Button onClick={() => {}} disabled={searchQuery.isLoading} className="text-base px-6 py-2 bg-green-600 hover:bg-green-700">
+              {searchQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
               Search
             </Button>
           )}
