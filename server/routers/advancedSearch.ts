@@ -209,13 +209,16 @@ export const advancedSearchRouter = router({
             if (!codeData) return null;
 
             const branches = parseJsonArray(codeData.branches);
+            const branchesArray = Array.isArray(branches) ? branches : [];
             return {
               code: codeData.code,
               description: codeData.description,
-              branches: branches.map(branch => ({
-                code: branch,
-                description: allCodes.find(c => c.code === branch)?.description || "",
-              })),
+              branches: branchesArray
+                .filter((branch) => typeof branch === 'string')
+                .map(branch => ({
+                  code: branch,
+                  description: allCodes.find(c => c.code === branch)?.description || "",
+                })),
               relatedMedications: parseJsonArray(codeData.relatedMedications),
             };
           })
