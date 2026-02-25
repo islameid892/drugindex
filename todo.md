@@ -280,3 +280,14 @@
 - [x] Fix branches data rendering
 - [x] End-to-end testing - all steps working perfectly
 - [x] Feature complete and production-ready
+
+
+## Phase 26: Advanced Search UX Improvements
+- [x] Redesign modal to show Scientific Name and Trade Name fields together on first step
+- [x] Implement auto-advance to Indications when either field is filled
+- [x] Fix indications autocomplete dropdown selection
+- [x] Test complete workflow with new UX
+- [x] Verify all steps work smoothly
+- [x] All autocomplete dropdowns working perfectly
+- [x] Selection from suggestions working flawlessly
+- [x] Results display and expandable branches working
