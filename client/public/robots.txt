@@ -57,8 +57,11 @@ Disallow: /api/
 Crawl-delay: 0
 Request-rate: 30/1m
 
-# Sitemap location
+# Sitemap location - Only for production domain
 Sitemap: https://drugindex.click/sitemap.xml
 Sitemap: https://drugindex.click/sitemap-drugs.xml
 Sitemap: https://drugindex.click/sitemap-codes.xml
 Sitemap: https://drugindex.click/sitemap-conditions.xml
+
+# Canonical domain
+Host: https://drugindex.click/
