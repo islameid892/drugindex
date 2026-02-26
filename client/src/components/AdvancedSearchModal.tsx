@@ -382,12 +382,16 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                         {/* Branches */}
                         {expandedCodes.has(result.code) && result.branches && result.branches.length > 0 && (
                           <div className={`mt-3 ml-4 space-y-2 border-l-2 ${isNonCovered ? 'border-red-300' : 'border-blue-300'} pl-4`}>
-                            {Array.isArray(result.branches) && result.branches.map((branch: any) => {
-                              const branchNonCovered = branch.isCovered === false || branch.coverage === 'non-covered';
+                            {Array.isArray(result.branches) && result.branches.map((branch: any, idx: number) => {
+                              // Handle both string and object formats
+                              const branchCode = typeof branch === 'string' ? branch : (branch.code || '');
+                              const branchDescription = typeof branch === 'string' ? '' : (branch.description || branch.name || '');
+                              const branchNonCovered = typeof branch === 'object' && (branch.isCovered === false || branch.coverage === 'non-covered');
+                              
                               return (
-                              <div key={branch.code} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
-                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branch.code}</div>
-                                <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branch.description || branch.name || 'No description'}</div>
+                              <div key={branchCode || idx} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
+                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branchCode}</div>
+                                {branchDescription && <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branchDescription}</div>}
                               </div>
                               );
                             })}
