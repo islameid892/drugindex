@@ -5,15 +5,15 @@
   <!-- Homepage -->
   <url>
     <loc>https://drugindex.click/</loc>
-    <lastmod>2026-02-21</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-02-26</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   
   <!-- About Us -->
   <url>
     <loc>https://drugindex.click/about</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -21,7 +21,7 @@
   <!-- Contact Us -->
   <url>
     <loc>https://drugindex.click/contact</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -29,7 +29,7 @@
   <!-- FAQ -->
   <url>
     <loc>https://drugindex.click/faq</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -37,7 +37,7 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://drugindex.click/privacy</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -45,7 +45,7 @@
   <!-- Terms of Service -->
   <url>
     <loc>https://drugindex.click/terms</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -53,7 +53,7 @@
   <!-- Database/Browse -->
   <url>
     <loc>https://drugindex.click/database</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -61,7 +61,7 @@
   <!-- Favorites Page -->
   <url>
     <loc>https://drugindex.click/favorites</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-26</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
