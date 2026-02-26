@@ -353,36 +353,49 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                 <div className="mt-6 pt-6 border-t">
                   <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
                   <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                    {results.map((result: any) => (
-                      <div key={result.code} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    {results.map((result: any) => {
+                      const isNonCovered = result.isCovered === false || result.coverage === 'non-covered';
+                      const bgColor = isNonCovered ? 'bg-red-50 hover:bg-red-100 border-red-200' : 'bg-gray-50 hover:bg-gray-100';
+                      const textColor = isNonCovered ? 'text-red-700' : 'text-gray-600';
+                      return (
+                      <div key={result.code} className={`border rounded-lg p-4 ${bgColor} transition-colors`}>
                         <button
                           onClick={() => toggleBranches(result.code)}
                           className="w-full flex items-center justify-between p-2 rounded"
                         >
                           <div className="text-left">
-                            <div className="font-semibold text-base">{result.code}</div>
-                            <div className="text-sm text-gray-600 mt-1">{result.name}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-semibold text-base">{result.code}</div>
+                              {isNonCovered && (
+                                <span className="px-2 py-0.5 bg-red-200 text-red-800 text-xs font-semibold rounded">NOT COVERED</span>
+                              )}
+                            </div>
+                            <div className={`text-sm ${textColor} mt-1`}>{result.name}</div>
                           </div>
                           {expandedCodes.has(result.code) ? (
-                            <ChevronUp className="h-5 w-5 text-gray-500" />
+                            <ChevronUp className={`h-5 w-5 ${isNonCovered ? 'text-red-500' : 'text-gray-500'}`} />
                           ) : (
-                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                            <ChevronDown className={`h-5 w-5 ${isNonCovered ? 'text-red-500' : 'text-gray-500'}`} />
                           )}
                         </button>
 
                         {/* Branches */}
                         {expandedCodes.has(result.code) && result.branches && result.branches.length > 0 && (
-                          <div className="mt-3 ml-4 space-y-2 border-l-2 border-blue-300 pl-4">
-                            {Array.isArray(result.branches) && result.branches.map((branch: any) => (
-                              <div key={branch.code} className="text-sm py-1">
-                                <div className="font-medium text-blue-700">{branch.code}</div>
-                                <div className="text-gray-600 mt-0.5">{branch.description || branch.name || 'No description'}</div>
+                          <div className={`mt-3 ml-4 space-y-2 border-l-2 ${isNonCovered ? 'border-red-300' : 'border-blue-300'} pl-4`}>
+                            {Array.isArray(result.branches) && result.branches.map((branch: any) => {
+                              const branchNonCovered = branch.isCovered === false || branch.coverage === 'non-covered';
+                              return (
+                              <div key={branch.code} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
+                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branch.code}</div>
+                                <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branch.description || branch.name || 'No description'}</div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               )}
