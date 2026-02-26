@@ -213,12 +213,15 @@ export const advancedSearchRouter = router({
             const branches = codeDetail?.branches ? parseJsonArray(codeDetail.branches) : [];
             
             // Check if branches are non-covered
-            const processedBranches = branches.map((branchCode: string) => {
+            const processedBranches = branches.map((branch: any) => {
+              // Branch can be a string or an object {code, description}
+              const branchCode = typeof branch === 'string' ? branch : branch.code;
+              const branchDescription = typeof branch === 'string' ? '' : (branch.description || branch.name || '');
               const branchIsNonCovered = nonCoveredCodesData.some(nc => nc.code === branchCode);
               return {
                 code: branchCode,
+                description: branchDescription,
                 isCovered: !branchIsNonCovered,
-                description: codeDetail?.description || "",
               };
             });
             
