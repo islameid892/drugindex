@@ -28,11 +28,6 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
-        passes: 2,
-      },
-      mangle: true,
-      format: {
-        comments: false,
       },
     },
     rollupOptions: {
@@ -41,38 +36,20 @@ export default defineConfig({
           'vendor': ['react', 'react-dom'],
           'ui': ['lucide-react'],
           'utils': ['wouter'],
-          'trpc': ['@trpc/client', '@trpc/react-query'],
-        },
-        // Optimize chunk names for better caching
-        entryFileNames: 'js/[name].[hash].js',
-        chunkFileNames: 'js/[name].[hash].js',
-        assetFileNames: (assetInfo) => {
-          const name = assetInfo.name || 'asset';
-          const info = name.split('.');
-          const ext = info[info.length - 1];
-          if (/png|jpe?g|gif|svg|webp|ico/.test(ext)) {
-            return `images/[name].[hash][extname]`;
-          } else if (/woff|woff2|eot|ttf|otf/.test(ext)) {
-            return `fonts/[name].[hash][extname]`;
-          } else if (ext === 'css') {
-            return `css/[name].[hash][extname]`;
-          }
-          return `assets/[name].[hash][extname]`;
         },
       },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
     cssCodeSplit: true,
+    // Core Web Vitals Optimizations
     target: 'esnext',
     reportCompressedSize: false,
   },
   // Performance optimizations
   optimizeDeps: {
-    include: ['react', 'react-dom', 'wouter', 'lucide-react', 'pdf-lib', '@trpc/client', '@trpc/react-query', '@tanstack/react-query'],
-    esbuildOptions: {
-      target: 'esnext',
-    },
+    include: ['react', 'react-dom', 'wouter', 'lucide-react', 'pdf-lib'],
+
   },
   server: {
     host: true,
@@ -89,10 +66,5 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-    middlewareMode: false,
   },
-  define: {
-    __DEV__: false,
-  },
-  logLevel: 'warn',
 });
