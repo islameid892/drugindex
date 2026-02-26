@@ -1,6 +1,6 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getAllMedications, getAllCodes } from "../db";
+import { getAllMedications, getAllCodes, getAllNonCoveredCodes } from "../db";
 
 /**
  * Advanced Search Router
@@ -174,6 +174,7 @@ export const advancedSearchRouter = router({
       try {
         const medications = await getAllMedications();
         const allCodes = await getAllCodes();
+        const nonCoveredCodesData = await getAllNonCoveredCodes();
 
         // Filter medications based on all criteria
         let matchedMeds = medications;
@@ -208,11 +209,24 @@ export const advancedSearchRouter = router({
         const results = Array.from(codeSet)
           .map(code => {
             const codeDetail = allCodes.find(c => c.code === code);
+            const isNonCovered = nonCoveredCodesData.some(nc => nc.code === code);
             const branches = codeDetail?.branches ? parseJsonArray(codeDetail.branches) : [];
+            
+            // Check if branches are non-covered
+            const processedBranches = branches.map((branchCode: string) => {
+              const branchIsNonCovered = nonCoveredCodesData.some(nc => nc.code === branchCode);
+              return {
+                code: branchCode,
+                isCovered: !branchIsNonCovered,
+                description: codeDetail?.description || "",
+              };
+            });
+            
             return {
               code,
               description: codeDetail?.description || "",
-              branches,
+              isCovered: !isNonCovered,
+              branches: processedBranches,
             };
           })
           .sort((a, b) => a.code.localeCompare(b.code));
