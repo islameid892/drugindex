@@ -101,7 +101,7 @@ export default function Home() {
   const stats = {
     medications: statsQuery.data?.totalDrugEntries ?? 0,
     conditions: statsQuery.data?.uniqueIndications ?? 0,
-    codes: statsQuery.data?.totalCodes ?? 0,
+    codes: (statsQuery.data?.totalCodes ?? 0) + (statsQuery.data?.totalBranches ?? 0),
   };
 
   // Search from API (server-side)
