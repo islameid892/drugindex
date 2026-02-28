@@ -739,3 +739,119 @@ export async function browseConditionsCount(query: string): Promise<number> {
     .where(ciLike(drugEntries.indication, q));
   return Number((result as Array<{ count: number }>)[0]?.count ?? 0);
 }
+
+// ─── Search Grouped by Scientific Name ─────────────────────────────────────────
+// Used by the main search bar: groups results by scientific name,
+// shows all trade names, indications, codes, and coverage status
+
+export interface GroupedDrugResult {
+  scientificName: string;
+  tradeNames: string[];
+  indications: Array<{
+    indication: string;
+    codes: CodeInfo[];
+    coverageStatus: "COVERED" | "NON-COVERED" | "PARTIAL";
+  }>;
+  overallCoverage: "COVERED" | "NON-COVERED" | "PARTIAL";
+  totalTradeNames: number;
+}
+
+export async function searchGroupedByScientificName(
+  query: string,
+  limit = 30
+): Promise<GroupedDrugResult[]> {
+  const db = await getDb();
+  const q = `%${query}%`;
+
+  // Step 1: Find distinct scientific names matching the query
+  const sciNames = await db
+    .select({ scientificName: drugEntries.scientificName })
+    .from(drugEntries)
+    .where(
+      or(
+        ciLike(drugEntries.scientificName, q),
+        ciLike(drugEntries.tradeName, q),
+        ciLike(drugEntries.indication, q),
+        ciLike(drugEntries.icdCodesRaw, q)
+      )
+    )
+    .groupBy(drugEntries.scientificName)
+    .orderBy(drugEntries.scientificName)
+    .limit(limit);
+
+  if (sciNames.length === 0) return [];
+
+  const sciNameList = (sciNames as Array<{ scientificName: string }>).map(r => r.scientificName);
+
+  // Step 2: Load all entries for these scientific names
+  const allEntries = await db
+    .select()
+    .from(drugEntries)
+    .where(inArray(drugEntries.scientificName, sciNameList));
+
+  // Step 3: Enrich with codes
+  const enriched = await enrichDrugEntriesWithCodes(
+    allEntries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>
+  );
+
+  // Step 4: Group by scientific name
+  const grouped = new Map<string, {
+    tradeNames: Set<string>;
+    indicationMap: Map<string, { codes: Map<string, CodeInfo> }>;
+  }>();
+
+  for (const entry of enriched) {
+    if (!grouped.has(entry.scientificName)) {
+      grouped.set(entry.scientificName, {
+        tradeNames: new Set(),
+        indicationMap: new Map(),
+      });
+    }
+    const g = grouped.get(entry.scientificName)!;
+    g.tradeNames.add(entry.tradeName);
+
+    if (!g.indicationMap.has(entry.indication)) {
+      g.indicationMap.set(entry.indication, { codes: new Map() });
+    }
+    const indGroup = g.indicationMap.get(entry.indication)!;
+    for (const code of entry.icdCodes) {
+      if (!indGroup.codes.has(code.code)) {
+        indGroup.codes.set(code.code, code);
+      }
+    }
+  }
+
+  // Step 5: Build output, preserving the order from sciNameList
+  return sciNameList.map(sciName => {
+    const g = grouped.get(sciName);
+    if (!g) return null;
+
+    const tradeNames = Array.from(g.tradeNames).sort();
+    const indications = Array.from(g.indicationMap.entries()).map(([indication, { codes }]) => {
+      const codeList = Array.from(codes.values());
+      const hasNonCovered = codeList.some(c => c.isNonCovered);
+      const hasCovered = codeList.some(c => !c.isNonCovered);
+      const coverageStatus: "COVERED" | "NON-COVERED" | "PARTIAL" =
+        codeList.length === 0 ? "COVERED" :
+        hasNonCovered && hasCovered ? "PARTIAL" :
+        hasNonCovered ? "NON-COVERED" : "COVERED";
+      return { indication, codes: codeList, coverageStatus };
+    });
+
+    const allCodes = indications.flatMap(i => i.codes);
+    const hasNonCovered = allCodes.some(c => c.isNonCovered);
+    const hasCovered = allCodes.some(c => !c.isNonCovered);
+    const overallCoverage: "COVERED" | "NON-COVERED" | "PARTIAL" =
+      allCodes.length === 0 ? "COVERED" :
+      hasNonCovered && hasCovered ? "PARTIAL" :
+      hasNonCovered ? "NON-COVERED" : "COVERED";
+
+    return {
+      scientificName: sciName,
+      tradeNames,
+      indications,
+      overallCoverage,
+      totalTradeNames: tradeNames.length,
+    };
+  }).filter(Boolean) as GroupedDrugResult[];
+}

@@ -1,30 +1,18 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
-import { ResultCard } from "@/components/ResultCard";
-import { DetailedRow } from "@/components/DetailedRow";
+import { SearchResultCard } from "@/components/SearchResultCard";
 import BrowseModal from "@/components/BrowseModal";
-import { PaginationControls } from "@/components/PaginationControls";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { BulkVerification } from "@/components/BulkVerification";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutGrid, List, Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3, Upload } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
-import { memo } from "react";
 import Footer from "@/components/Footer";
 import InfographicsSection from "@/components/InfographicsSection";
-
-import { matchesSearchQuery } from '@/lib/arabicSearch';
 import { trpc } from '@/lib/trpc';
-
-const ITEMS_PER_PAGE = 20;
-
-const MemoizedResultCard = memo(ResultCard);
-const MemoizedDetailedRow = memo(DetailedRow);
 
 // Helper function to load data with compression support
 const loadDataWithCompression = async (url: string): Promise<any> => {
@@ -104,17 +92,14 @@ export default function Home() {
     codes: (statsQuery.data?.totalCodes ?? 0) + (statsQuery.data?.totalBranches ?? 0),
   };
 
-  // Search from API (server-side)
-  const searchQuery = trpc.data.medications.search.useQuery(
-    { query: debouncedQuery, limit: 500 },
+  // Grouped search from API (server-side) - groups results by scientific name
+  const searchQuery = trpc.data.searchGrouped.useQuery(
+    { query: debouncedQuery, limit: 30 },
     { enabled: debouncedQuery.trim().length >= 1, staleTime: 30000 }
   );
 
-  // Non-covered codes from API
-  const nonCoveredQuery = trpc.data.nonCoveredCodes.getAll.useQuery(undefined, { staleTime: 300000 });
-  const nonCoveredData = nonCoveredQuery.data ?? [];
-
   const loading = statsQuery.isLoading && !statsQuery.data;
+  const searchLoading = searchQuery.isFetching;
 
   // Set page title for SEO
   useEffect(() => {
@@ -131,16 +116,17 @@ export default function Home() {
   }, [query]);
 
   // Use API search results directly
-  const filteredData = searchQuery.data ?? [];
+  const groupedResults = searchQuery.data ?? [];
 
   // Paginate results
-  const paginatedData = useMemo(() => {
+  const ITEMS_PER_PAGE = 10;
+  const paginatedResults = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filteredData.slice(startIndex, endIndex);
-  }, [filteredData, currentPage]);
+    return groupedResults.slice(startIndex, endIndex);
+  }, [groupedResults, currentPage]);
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(groupedResults.length / ITEMS_PER_PAGE);
 
   // Track search when user stops typing (debounced)
   useEffect(() => {
@@ -151,13 +137,13 @@ export default function Home() {
       lastTrackedQuery.current = query;
       trackSearchMutation.mutate({
         query: query.trim(),
-        resultCount: filteredData.length,
+        resultCount: groupedResults.length,
         responseTime: 0,
       });
-    }, 1500); // Track after 1.5s of no typing
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [query, filteredData.length]);
+  }, [query, groupedResults.length]);
 
   if (showDashboard) {
     return (
@@ -506,84 +492,62 @@ export default function Home() {
 
         {/* Search Results */}
         {query && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Results Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Search Results</h2>
-                <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                  Found <span className="font-semibold text-sky-600 dark:text-sky-400">{filteredData.length}</span> results for "<span className="font-semibold">{query}</span>"
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Search Results</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {searchLoading ? (
+                    <span className="flex items-center gap-1.5"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching...</span>
+                  ) : (
+                    <>Found <span className="font-semibold text-sky-600 dark:text-sky-400">{groupedResults.length}</span> active ingredients for "<span className="font-semibold">{query}</span>"</>
+                  )}
                 </p>
-              </div>
-              
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                <button
-                  onClick={() => setViewMode("aggregated")}
-                  className={`p-2 rounded transition-all ${viewMode === "aggregated" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Aggregated View"
-                >
-                  <LayoutGrid className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("detailed")}
-                  className={`p-2 rounded transition-all ${viewMode === "detailed" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Detailed View"
-                >
-                  <List className="h-5 w-5" />
-                </button>
               </div>
             </div>
 
             {/* Results Content */}
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
+            {searchLoading && groupedResults.length === 0 ? (
+              <div className="flex items-center justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
               </div>
-            ) : paginatedData.length > 0 ? (
+            ) : paginatedResults.length > 0 ? (
               <>
-                {viewMode === "aggregated" ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {paginatedData.map((item, index) => (
-                      <MemoizedResultCard key={index} data={item} treeData={[]} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2 overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Trade Name / Scientific Name</TableHead>
-                          <TableHead>Indication</TableHead>
-                          <TableHead>ICD-10 Codes</TableHead>
-                          <TableHead>Coverage</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedData.map((item, index) => (
-                          <MemoizedDetailedRow key={index} data={item} treeData={[]} />
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {paginatedResults.map((item, index) => (
+                    <SearchResultCard key={index} data={item} />
+                  ))}
+                </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center py-8">
-                    <PaginationControls
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
+                  <div className="flex items-center justify-center gap-2 py-6">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+                    >
+                      Next
+                    </button>
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-16">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">No results found</h3>
-                <p className="text-muted-foreground">Try searching with different keywords</p>
+                <p className="text-muted-foreground">Try searching with a different name, code, or diagnosis</p>
               </div>
             )}
           </div>

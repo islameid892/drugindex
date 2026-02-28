@@ -14,6 +14,7 @@ import {
   browseDrugsByTradeNameCount,
   browseConditions,
   browseConditionsCount,
+  searchGroupedByScientificName,
 } from "../db";
 import { drugEntries } from "../../drizzle/schema";
 
@@ -113,6 +114,16 @@ export const dataRouter = router({
         browseConditionsCount(input.query),
       ]);
       return { results, total };
+    }),
+
+  // Main search: grouped by scientific name
+  searchGrouped: publicProcedure
+    .input(z.object({
+      query: z.string().min(1).max(200),
+      limit: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      return await searchGroupedByScientificName(input.query, input.limit ?? 30);
     }),
 
   // Stats
