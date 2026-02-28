@@ -18,7 +18,17 @@ export async function syncAllDataFiles() {
     if (codes.length > 0) {
       // tree_data.json
       const treeData = codes.map((code: any) => {
-        const branches = Array.isArray(code.branches) ? code.branches : [];
+        // Parse branches from JSON string
+        let branches = [];
+        try {
+          if (typeof code.branches === 'string') {
+            branches = JSON.parse(code.branches);
+          } else if (Array.isArray(code.branches)) {
+            branches = code.branches;
+          }
+        } catch (e) {
+          branches = [];
+        }
         return {
           code: code.code,
           description: code.description,
@@ -37,7 +47,17 @@ export async function syncAllDataFiles() {
         { description: string; branch_count: number; branches: any[] }
       > = {};
       for (const code of codes) {
-        const branches = Array.isArray(code.branches) ? code.branches : [];
+        // Parse branches from JSON string
+        let branches = [];
+        try {
+          if (typeof code.branches === 'string') {
+            branches = JSON.parse(code.branches);
+          } else if (Array.isArray(code.branches)) {
+            branches = code.branches;
+          }
+        } catch (e) {
+          branches = [];
+        }
         codeMap[code.code] = {
           description: code.description,
           branch_count: branches.length,
@@ -51,7 +71,17 @@ export async function syncAllDataFiles() {
 
       // summary_data.json
       const summaryData = codes.map((code: any) => {
-        const branches = Array.isArray(code.branches) ? code.branches : [];
+        // Parse branches from JSON string
+        let branches = [];
+        try {
+          if (typeof code.branches === 'string') {
+            branches = JSON.parse(code.branches);
+          } else if (Array.isArray(code.branches)) {
+            branches = code.branches;
+          }
+        } catch (e) {
+          branches = [];
+        }
         return {
           code: code.code,
           description: code.description,

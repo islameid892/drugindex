@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total_codes, COUNT(CASE WHEN branches != '[]' THEN 1 END) as codes_with_branches, SUM(JSON_LENGTH(branches)) as total_branches FROM codes;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total_codes, COUNT(CASE WHEN branches != '[]' THEN 1 END) as codes_with_branches, SUM(JSON_LENGTH(branches)) as total_branches FROM codes;",
+  "rows": [
+    {
+      "total_codes": "500",
+      "codes_with_branches": "400",
+      "total_branches": "2935"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_codes\tcodes_with_branches\ttotal_branches\n500\t400\t2935\n",
+  "stderr": "",
+  "execution_time_ms": 1596
+}
