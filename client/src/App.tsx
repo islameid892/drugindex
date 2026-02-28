@@ -22,6 +22,7 @@ const ContactUs = lazy(() => import("./pages/ContactUs"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
@@ -79,6 +80,11 @@ function Router() {
       <Route path={"/faq"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <FAQ />
+        </Suspense>
+      )} />
+      <Route path={"/analytics"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Analytics />
         </Suspense>
       )} />
       <Route path={"/tools"} component={() => (

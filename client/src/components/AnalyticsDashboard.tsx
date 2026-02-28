@@ -72,7 +72,7 @@ export function AnalyticsDashboard() {
   const dbStats = dashboard?.dbStats || { totalCodes: 0, nonCoveredCodes: 0, totalDrugEntries: 0, uniqueIndications: 0, uniqueScientificNames: 0, uniqueTradeNames: 0, totalBranches: 0 };
   const todayVolume = dashboard?.todayVolume || 0;
   const recentSearches = dashboard?.recentSearches || [];
-  const maxTrend = Math.max(...searchTrend.map((d: any) => d.searches), 1);
+  const maxTrend = Math.max(...searchTrend.map((d: any) => d.count || 0), 1);
   const maxTopSearch = topSearches.length > 0 ? topSearches[0].count : 1;
 
   return (
@@ -149,16 +149,16 @@ export function AnalyticsDashboard() {
               {searchTrend.length > 0 ? (
                 <div className="space-y-4">
                   {searchTrend.map((day: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-4">
-                      <span className="w-20 text-sm font-medium text-muted-foreground truncate">{day.date}</span>
-                      <div className="flex-1 bg-muted rounded-full h-8 overflow-hidden">
+                    <div key={idx} className="flex items-center justify-between gap-4">
+                      <span className="text-sm text-muted-foreground min-w-20">{day.date}</span>
+                      <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-sky-500 to-sky-600 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.max((day.searches / maxTrend) * 100, 2)}%` }}
+                          style={{ width: `${Math.max(((day.count || 0) / maxTrend) * 100, 2)}%` }}
                         />
                       </div>
                       <span className="w-16 text-right text-sm font-semibold text-foreground">
-                        {day.searches.toLocaleString()}
+                        {(day.count || 0).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -315,7 +315,7 @@ export function AnalyticsDashboard() {
                             {search.responseTime > 0 ? `${search.responseTime}ms` : '-'}
                           </td>
                           <td className="px-4 py-2 text-muted-foreground text-xs">
-                            {new Date(search.timestamp).toLocaleString()}
+                            {search.timestamp ? new Date(search.timestamp).toLocaleString() : '-'}
                           </td>
                         </tr>
                       ))}
