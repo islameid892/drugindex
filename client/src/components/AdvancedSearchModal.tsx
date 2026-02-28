@@ -68,8 +68,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     }
   );
 
-  const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
-    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: debouncedIndicationInput || "", limit: 50 },
+  const indicationsSuggestions = trpc.advancedSearch.indicationSuggestions.useQuery(
+    { tradeName: tradeName || "", query: debouncedIndicationInput || "", limit: 50 },
     { 
       enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0),
       staleTime: 30000,
@@ -77,10 +77,10 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     }
   );
 
-  const searchQuery = trpc.advancedSearch.search.useQuery(
-    { scientificName, tradeNames: tradeName ? [tradeName] : [], indications },
+  const searchQuery = trpc.advancedSearch.codesByIndication.useQuery(
+    { indication: indications.length > 0 ? indications[0] : "" },
     { 
-      enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) && indications.length > 0,
+      enabled: step === 2 && indications.length > 0,
       staleTime: 30000,
       gcTime: 60000,
     }
@@ -88,8 +88,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   // Update results when search query completes
   useEffect(() => {
-    if (searchQuery.data?.codes) {
-      setResults(searchQuery.data.codes);
+    if (searchQuery.data && Array.isArray(searchQuery.data)) {
+      setResults(searchQuery.data);
     }
   }, [searchQuery.data]);
 
@@ -349,7 +349,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               )}
 
               {/* Results */}
-              {searchQuery.data?.codes && (
+              {searchQuery.data && (
                 <div className="mt-6 pt-6 border-t">
                   <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
                   <div className="space-y-3 max-h-[500px] overflow-y-auto">

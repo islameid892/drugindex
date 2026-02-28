@@ -1,7 +1,29 @@
-import { eq, like, sql, desc, gte, and } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, medications, conditions, codes, nonCoveredCodes, searchAnalytics, userSessions, type Medication, type Condition, type Code, type NonCoveredCode, type InsertSearchAnalytic } from "../drizzle/schema";
-import { count } from "drizzle-orm";
+import { drizzle, MySql2Database } from "drizzle-orm/mysql2";
+import { 
+  InsertUser, 
+  users, 
+  medications, 
+  medicationTradeNames,
+  medicationIndications,
+  medicationCodes,
+  conditions, 
+  conditionCodes,
+  conditionMedications,
+  codes, 
+  codeBranches,
+  nonCoveredCodes, 
+  searchAnalytics, 
+  userSessions, 
+  type Medication, 
+  type Condition, 
+  type Code,
+  type CodeBranch,
+  type MedicationTradeName,
+  type MedicationIndication,
+  type NonCoveredCode, 
+  type InsertSearchAnalytic 
+} from "../drizzle/schema";
+import { count, eq, inArray, and, sql } from "drizzle-orm";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -17,6 +39,19 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function getUserByOpenId(openId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const user = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+    return user.length > 0 ? user[0] : null;
+  } catch (error) {
+    console.error("[Database] Error getting user by openId:", error);
+    return null;
+  }
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -48,404 +83,333 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
 
     textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
+    updateSet.lastSignedIn = new Date();
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
     });
   } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
+    console.error("[Database] Error upserting user:", error);
     throw error;
   }
 }
 
-export async function getUserByOpenId(openId: string) {
+// ============================================================================
+// MEDICATION QUERIES
+// ============================================================================
+
+export async function getMedicationById(id: number) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
+  if (!db) return null;
+
+  try {
+    const med = await db.select().from(medications).where(eq(medications.id, id)).limit(1);
+    if (!med.length) return null;
+
+    // Get trade names
+    const tradeNames = await db
+      .select({ tradeName: medicationTradeNames.tradeName })
+      .from(medicationTradeNames)
+      .where(eq(medicationTradeNames.medicationId, id));
+
+    // Get indications
+    const indications = await db
+      .select({ indication: medicationIndications.indication })
+      .from(medicationIndications)
+      .where(eq(medicationIndications.medicationId, id));
+
+    // Get codes
+    const relatedCodes = await db
+      .select({ code: codes.code, description: codes.description })
+      .from(medicationCodes)
+      .innerJoin(codes, eq(medicationCodes.codeId, codes.id))
+      .where(eq(medicationCodes.medicationId, id));
+
+    return {
+      ...med[0],
+      tradeNames: tradeNames.map(t => t.tradeName),
+      indications: indications.map(i => i.indication),
+      icdCodes: relatedCodes.map(c => c.code),
+    };
+  } catch (error) {
+    console.error("[Database] Error getting medication:", error);
+    return null;
   }
-
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
-
-// Medications queries
 export async function getAllMedications() {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(medications);
+
+  try {
+    return await db.select().from(medications);
+  } catch (error) {
+    console.error("[Database] Error getting all medications:", error);
+    return [];
+  }
 }
 
 export async function searchMedications(query: string) {
   const db = await getDb();
   if (!db) return [];
-  const lowerQuery = query.toLowerCase();
-  return await db.select().from(medications).where(
-    like(medications.scientificName, `%${lowerQuery}%`)
-  ).limit(100);
-}
 
-export async function getMedicationById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(medications).where(eq(medications.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
+  try {
+    const searchPattern = `%${query}%`;
+    
+    // Search in scientific names
+    const meds = await db
+      .select({ id: medications.id })
+      .from(medications)
+      .where(sql`${medications.scientificName} LIKE ${searchPattern}`)
+      .limit(100);
 
-// Conditions queries
-export async function getAllConditions() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(conditions);
-}
+    const medIds = meds.map(m => m.id);
+    if (!medIds.length) return [];
 
-export async function searchConditions(query: string) {
-  const db = await getDb();
-  if (!db) return [];
-  const lowerQuery = query.toLowerCase();
-  return await db.select().from(conditions).where(
-    like(conditions.name, `%${lowerQuery}%`)
-  ).limit(100);
-}
-
-export async function getConditionById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(conditions).where(eq(conditions.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-// Codes queries
-export async function getAllCodes() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(codes);
-}
-
-export async function searchCodes(query: string) {
-  const db = await getDb();
-  if (!db) {
-    console.log('DB connection failed');
+    // Get full medication details
+    const results = [];
+    for (const id of medIds) {
+      const med = await getMedicationById(id);
+      if (med) results.push(med);
+    }
+    return results;
+  } catch (error) {
+    console.error("[Database] Error searching medications:", error);
     return [];
   }
-  const upperQuery = query.toUpperCase();
-  console.log('Searching code:', upperQuery);
-  
-  let result = await db.select().from(codes).where(
-    eq(codes.code, upperQuery)
-  ).limit(1);
-  
-  console.log('Exact match:', result.length);
-  
-  if (result.length === 0) {
-    result = await db.select().from(codes).where(
-      like(codes.code, `%${upperQuery}%`)
-    ).limit(100);
-    console.log('Partial match:', result.length);
-  }
-  
-  return result;
 }
+
+// ============================================================================
+// CODE QUERIES
+// ============================================================================
 
 export async function getCodeById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(codes).where(eq(codes.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
+  if (!db) return null;
 
-// Non-Covered Codes queries
-export async function getAllNonCoveredCodes() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(nonCoveredCodes);
-}
-
-export async function searchNonCoveredCodes(query: string) {
-  const db = await getDb();
-  if (!db) return [];
-  const upperQuery = query.toUpperCase();
-  // Try exact match first
-  let result = await db.select().from(nonCoveredCodes).where(
-    eq(nonCoveredCodes.code, upperQuery)
-  ).limit(1);
-  
-  // If no exact match, try partial match
-  if (result.length === 0) {
-    result = await db.select().from(nonCoveredCodes).where(
-      like(nonCoveredCodes.code, `%${upperQuery}%`)
-    ).limit(100);
-  }
-  
-  return result;
-}
-
-export async function getNonCoveredCodeById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(nonCoveredCodes).where(eq(nonCoveredCodes.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-
-// ===== Analytics functions =====
-
-// Record a search event with response time
-export async function recordSearch(data: InsertSearchAnalytic) {
-  const db = await getDb();
-  if (!db) return undefined;
   try {
-    const result = await db.insert(searchAnalytics).values(data);
-    return result;
-  } catch (error) {
-    console.error("[Database] Failed to record search:", error);
-    return undefined;
-  }
-}
+    const code = await db.select().from(codes).where(eq(codes.id, id)).limit(1);
+    if (!code.length) return null;
 
-// Get total number of searches (all time)
-export async function getTotalSearches() {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const result = await db.select({ count: count() }).from(searchAnalytics);
-    return result[0]?.count || 0;
-  } catch (error) {
-    console.error("[Database] Failed to get total searches:", error);
-    return 0;
-  }
-}
+    // Get branches
+    const branches = await db
+      .select({ code: codeBranches.branchCode, description: codeBranches.branchDescription })
+      .from(codeBranches)
+      .where(eq(codeBranches.parentCodeId, id));
 
-// Get total searches in the last N days
-export async function getTotalSearchesSince(days: number) {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    const result = await db.select({ count: count() })
-      .from(searchAnalytics)
-      .where(gte(searchAnalytics.timestamp, since));
-    return result[0]?.count || 0;
-  } catch (error) {
-    console.error("[Database] Failed to get recent searches:", error);
-    return 0;
-  }
-}
+    // Get related medications
+    const relatedMeds = await db
+      .select({ id: medications.id, scientificName: medications.scientificName })
+      .from(medicationCodes)
+      .innerJoin(medications, eq(medicationCodes.medicationId, medications.id))
+      .where(eq(medicationCodes.codeId, id));
 
-// Get real average response time from search analytics
-export async function getAverageResponseTime() {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const result = await db.select({
-      avg: sql<number>`COALESCE(AVG(${searchAnalytics.responseTime}), 0)`
-    }).from(searchAnalytics);
-    return Math.round(result[0]?.avg || 0);
-  } catch (error) {
-    console.error("[Database] Failed to get avg response time:", error);
-    return 0;
-  }
-}
-
-// Get unique users count (from users table)
-export async function getActiveUsers() {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const result = await db.select({ count: count() }).from(users);
-    return result[0]?.count || 0;
-  } catch (error) {
-    console.error("[Database] Failed to get active users:", error);
-    return 0;
-  }
-}
-
-// Get unique searchers (distinct userId from searchAnalytics in last N days)
-export async function getUniqueSearchers(days: number = 7) {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    const result = await db.select({
-      count: sql<number>`COUNT(DISTINCT ${searchAnalytics.userId})`
-    })
-      .from(searchAnalytics)
-      .where(gte(searchAnalytics.timestamp, since));
-    return result[0]?.count || 0;
-  } catch (error) {
-    console.error("[Database] Failed to get unique searchers:", error);
-    return 0;
-  }
-}
-
-// Get top searched terms (real data from DB)
-export async function getPopularSearches(limit: number = 10) {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    const result = await db.select({
-      query: searchAnalytics.query,
-      count: count()
-    })
-      .from(searchAnalytics)
-      .groupBy(searchAnalytics.query)
-      .orderBy(desc(count()))
-      .limit(limit);
-    return result.map(r => ({ term: r.query, count: r.count }));
-  } catch (error) {
-    console.error("[Database] Failed to get popular searches:", error);
-    return [];
-  }
-}
-
-// Get search trend for last N days (daily counts)
-export async function getSearchTrend(days: number = 7) {
-  const db = await getDb();
-  if (!db) return [];
-  try {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    
-    // Use raw SQL to avoid only_full_group_by issue
-    const result = await db.execute(
-      sql`SELECT DATE(\`timestamp\`) as search_date, COUNT(*) as search_count FROM \`searchAnalytics\` WHERE \`timestamp\` >= ${since} GROUP BY search_date ORDER BY search_date`
-    ) as any;
-    
-    // Parse raw results
-    const rows = (result[0] || result || []) as Array<{ search_date: string; search_count: number }>;
-    
-    // Fill in missing days with 0
-    const trendMap = new Map<string, number>();
-    rows.forEach((r: any) => {
-      // search_date might be a Date object or string
-      const dateStr = r.search_date instanceof Date 
-        ? r.search_date.toISOString().split('T')[0] 
-        : String(r.search_date);
-      trendMap.set(dateStr, Number(r.search_count) || 0);
-    });
-    
-    const trend: Array<{ date: string; searches: number }> = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      trend.push({
-        date: `${dayName} ${d.getDate()}/${d.getMonth() + 1}`,
-        searches: trendMap.get(dateStr) || 0
-      });
-    }
-    
-    return trend;
-  } catch (error) {
-    console.error("[Database] Failed to get search trend:", error);
-    return [];
-  }
-}
-
-// Get real database statistics
-export async function getDatabaseStats() {
-  const db = await getDb();
-  if (!db) return { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
-  try {
-    const [codesCount, nonCoveredCount, medsCount, conditionsCount] = await Promise.all([
-      db.select({ count: count() }).from(codes),
-      db.select({ count: count() }).from(nonCoveredCodes),
-      db.select({ count: count() }).from(medications),
-      db.select({ count: count() }).from(conditions),
-    ]);
-    
     return {
-      totalCodes: codesCount[0]?.count || 0,
-      totalNonCovered: nonCoveredCount[0]?.count || 0,
-      totalMedications: medsCount[0]?.count || 0,
-      totalConditions: conditionsCount[0]?.count || 0,
+      ...code[0],
+      branches: branches,
+      relatedMedications: relatedMeds,
     };
   } catch (error) {
-    console.error("[Database] Failed to get database stats:", error);
-    return { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
+    console.error("[Database] Error getting code:", error);
+    return null;
   }
 }
 
-// Get coverage rate from real data
-export async function getCoverageRate() {
+export async function getCodeByCode(codeString: string) {
   const db = await getDb();
-  if (!db) return { covered: 0, uncovered: 0, rate: 0 };
+  if (!db) return null;
+
   try {
-    const [totalCodesResult, nonCoveredResult] = await Promise.all([
-      db.select({ count: count() }).from(codes),
-      db.select({ count: count() }).from(nonCoveredCodes),
-    ]);
-    
-    const totalCodes = totalCodesResult[0]?.count || 0;
-    const nonCovered = nonCoveredResult[0]?.count || 0;
-    const covered = totalCodes - nonCovered;
-    const rate = totalCodes > 0 ? Math.round((covered / totalCodes) * 100) : 0;
-    
-    return { covered, uncovered: nonCovered, rate };
+    const code = await db.select().from(codes).where(eq(codes.code, codeString)).limit(1);
+    if (!code.length) return null;
+
+    return await getCodeById(code[0].id);
   } catch (error) {
-    console.error("[Database] Failed to get coverage rate:", error);
-    return { covered: 0, uncovered: 0, rate: 0 };
+    console.error("[Database] Error getting code by code string:", error);
+    return null;
   }
 }
 
-// Get searches per hour for today (for performance insights)
-export async function getTodaySearchVolume() {
-  const db = await getDb();
-  if (!db) return 0;
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const result = await db.select({ count: count() })
-      .from(searchAnalytics)
-      .where(gte(searchAnalytics.timestamp, today));
-    return result[0]?.count || 0;
-  } catch (error) {
-    return 0;
-  }
-}
-
-// Get recent searches (last N)
-export async function getRecentSearches(limit: number = 20) {
+export async function getAllCodes() {
   const db = await getDb();
   if (!db) return [];
+
   try {
-    const result = await db.select({
-      query: searchAnalytics.query,
-      resultsCount: searchAnalytics.resultsCount,
-      responseTime: searchAnalytics.responseTime,
-      timestamp: searchAnalytics.timestamp,
-    })
-      .from(searchAnalytics)
-      .orderBy(desc(searchAnalytics.timestamp))
-      .limit(limit);
+    return await db.select().from(codes);
+  } catch (error) {
+    console.error("[Database] Error getting all codes:", error);
+    return [];
+  }
+}
+
+export async function getCodesWithBranches() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const allCodes = await db.select().from(codes);
+    
+    const results = [];
+    for (const code of allCodes) {
+      const branches = await db
+        .select()
+        .from(codeBranches)
+        .where(eq(codeBranches.parentCodeId, code.id));
+      
+      results.push({
+        ...code,
+        branches: branches,
+      });
+    }
+    return results;
+  } catch (error) {
+    console.error("[Database] Error getting codes with branches:", error);
+    return [];
+  }
+}
+
+// ============================================================================
+// CONDITION QUERIES
+// ============================================================================
+
+export async function getConditionById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const condition = await db.select().from(conditions).where(eq(conditions.id, id)).limit(1);
+    if (!condition.length) return null;
+
+    // Get related codes
+    const relatedCodes = await db
+      .select({ code: codes.code, description: codes.description })
+      .from(conditionCodes)
+      .innerJoin(codes, eq(conditionCodes.codeId, codes.id))
+      .where(eq(conditionCodes.conditionId, id));
+
+    // Get related medications
+    const relatedMeds = await db
+      .select({ id: medications.id, scientificName: medications.scientificName })
+      .from(conditionMedications)
+      .innerJoin(medications, eq(conditionMedications.medicationId, medications.id))
+      .where(eq(conditionMedications.conditionId, id));
+
+    return {
+      ...condition[0],
+      relatedCodes: relatedCodes,
+      relatedMedications: relatedMeds,
+    };
+  } catch (error) {
+    console.error("[Database] Error getting condition:", error);
+    return null;
+  }
+}
+
+export async function getAllConditions() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select().from(conditions);
+  } catch (error) {
+    console.error("[Database] Error getting all conditions:", error);
+    return [];
+  }
+}
+
+// ============================================================================
+// NON-COVERED CODE QUERIES
+// ============================================================================
+
+export async function getNonCoveredCodes() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select().from(nonCoveredCodes);
+  } catch (error) {
+    console.error("[Database] Error getting non-covered codes:", error);
+    return [];
+  }
+}
+
+// ============================================================================
+// STATISTICS QUERIES
+// ============================================================================
+
+export async function getStatistics() {
+  const db = await getDb();
+  if (!db) return { medications: 0, conditions: 0, codes: 0, branches: 0 };
+
+  try {
+    const medCount = await db.select({ count: count() }).from(medications);
+    const condCount = await db.select({ count: count() }).from(conditions);
+    const codeCount = await db.select({ count: count() }).from(codes);
+    const branchCount = await db.select({ count: count() }).from(codeBranches);
+
+    return {
+      medications: medCount[0]?.count || 0,
+      conditions: condCount[0]?.count || 0,
+      codes: codeCount[0]?.count || 0,
+      branches: branchCount[0]?.count || 0,
+    };
+  } catch (error) {
+    console.error("[Database] Error getting statistics:", error);
+    return { medications: 0, conditions: 0, codes: 0, branches: 0 };
+  }
+}
+
+// ============================================================================
+// SEARCH ANALYTICS
+// ============================================================================
+
+export async function recordSearch(query: string, resultsCount: number, responseTime: number, userId?: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.insert(searchAnalytics).values({
+      query,
+      resultsCount,
+      responseTime,
+      userId: userId || null,
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    console.error("[Database] Error recording search:", error);
+  }
+}
+
+// ============================================================================
+// USER SESSION QUERIES
+// ============================================================================
+
+export async function createUserSession(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db.insert(userSessions).values({
+      userId,
+      sessionStart: new Date(),
+      isActive: true,
+    });
     return result;
   } catch (error) {
-    return [];
+    console.error("[Database] Error creating user session:", error);
+    return null;
+  }
+}
+
+export async function endUserSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.update(userSessions)
+      .set({ sessionEnd: new Date(), isActive: false })
+      .where(eq(userSessions.id, sessionId));
+  } catch (error) {
+    console.error("[Database] Error ending user session:", error);
   }
 }

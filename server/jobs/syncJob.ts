@@ -3,7 +3,7 @@
  * Runs every 30 minutes or when database is modified
  */
 
-import { getAllCodes, getAllMedications } from "../db";
+import { getAllCodes, getAllMedications, getCodesWithBranches } from "../db";
 import fs from "fs";
 import path from "path";
 
@@ -46,18 +46,11 @@ export async function syncAllDataFiles() {
         string,
         { description: string; branch_count: number; branches: any[] }
       > = {};
-      for (const code of codes) {
-        // Parse branches from JSON string
-        let branches = [];
-        try {
-          if (typeof code.branches === 'string') {
-            branches = JSON.parse(code.branches);
-          } else if (Array.isArray(code.branches)) {
-            branches = code.branches;
-          }
-        } catch (e) {
-          branches = [];
-        }
+      
+      // Get codes with branches
+      const codesWithBranches = await getCodesWithBranches();
+      for (const code of codesWithBranches) {
+        const branches = code.branches || [];
         codeMap[code.code] = {
           description: code.description,
           branch_count: branches.length,

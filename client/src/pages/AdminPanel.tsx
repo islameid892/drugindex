@@ -86,9 +86,9 @@ export default function AdminPanel() {
     try {
       await addMedicationMutation.mutateAsync({
         scientificName: formData.scientificName,
-        tradeNames: formData.tradeNames,
-        indication: formData.indication,
-        icdCodes: formData.icdCodes,
+        tradeNames: formData.tradeNames.split(',').map(t => t.trim()).filter(Boolean),
+        indications: formData.indication ? [formData.indication] : [],
+        icdCodes: formData.icdCodes.split(',').map(c => c.trim()).filter(Boolean),
       });
     } catch (error) {
       console.error("Error adding medication:", error);
