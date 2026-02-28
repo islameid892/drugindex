@@ -79,12 +79,8 @@ const loadDataWithCompression = async (url: string): Promise<any> => {
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [viewMode, setViewMode] = useState<"aggregated" | "detailed">("aggregated");
-  const [mainData, setMainData] = useState<any[]>([]);
-  const [treeData, setTreeData] = useState<any[]>([]);
-  const [nonCoveredData, setNonCoveredData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ medications: 0, conditions: 0, codes: 0 });
   const [browseModal, setBrowseModal] = useState<{ isOpen: boolean; type: 'drugs' | 'conditions' | 'codes' | 'non-covered' }>({ isOpen: false, type: 'drugs' });
   const [currentPage, setCurrentPage] = useState(1);
   const [showDashboard, setShowDashboard] = useState(false);
@@ -94,39 +90,35 @@ export default function Home() {
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const { favorites } = useFavorites();
 
+  // Debounce query for API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 400);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Load stats from API
+  const statsQuery = trpc.data.stats.useQuery(undefined, { staleTime: 60000 });
+  const stats = {
+    medications: statsQuery.data?.medications ?? 0,
+    conditions: statsQuery.data?.conditions ?? 0,
+    codes: statsQuery.data?.codes ?? 0,
+  };
+
+  // Search from API (server-side)
+  const searchQuery = trpc.data.medications.search.useQuery(
+    { query: debouncedQuery, limit: 500 },
+    { enabled: debouncedQuery.trim().length >= 1, staleTime: 30000 }
+  );
+
+  // Non-covered codes from API
+  const nonCoveredQuery = trpc.data.nonCoveredCodes.getAll.useQuery(undefined, { staleTime: 300000 });
+  const nonCoveredData = nonCoveredQuery.data ?? [];
+
+  const loading = statsQuery.isLoading && !statsQuery.data;
+
   // Set page title for SEO
   useEffect(() => {
     document.title = "ICD-10 Search Engine - Drug & Medical Coding";
-  }, []);
-
-  // Load data with compression
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [main, tree, nonCovered] = await Promise.all([
-          loadDataWithCompression('/data/main_data.json'),
-          loadDataWithCompression('/data/tree_data.json'),
-          loadDataWithCompression('/data/non_covered_codes_full.json')
-        ]);
-        
-        setMainData(main);
-        setTreeData(tree);
-        setNonCoveredData(nonCovered);
-        
-        setStats({
-          medications: main.length,
-          conditions: new Set(main.map((item: any) => item.indication)).size,
-          codes: tree.length
-        });
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to load data:", error);
-        setLoading(false);
-      }
-    };
-    
-    loadData();
   }, []);
 
   // Track search mutation
@@ -138,40 +130,8 @@ export default function Home() {
     setCurrentPage(1);
   }, [query]);
 
-  // Filter results
-  const filteredData = useMemo(() => {
-    if (!query) return [];
-    
-    const lowerQuery = query.toLowerCase().trim();
-    
-    const matchedMedications = mainData.filter(item => {
-      const tradeName = item.tradeNames && Array.isArray(item.tradeNames) ? item.tradeNames.join(' ') : '';
-      const scientificName = item.scientificName || '';
-      return matchesSearchQuery(tradeName, query) ||
-             matchesSearchQuery(scientificName, query);
-    });
-    
-    const matchedConditions = mainData.filter(item => {
-      const indication = item.indication || '';
-      return matchesSearchQuery(indication, query);
-    });
-    
-    const matchedCodes = mainData.filter(item => {
-      const codes = item.icdCodes && Array.isArray(item.icdCodes) ? item.icdCodes.join(' ') : '';
-      return matchesSearchQuery(codes, query);
-    });
-    
-    const allMatched = [...matchedMedications, ...matchedConditions, ...matchedCodes];
-    
-    const uniqueMatched = Array.from(
-      new Map(allMatched.map(item => {
-        const key = (item.tradeNames?.join('') || '') + (item.indication || '') + (item.icdCodes?.join('') || '');
-        return [key, item];
-      })).values()
-    );
-    
-    return uniqueMatched;
-  }, [query, mainData]);
+  // Use API search results directly
+  const filteredData = searchQuery.data ?? [];
 
   // Paginate results
   const paginatedData = useMemo(() => {
@@ -585,7 +545,7 @@ export default function Home() {
                 {viewMode === "aggregated" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {paginatedData.map((item, index) => (
-                      <MemoizedResultCard key={index} data={item} treeData={treeData} />
+                      <MemoizedResultCard key={index} data={item} treeData={[]} />
                     ))}
                   </div>
                 ) : (
@@ -601,7 +561,7 @@ export default function Home() {
                       </TableHeader>
                       <TableBody>
                         {paginatedData.map((item, index) => (
-                          <MemoizedDetailedRow key={index} data={item} treeData={treeData} />
+                          <MemoizedDetailedRow key={index} data={item} treeData={[]} />
                         ))}
                       </TableBody>
                     </Table>
@@ -635,8 +595,8 @@ export default function Home() {
         isOpen={browseModal.isOpen}
         type={browseModal.type}
         onClose={() => setBrowseModal({ ...browseModal, isOpen: false })}
-        data={browseModal.type === 'non-covered' ? nonCoveredData : mainData}
-        treeData={treeData}
+        data={browseModal.type === 'non-covered' ? nonCoveredData : []}
+        treeData={[]}
         nonCoveredData={nonCoveredData}
       />
 

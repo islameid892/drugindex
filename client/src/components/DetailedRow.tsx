@@ -2,37 +2,43 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BranchViewer } from "./BranchViewer";
-import { useCoverageStatus } from "@/hooks/useCoverageStatus";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 
-interface DetailedRowProps {
-  data: any;
-  treeData?: any;
+interface IcdCodeEntry {
+  code: string;
+  description: string;
+  branchCount: number;
+  isNonCovered: boolean;
+  branches?: Array<{ branchCode: string; branchDescription: string }>;
 }
 
-export function DetailedRow({ data, treeData }: DetailedRowProps) {
-  // استخراج جميع الأكواد الرئيسية (أول 3 أحرف) للبحث في الشجرة
-  const icdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
-  const allCodes = icdCodes.map((code: string) => ({
-    fullCode: code.trim(),
-    mainCode: code.trim().substring(0, 3)
-  }));
+interface DetailedRowProps {
+  data: any;
+  treeData?: any; // kept for backward compatibility
+}
+
+export function DetailedRow({ data }: DetailedRowProps) {
+  // Support both old format (array of strings) and new format (array of objects)
+  const rawIcdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
   
-  const treeNodes = allCodes
-    .map((codeObj: any) => ({
-      ...codeObj,
-      node: treeData?.find((node: any) => node.code === codeObj.fullCode || node.code === codeObj.mainCode)
-    }));
+  const icdCodeEntries: IcdCodeEntry[] = rawIcdCodes.map((entry: any) => {
+    if (typeof entry === 'string') {
+      return { code: entry, description: '', branchCount: 0, isNonCovered: false, branches: [] };
+    }
+    return entry as IcdCodeEntry;
+  });
 
-  // استخدام الـ hook للتحقق من حالة التغطية
-  const codesString = icdCodes.join(',');
-  const { isCovered } = useCoverageStatus(codesString);
+  // Determine coverage from API
+  const coverageStatus = data.coverageStatus ?? 'COVERED';
+  const isCovered = coverageStatus !== 'NON-COVERED';
 
-  // استخدام الـ hook للمفضلة
+  const codesString = icdCodeEntries.map(e => e.code).join(',');
+
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.join(', ') : '';
-  const favoriteId = `${data.scientificName}-${data.indication}-${codesString}`;
+  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.slice(0, 3).join(', ') : '';
+  const indication = Array.isArray(data.indications) ? data.indications.slice(0, 2).join('; ') : (data.indication ?? '');
+  const favoriteId = `${data.scientificName}-${codesString}`;
   const isFav = isFavorite(favoriteId);
   
   const handleToggleFavorite = () => {
@@ -43,9 +49,9 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
         id: favoriteId,
         scientific_name: data.scientificName,
         trade_name: tradeName,
-        indication: data.indication,
+        indication: indication,
         icd10_codes: codesString,
-        atc_codes: (data.atcCodes || []).join(','),
+        atc_codes: '',
         addedAt: Date.now()
       });
     }
@@ -56,8 +62,10 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
   const badgeClass = isCovered 
     ? 'bg-white text-slate-700 border-slate-300' 
     : 'bg-white text-red-700 border-red-300';
-  const statusBadgeClass = isCovered
+  const statusBadgeClass = coverageStatus === 'COVERED'
     ? 'bg-sky-50 text-sky-700 border-sky-200'
+    : coverageStatus === 'PARTIAL'
+    ? 'bg-amber-50 text-amber-700 border-amber-200'
     : 'bg-white text-red-700 border-red-300';
 
   return (
@@ -90,39 +98,45 @@ export function DetailedRow({ data, treeData }: DetailedRowProps) {
       </TableCell>
 
       {/* Indication */}
-      <TableCell className={`max-w-xs transition-colors ${indicationClass}`} title={data.indication}>
-        <span className="line-clamp-2">{data.indication}</span>
+      <TableCell className={`max-w-xs transition-colors ${indicationClass}`} title={indication}>
+        <span className="line-clamp-2">{indication || '—'}</span>
       </TableCell>
 
       {/* ICD-10 Codes */}
       <TableCell>
         <div className="flex items-center gap-2 flex-wrap">
-          {icdCodes.map((code: string, index: number) => {
-            const codeObj = allCodes[index];
-            const node = treeData?.find((n: any) => n.code === codeObj.fullCode || n.code === codeObj.mainCode);
+          {icdCodeEntries.map((entry, index) => {
+            const entryBadgeClass = entry.isNonCovered
+              ? 'bg-white text-red-700 border-red-300'
+              : badgeClass;
             return (
-              <div key={`${code}-${index}`} className="flex items-center gap-1">
-                <Badge variant="outline" className={`font-mono text-xs ${badgeClass}`}>
-                  {code}
+              <div key={`${entry.code}-${index}`} className="flex items-center gap-1">
+                <Badge variant="outline" className={`font-mono text-xs ${entryBadgeClass}`}>
+                  {entry.code}
+                  {entry.isNonCovered && <span className="ml-1 text-[10px]">⚠</span>}
                 </Badge>
-                {node && (
+                {entry.branches && entry.branches.length > 0 && (
                   <BranchViewer 
-                    mainCode={node.code} 
-                    mainDescription={node.description} 
-                    branches={node.branches}
-                    isCovered={isCovered}
+                    mainCode={entry.code}
+                    mainDescription={entry.description}
+                    branches={entry.branches.map(b => ({ code: b.branchCode, description: b.branchDescription }))}
+                    isCovered={!entry.isNonCovered}
                   />
                 )}
               </div>
             );
           })}
+          {icdCodeEntries.length === 0 && (
+            <span className="text-xs text-slate-400 italic">—</span>
+          )}
         </div>
       </TableCell>
 
       {/* Coverage Status */}
       <TableCell>
         <Badge className={`font-mono text-xs font-bold ${statusBadgeClass}`}>
-          {isCovered ? 'COVERED' : 'NOT COVERED'}
+          {coverageStatus === 'COVERED' ? 'COVERED' : 
+           coverageStatus === 'PARTIAL' ? 'PARTIAL' : 'NOT COVERED'}
         </Badge>
       </TableCell>
     </TableRow>

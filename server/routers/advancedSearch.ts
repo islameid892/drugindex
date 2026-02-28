@@ -1,61 +1,27 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getAllMedications, getAllCodes, getAllNonCoveredCodes } from "../db";
-
-/**
- * Advanced Search Router
- * Provides progressive disclosure search with autocomplete for:
- * 1. Scientific Names
- * 2. Trade Names
- * 3. Indications
- * Returns matching ICD-10 codes with branches
- */
-
-// Helper to parse JSON arrays from database
-function parseJsonArray(jsonString: string | null): string[] {
-  if (!jsonString) return [];
-  try {
-    return JSON.parse(jsonString);
-  } catch {
-    return [];
-  }
-}
+import { advancedSearch, searchMedications, getAllNonCoveredCodes } from "../db";
 
 // Helper to get unique sorted items
 function getUniqueSorted(items: string[]): string[] {
   return Array.from(new Set(items))
-    .filter(item => item && item.trim())
+    .filter((item) => item && item.trim())
     .sort((a, b) => a.localeCompare(b));
 }
 
 export const advancedSearchRouter = router({
   /**
    * Step 1: Get scientific name suggestions with autocomplete
-   * Returns unique scientific names matching the query
    */
   scientificNameSuggestions: publicProcedure
-    .input(z.object({
-      query: z.string().min(1).max(100),
-      limit: z.number().min(1).max(20).default(10),
-    }))
+    .input(z.object({ query: z.string().min(1).max(100), limit: z.number().min(1).max(20).default(10) }))
     .query(async ({ input }) => {
       try {
-        const medications = await getAllMedications();
-        const lowerQuery = input.query.toLowerCase();
-
-        // Get unique scientific names matching query
-        const suggestions = getUniqueSorted(
-          medications
-            .filter(med => {
-              const scientificName = med.scientificName?.toLowerCase() || "";
-              return scientificName.includes(lowerQuery);
-            })
-            .map(med => med.scientificName)
-        );
-
-        return suggestions.slice(0, input.limit).map(name => ({
+        const results = await searchMedications(input.query, 200, 0);
+        const names = getUniqueSorted(results.map((m) => m.scientificName));
+        return names.slice(0, input.limit).map((name) => ({
           name,
-          count: medications.filter(m => m.scientificName === name).length,
+          count: results.filter((m) => m.scientificName === name).length,
         }));
       } catch (error) {
         console.error("Error fetching scientific name suggestions:", error);
@@ -65,7 +31,6 @@ export const advancedSearchRouter = router({
 
   /**
    * Step 2: Get trade names for selected scientific name
-   * Returns unique trade names for a specific scientific name
    */
   tradeNameSuggestions: publicProcedure
     .input(z.object({
@@ -75,31 +40,19 @@ export const advancedSearchRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        const medications = await getAllMedications();
-        const lowerQuery = input.query.toLowerCase();
-
-        // Get medications with matching scientific name (if provided)
-        const matchedMeds = input.scientificName
-          ? medications.filter(med => med.scientificName === input.scientificName)
-          : medications;
-
-        // Extract and parse trade names
-        const allTradeNames: string[] = [];
-        matchedMeds.forEach(med => {
-          const tradeNames = parseJsonArray(med.tradeNames);
-          allTradeNames.push(...tradeNames);
+        const results = await advancedSearch({
+          scientificName: input.scientificName || undefined,
+          limit: 500,
         });
-
-        // Filter by query and get unique sorted
+        const lowerQuery = input.query.toLowerCase();
+        const allTradeNames: string[] = [];
+        results.results.forEach((med) => {
+          med.tradeNames.forEach((t) => allTradeNames.push(t));
+        });
         const suggestions = getUniqueSorted(
-          allTradeNames.filter(name =>
-            name.toLowerCase().includes(lowerQuery)
-          )
+          allTradeNames.filter((name) => name.toLowerCase().includes(lowerQuery))
         );
-
-        return suggestions.slice(0, input.limit).map(name => ({
-          name,
-        }));
+        return suggestions.slice(0, input.limit).map((name) => ({ name }));
       } catch (error) {
         console.error("Error fetching trade name suggestions:", error);
         return [];
@@ -108,7 +61,6 @@ export const advancedSearchRouter = router({
 
   /**
    * Step 3: Get indications for selected scientific name and trade names
-   * Returns unique indications sorted alphabetically
    */
   indicationsSuggestions: publicProcedure
     .input(z.object({
@@ -119,41 +71,20 @@ export const advancedSearchRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        const medications = await getAllMedications();
+        const results = await advancedSearch({
+          scientificName: input.scientificName || undefined,
+          tradeName: input.tradeNames.length > 0 ? input.tradeNames[0] : undefined,
+          limit: 500,
+        });
         const lowerQuery = input.query.toLowerCase();
-
-        // Get medications matching scientific name or trade names
-        let matchedMeds = medications;
-        
-        if (input.scientificName) {
-          matchedMeds = matchedMeds.filter(med => med.scientificName === input.scientificName);
-        }
-
-        // If trade names are selected, filter further
-        if (input.tradeNames.length > 0) {
-          matchedMeds = matchedMeds.filter(med => {
-            const tradeNames = parseJsonArray(med.tradeNames);
-            return input.tradeNames.some(selected =>
-              tradeNames.includes(selected)
-            );
-          });
-        }
-
-        // Extract unique indications
-        const allIndications = matchedMeds
-          .map(med => med.indication)
-          .filter((indication): indication is string => !!indication);
-
-        // Filter by query and get unique sorted
+        const allIndications: string[] = [];
+        results.results.forEach((med) => {
+          med.indications.forEach((i) => allIndications.push(i));
+        });
         const suggestions = getUniqueSorted(
-          allIndications.filter(indication =>
-            indication.toLowerCase().includes(lowerQuery)
-          )
+          allIndications.filter((ind) => ind.toLowerCase().includes(lowerQuery))
         );
-
-        return suggestions.slice(0, input.limit).map(indication => ({
-          indication,
-        }));
+        return suggestions.slice(0, input.limit).map((indication) => ({ indication }));
       } catch (error) {
         console.error("Error fetching indications suggestions:", error);
         return [];
@@ -162,7 +93,6 @@ export const advancedSearchRouter = router({
 
   /**
    * Final Search: Get ICD-10 codes for selected filters
-   * Returns codes with their branches and related information
    */
   search: publicProcedure
     .input(z.object({
@@ -172,66 +102,45 @@ export const advancedSearchRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        const medications = await getAllMedications();
-        const allCodes = await getAllCodes();
         const nonCoveredCodesData = await getAllNonCoveredCodes();
+        const nonCoveredSet = new Set(nonCoveredCodesData.map((nc) => nc.code));
 
-        // Filter medications based on all criteria
-        let matchedMeds = medications;
-
-        if (input.scientificName) {
-          matchedMeds = matchedMeds.filter(med => med.scientificName === input.scientificName);
-        }
-
-        // If trade names are selected, filter further
-        if (input.tradeNames.length > 0) {
-          matchedMeds = matchedMeds.filter(med => {
-            const tradeNames = parseJsonArray(med.tradeNames);
-            return input.tradeNames.some(selected =>
-              tradeNames.includes(selected)
-            );
-          });
-        }
-
-        // Filter by indications
-        matchedMeds = matchedMeds.filter(med =>
-          med.indication && input.indications.includes(med.indication)
-        );
-
-        // Extract ICD-10 codes
-        const codeSet = new Set<string>();
-        matchedMeds.forEach(med => {
-          const codes = parseJsonArray(med.icdCodes);
-          codes.forEach(code => codeSet.add(code));
+        const results = await advancedSearch({
+          scientificName: input.scientificName || undefined,
+          tradeName: input.tradeNames.length > 0 ? input.tradeNames[0] : undefined,
+          indication: input.indications.length > 0 ? input.indications[0] : undefined,
+          limit: 500,
         });
 
-        // Get code details with branches
-        const results = Array.from(codeSet)
-          .map(code => {
-            const codeDetail = allCodes.find(c => c.code === code);
-            const isNonCovered = nonCoveredCodesData.some(nc => nc.code === code);
-            const branches = codeDetail?.branches ? parseJsonArray(codeDetail.branches) : [];
-            
-            // Check if branches are non-covered
-            const processedBranches = branches.map((branchCode: string) => {
-              const branchIsNonCovered = nonCoveredCodesData.some(nc => nc.code === branchCode);
-              return {
-                code: branchCode,
-                isCovered: !branchIsNonCovered,
-                description: codeDetail?.description || "",
-              };
-            });
-            
-            return {
-              code,
-              description: codeDetail?.description || "",
-              isCovered: !isNonCovered,
-              branches: processedBranches,
-            };
-          })
+        // Collect all unique codes from matching medications
+        const codeMap = new Map<string, { code: string; description: string; branchCount: number; branches: Array<{ branchCode: string; branchDescription: string }> }>();
+        results.results.forEach((med) => {
+          med.icdCodes.forEach((c) => {
+            if (!codeMap.has(c.code)) {
+              codeMap.set(c.code, {
+                code: c.code,
+                description: c.description,
+                branchCount: c.branchCount,
+                branches: c.branches ?? [],
+              });
+            }
+          });
+        });
+
+        const codes = Array.from(codeMap.values())
+          .map((c) => ({
+            code: c.code,
+            description: c.description,
+            isCovered: !nonCoveredSet.has(c.code),
+            branches: c.branches.map((b) => ({
+              code: b.branchCode,
+              description: b.branchDescription,
+              isCovered: !nonCoveredSet.has(b.branchCode),
+            })),
+          }))
           .sort((a, b) => a.code.localeCompare(b.code));
 
-        return { codes: results };
+        return { codes };
       } catch (error) {
         console.error("Error searching codes:", error);
         return { codes: [] };
@@ -241,19 +150,14 @@ export const advancedSearchRouter = router({
   /**
    * Get all scientific names (for reference)
    */
-  getAllScientificNames: publicProcedure
-    .query(async () => {
-      try {
-        const medications = await getAllMedications();
-        const names = getUniqueSorted(
-          medications
-            .map(med => med.scientificName)
-            .filter((name): name is string => !!name)
-        );
-        return names;
-      } catch (error) {
-        console.error("Error fetching all scientific names:", error);
-        return [];
-      }
-    }),
+  getAllScientificNames: publicProcedure.query(async () => {
+    try {
+      const results = await advancedSearch({ limit: 2000 });
+      const names = getUniqueSorted(results.results.map((m) => m.scientificName));
+      return names;
+    } catch (error) {
+      console.error("Error fetching all scientific names:", error);
+      return [];
+    }
+  }),
 });

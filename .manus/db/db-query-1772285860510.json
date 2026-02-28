@@ -1,0 +1,38 @@
+{
+  "query": "SELECT 'medications' as tbl, COUNT(*) as cnt FROM medications UNION ALL SELECT 'medication_trade_names', COUNT(*) FROM medication_trade_names UNION ALL SELECT 'medication_indications', COUNT(*) FROM medication_indications UNION ALL SELECT 'medication_codes', COUNT(*) FROM medication_codes UNION ALL SELECT 'icd_codes', COUNT(*) FROM icd_codes UNION ALL SELECT 'icd_branches', COUNT(*) FROM icd_branches UNION ALL SELECT 'non_covered_codes', COUNT(*) FROM non_covered_codes;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT 'medications' as tbl, COUNT(*) as cnt FROM medications UNION ALL SELECT 'medication_trade_names', COUNT(*) FROM medication_trade_names UNION ALL SELECT 'medication_indications', COUNT(*) FROM medication_indications UNION ALL SELECT 'medication_codes', COUNT(*) FROM medication_codes UNION ALL SELECT 'icd_codes', COUNT(*) FROM icd_codes UNION ALL SELECT 'icd_branches', COUNT(*) FROM icd_branches UNION ALL SELECT 'non_covered_codes', COUNT(*) FROM non_covered_codes;",
+  "rows": [
+    {
+      "tbl": "medications",
+      "cnt": "1749"
+    },
+    {
+      "tbl": "icd_codes",
+      "cnt": "2078"
+    },
+    {
+      "tbl": "medication_trade_names",
+      "cnt": "8164"
+    },
+    {
+      "tbl": "non_covered_codes",
+      "cnt": "202"
+    },
+    {
+      "tbl": "medication_codes",
+      "cnt": "7169"
+    },
+    {
+      "tbl": "medication_indications",
+      "cnt": "7134"
+    },
+    {
+      "tbl": "icd_branches",
+      "cnt": "38361"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nmedications\t1749\nicd_codes\t2078\nmedication_trade_names\t8164\nnon_covered_codes\t202\nmedication_codes\t7169\nmedication_indications\t7134\nicd_branches\t38361\n",
+  "stderr": "",
+  "execution_time_ms": 1554
+}

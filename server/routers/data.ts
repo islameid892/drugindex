@@ -2,61 +2,65 @@ import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import {
   getAllMedications,
-  getAllConditions,
   getAllCodes,
   getAllNonCoveredCodes,
   searchMedications,
-  searchConditions,
   searchCodes,
   searchNonCoveredCodes,
+  getStats,
+  getDashboardStats,
+  getMedicationById,
+  getCodeById,
 } from "../db";
 
-// Input validation schemas with security measures
 const searchQuerySchema = z.object({
   query: z.string()
     .min(1, "Search query cannot be empty")
     .max(200, "Search query is too long")
     .trim()
-    .transform(val => val.replace(/[<>\"']/g, '')), // Remove potentially dangerous characters
+    .transform((val) => val.replace(/[<>"']/g, "")),
 });
 
 export const dataRouter = router({
   // Medications
   medications: router({
-    getAll: publicProcedure.query(async () => {
-      return await getAllMedications();
-    }),
-
-    search: publicProcedure
-      .input(searchQuerySchema)
+    getAll: publicProcedure
+      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
       .query(async ({ input }) => {
-        return await searchMedications(input.query);
+        return await getAllMedications(input?.limit ?? 100, input?.offset ?? 0);
       }),
-  }),
-
-  // Conditions
-  conditions: router({
-    getAll: publicProcedure.query(async () => {
-      return await getAllConditions();
-    }),
 
     search: publicProcedure
-      .input(searchQuerySchema)
+      .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
       .query(async ({ input }) => {
-        return await searchConditions(input.query);
+        return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
+      }),
+
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await getMedicationById(input.id);
       }),
   }),
 
   // Codes
   codes: router({
-    getAll: publicProcedure.query(async () => {
-      return await getAllCodes();
-    }),
+    getAll: publicProcedure
+      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await getAllCodes(input?.limit ?? 2100, input?.offset ?? 0);
+      }),
 
     search: publicProcedure
       .input(searchQuerySchema)
       .query(async ({ input }) => {
         return await searchCodes(input.query);
+      }),
+
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await getCodeById(input.id);
       }),
   }),
 
@@ -73,21 +77,13 @@ export const dataRouter = router({
       }),
   }),
 
-  // Admin operations
-  admin: router({
-    getStats: protectedProcedure.query(async () => {
-      // Only allow authenticated users (protectedProcedure ensures this)
-      const medications = await getAllMedications();
-      const conditions = await getAllConditions();
-      const codes = await getAllCodes();
-      const nonCoveredCodes = await getAllNonCoveredCodes();
+  // Stats
+  stats: publicProcedure.query(async () => {
+    return await getStats();
+  }),
 
-      return {
-        medicationsCount: medications.length,
-        conditionsCount: conditions.length,
-        codesCount: codes.length,
-        nonCoveredCodesCount: nonCoveredCodes.length,
-      };
-    }),
+  // Dashboard stats (protected)
+  dashboardStats: protectedProcedure.query(async () => {
+    return await getDashboardStats();
   }),
 });

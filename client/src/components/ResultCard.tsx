@@ -2,38 +2,46 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BranchViewer } from "./BranchViewer";
-import { useCoverageStatus } from "@/hooks/useCoverageStatus";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 
-interface ResultCardProps {
-  data: any;
-  treeData?: any;
+interface IcdCodeEntry {
+  code: string;
+  description: string;
+  branchCount: number;
+  isNonCovered: boolean;
+  branches?: Array<{ branchCode: string; branchDescription: string }>;
 }
 
-export function ResultCard({ data, treeData }: ResultCardProps) {
-  // استخراج جميع الأكواد الرئيسية (أول 3 أحرف) للبحث في الشجرة
-  const icdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
-  const allCodes = icdCodes.map((code: string) => ({
-    fullCode: code.trim(),
-    mainCode: code.trim().substring(0, 3)
-  }));
+interface ResultCardProps {
+  data: any;
+  treeData?: any; // kept for backward compatibility but not used
+}
+
+export function ResultCard({ data }: ResultCardProps) {
+  // Support both old format (array of strings) and new format (array of objects)
+  const rawIcdCodes = Array.isArray(data.icdCodes) ? data.icdCodes : [];
   
-  const treeNodes = allCodes
-    .map((codeObj: any) => ({
-      ...codeObj,
-      node: treeData?.find((node: any) => node.code === codeObj.mainCode)
-    }))
-    .filter((item: any) => item.node);
+  // Normalize to objects
+  const icdCodeEntries: IcdCodeEntry[] = rawIcdCodes.map((entry: any) => {
+    if (typeof entry === 'string') {
+      return { code: entry, description: '', branchCount: 0, isNonCovered: false, branches: [] };
+    }
+    return entry as IcdCodeEntry;
+  });
+
+  // Determine overall coverage from API data or from individual codes
+  const coverageStatus = data.coverageStatus ?? 'COVERED';
+  const isCovered = coverageStatus !== 'NON-COVERED';
+  const isPartial = coverageStatus === 'PARTIAL';
+
+  // For favorites compatibility
+  const codesString = icdCodeEntries.map(e => e.code).join(',');
   
-  // استخدام الـ hook للتحقق من حالة التغطية
-  const codesString = icdCodes.join(',');
-  const { isCovered } = useCoverageStatus(codesString);
-  
-  // استخدام الـ hook للمفضلة
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.join(', ') : '';
-  const favoriteId = `${data.scientificName}-${data.indication}-${codesString}`;
+  const tradeName = Array.isArray(data.tradeNames) ? data.tradeNames.slice(0, 3).join(', ') : '';
+  const indication = Array.isArray(data.indications) ? data.indications.slice(0, 2).join('; ') : (data.indication ?? '');
+  const favoriteId = `${data.scientificName}-${codesString}`;
   const isFav = isFavorite(favoriteId);
   
   const handleToggleFavorite = () => {
@@ -44,9 +52,9 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
         id: favoriteId,
         scientific_name: data.scientificName,
         trade_name: tradeName,
-        indication: data.indication,
+        indication: indication,
         icd10_codes: codesString,
-        atc_codes: (data.atcCodes || []).join(','),
+        atc_codes: '',
         addedAt: Date.now()
       });
     }
@@ -104,38 +112,56 @@ export function ResultCard({ data, treeData }: ResultCardProps) {
         </div>
 
         {/* Indication Row */}
-        <div className="px-4 py-3 border-b border-slate-100">
-          <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Indication</h4>
-          <p className={`text-sm font-medium leading-relaxed p-2 rounded border transition-colors ${indicationClass}`}>
-            {data.indication}
-          </p>
-        </div>
+        {indication && (
+          <div className="px-4 py-3 border-b border-slate-100">
+            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Indication</h4>
+            <p className={`text-sm font-medium leading-relaxed p-2 rounded border transition-colors ${indicationClass}`}>
+              {indication}
+            </p>
+          </div>
+        )}
 
         {/* ICD-10 Codes Row */}
         <div className="px-4 py-3 border-b border-slate-100">
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">ICD-10 Codes</h4>
           <div className="flex flex-wrap gap-1.5">
-            {treeNodes.map((item: any, index: number) => (
-              <div key={`${item.mainCode}-${index}`} className="flex items-center gap-1">
-                <Badge variant="outline" className={`font-mono font-bold text-xs ${badgeClass}`}>
-                  {item.fullCode}
-                </Badge>
-                <BranchViewer 
-                  mainCode={item.node.code} 
-                  mainDescription={item.node.description} 
-                  branches={item.node.branches}
-                  isCovered={isCovered}
-                />
-              </div>
-            ))}
+            {icdCodeEntries.map((entry, index) => {
+              const entryBadgeClass = entry.isNonCovered
+                ? 'text-red-700 border-red-300 bg-red-50'
+                : badgeClass;
+              return (
+                <div key={`${entry.code}-${index}`} className="flex items-center gap-1">
+                  <Badge variant="outline" className={`font-mono font-bold text-xs ${entryBadgeClass}`}>
+                    {entry.code}
+                    {entry.isNonCovered && <span className="ml-1 text-[10px]">⚠</span>}
+                  </Badge>
+                  {entry.branches && entry.branches.length > 0 && (
+                    <BranchViewer 
+                      mainCode={entry.code}
+                      mainDescription={entry.description}
+                      branches={entry.branches.map(b => ({ code: b.branchCode, description: b.branchDescription }))}
+                      isCovered={!entry.isNonCovered}
+                    />
+                  )}
+                </div>
+              );
+            })}
+            {icdCodeEntries.length === 0 && (
+              <span className="text-xs text-slate-400 italic">No codes linked</span>
+            )}
           </div>
         </div>
 
         {/* Coverage Status Row */}
         <div className="px-4 py-3 flex items-center justify-between">
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Coverage Status</h4>
-          <Badge className={`font-mono text-xs font-bold ${isCovered ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-red-100 text-red-700 border-red-300'}`}>
-            {isCovered ? 'COVERED' : 'NOT COVERED'}
+          <Badge className={`font-mono text-xs font-bold ${
+            coverageStatus === 'COVERED' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+            coverageStatus === 'PARTIAL' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+            'bg-red-100 text-red-700 border-red-300'
+          }`}>
+            {coverageStatus === 'COVERED' ? 'COVERED' : 
+             coverageStatus === 'PARTIAL' ? 'PARTIAL' : 'NOT COVERED'}
           </Badge>
         </div>
       </CardContent>
