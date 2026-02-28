@@ -273,7 +273,9 @@ export async function getMedicationsByIds(ids: number[]): Promise<MedicationResu
     });
   }
 
-  return meds.map((med) => {
+  // Expand: each trade name becomes a separate result (matches original JSON behavior)
+  const results: MedicationResult[] = [];
+  for (const med of meds) {
     const codes = codeMap.get(med.id) ?? [];
     const hasNonCovered = codes.some((c) => c.isNonCovered);
     const hasCovered = codes.some((c) => !c.isNonCovered);
@@ -282,15 +284,34 @@ export async function getMedicationsByIds(ids: number[]): Promise<MedicationResu
       hasNonCovered && hasCovered ? "PARTIAL" :
       hasNonCovered ? "NON-COVERED" : "COVERED";
 
-    return {
-      id: med.id,
-      scientificName: med.scientificName,
-      tradeNames: tradeMap.get(med.id) ?? [],
-      indications: indicationMap.get(med.id) ?? [],
-      icdCodes: codes,
-      coverageStatus,
-    };
-  });
+    const trades = tradeMap.get(med.id) ?? [];
+    const inds = indicationMap.get(med.id) ?? [];
+
+    if (trades.length <= 1) {
+      // Single or no trade name - one result
+      results.push({
+        id: med.id,
+        scientificName: med.scientificName,
+        tradeNames: trades,
+        indications: inds,
+        icdCodes: codes,
+        coverageStatus,
+      });
+    } else {
+      // Multiple trade names - one result per trade name
+      for (const tn of trades) {
+        results.push({
+          id: med.id,
+          scientificName: med.scientificName,
+          tradeNames: [tn],
+          indications: inds,
+          icdCodes: codes,
+          coverageStatus,
+        });
+      }
+    }
+  }
+  return results;
 }
 
 export async function getAllMedications(limit = 100, offset = 0) {

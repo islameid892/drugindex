@@ -595,9 +595,6 @@ export default function Home() {
         isOpen={browseModal.isOpen}
         type={browseModal.type}
         onClose={() => setBrowseModal({ ...browseModal, isOpen: false })}
-        data={browseModal.type === 'non-covered' ? nonCoveredData : []}
-        treeData={[]}
-        nonCoveredData={nonCoveredData}
       />
 
       <Footer />

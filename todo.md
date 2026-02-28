@@ -320,3 +320,7 @@
 - [x] Complete end-to-end testing of entire Advanced Search feature
 - [x] All 21 API tests passing
 - [x] Advanced Search feature fully working and production-ready
+
+## Phase 31: Bug Fixes - Mounjaro Search & Browse Codes
+- [x] Fix: Mounjaro search returns only 1 result instead of all entries
+- [x] Fix: Browse Codes feature is not working
