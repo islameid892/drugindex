@@ -68,8 +68,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     }
   );
 
-  const indicationsSuggestions = trpc.advancedSearch.indicationSuggestions.useQuery(
-    { tradeName: tradeName || "", query: debouncedIndicationInput || "", limit: 50 },
+  const indicationsSuggestions = trpc.advancedSearch.indicationsSuggestions.useQuery(
+    { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: debouncedIndicationInput || "", limit: 50 },
     { 
       enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0),
       staleTime: 30000,
@@ -77,10 +77,10 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     }
   );
 
-  const searchQuery = trpc.advancedSearch.codesByIndication.useQuery(
-    { indication: indications.length > 0 ? indications[0] : "" },
+  const searchQuery = trpc.advancedSearch.search.useQuery(
+    { scientificName, tradeNames: tradeName ? [tradeName] : [], indications },
     { 
-      enabled: step === 2 && indications.length > 0,
+      enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) && indications.length > 0,
       staleTime: 30000,
       gcTime: 60000,
     }
@@ -88,8 +88,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   // Update results when search query completes
   useEffect(() => {
-    if (searchQuery.data && Array.isArray(searchQuery.data)) {
-      setResults(searchQuery.data);
+    if (searchQuery.data?.codes) {
+      setResults(searchQuery.data.codes);
     }
   }, [searchQuery.data]);
 
@@ -349,7 +349,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               )}
 
               {/* Results */}
-              {searchQuery.data && (
+              {searchQuery.data?.codes && (
                 <div className="mt-6 pt-6 border-t">
                   <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
                   <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -382,16 +382,12 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                         {/* Branches */}
                         {expandedCodes.has(result.code) && result.branches && result.branches.length > 0 && (
                           <div className={`mt-3 ml-4 space-y-2 border-l-2 ${isNonCovered ? 'border-red-300' : 'border-blue-300'} pl-4`}>
-                            {Array.isArray(result.branches) && result.branches.map((branch: any, idx: number) => {
-                              // Handle both string and object formats
-                              const branchCode = typeof branch === 'string' ? branch : (branch.code || '');
-                              const branchDescription = typeof branch === 'string' ? '' : (branch.description || branch.name || '');
-                              const branchNonCovered = typeof branch === 'object' && (branch.isCovered === false || branch.coverage === 'non-covered');
-                              
+                            {Array.isArray(result.branches) && result.branches.map((branch: any) => {
+                              const branchNonCovered = branch.isCovered === false || branch.coverage === 'non-covered';
                               return (
-                              <div key={branchCode || idx} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
-                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branchCode}</div>
-                                {branchDescription && <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branchDescription}</div>}
+                              <div key={branch.code} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
+                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branch.code}</div>
+                                <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branch.description || branch.name || 'No description'}</div>
                               </div>
                               );
                             })}

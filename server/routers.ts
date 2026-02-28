@@ -9,7 +9,17 @@ import { ocrRouter } from "./routers/ocr";
 import { toolsRouter } from "./routers/tools";
 import { advancedSearchRouter } from "./routers/advancedSearch";
 import {
-  getStatistics,
+  getTotalSearches,
+  getTotalSearchesSince,
+  getAverageResponseTime,
+  getActiveUsers,
+  getUniqueSearchers,
+  getPopularSearches,
+  getSearchTrend,
+  getDatabaseStats,
+  getCoverageRate,
+  getTodaySearchVolume,
+  getRecentSearches,
   recordSearch,
 } from "./db";
 import { z } from "zod";
@@ -37,20 +47,68 @@ export const appRouter = router({
   analytics: router({
     // Get full dashboard data in one call
     getDashboard: publicProcedure.query(async () => {
-      const stats = await getStatistics();
-      // Return basic statistics
+      const [
+        totalSearches,
+        weekSearches,
+        avgResponseTime,
+        registeredUsers,
+        uniqueSearchers,
+        topSearches,
+        searchTrend,
+        dbStats,
+        coverage,
+        todayVolume,
+        recentSearches,
+      ] = await Promise.all([
+        getTotalSearches(),
+        getTotalSearchesSince(7),
+        getAverageResponseTime(),
+        getActiveUsers(),
+        getUniqueSearchers(7),
+        getPopularSearches(10),
+        getSearchTrend(7),
+        getDatabaseStats(),
+        getCoverageRate(),
+        getTodaySearchVolume(),
+        getRecentSearches(20),
+      ]);
+
       return {
-        stats,
-        timestamp: new Date(),
+        totalSearches,
+        weekSearches,
+        avgResponseTime,
+        registeredUsers,
+        uniqueSearchers,
+        topSearches,
+        searchTrend,
+        dbStats,
+        coverage,
+        todayVolume,
+        recentSearches,
       };
-
-
     }),
 
     // Individual endpoints for granular queries
     getTotalSearches: publicProcedure.query(async () => {
-      const stats = await getStatistics();
-      return { total: stats.medications + stats.conditions + stats.codes };
+      return await getTotalSearches();
+    }),
+    getAverageResponseTime: publicProcedure.query(async () => {
+      return await getAverageResponseTime();
+    }),
+    getActiveUsers: publicProcedure.query(async () => {
+      return await getActiveUsers();
+    }),
+    getPopularSearches: publicProcedure.query(async () => {
+      return await getPopularSearches(10);
+    }),
+    getCoverageRate: publicProcedure.query(async () => {
+      return await getCoverageRate();
+    }),
+    getSearchTrend: publicProcedure.query(async () => {
+      return await getSearchTrend(7);
+    }),
+    getDatabaseStats: publicProcedure.query(async () => {
+      return await getDatabaseStats();
     }),
 
     // Track a search event
@@ -61,11 +119,12 @@ export const appRouter = router({
         responseTime: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await recordSearch(
-          input.query,
-          input.resultCount,
-          input.responseTime || 0
-        );
+        return await recordSearch({
+          query: input.query,
+          resultsCount: input.resultCount,
+          responseTime: input.responseTime || 0,
+          timestamp: new Date(),
+        });
       }),
   }),
 });

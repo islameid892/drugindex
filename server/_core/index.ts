@@ -11,7 +11,6 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { startSyncJob } from "../jobs/syncJob";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -50,9 +49,6 @@ const apiLimiter = rateLimit({
 });
 
 async function startServer() {
-  // Start periodic sync job
-  startSyncJob();
-
   const app = express();
   const server = createServer(app);
 

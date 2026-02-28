@@ -4,10 +4,11 @@ import {
   getAllMedications,
   getAllConditions,
   getAllCodes,
-  getNonCoveredCodes,
+  getAllNonCoveredCodes,
   searchMedications,
-  getStatistics,
-  getCodesWithBranches,
+  searchConditions,
+  searchCodes,
+  searchNonCoveredCodes,
 } from "../db";
 
 // Input validation schemas with security measures
@@ -42,11 +43,7 @@ export const dataRouter = router({
     search: publicProcedure
       .input(searchQuerySchema)
       .query(async ({ input }) => {
-        // Search conditions by name
-        const allConditions = await getAllConditions();
-        return allConditions.filter(c => 
-          c.name.toLowerCase().includes(input.query.toLowerCase())
-        );
+        return await searchConditions(input.query);
       }),
   }),
 
@@ -59,29 +56,20 @@ export const dataRouter = router({
     search: publicProcedure
       .input(searchQuerySchema)
       .query(async ({ input }) => {
-        // Search codes by code or description
-        const allCodes = await getAllCodes();
-        return allCodes.filter(c => 
-          c.code.toLowerCase().includes(input.query.toLowerCase()) ||
-          c.description.toLowerCase().includes(input.query.toLowerCase())
-        );
+        return await searchCodes(input.query);
       }),
   }),
 
   // Non-Covered Codes
   nonCoveredCodes: router({
     getAll: publicProcedure.query(async () => {
-      return await getNonCoveredCodes();
+      return await getAllNonCoveredCodes();
     }),
 
     search: publicProcedure
       .input(searchQuerySchema)
       .query(async ({ input }) => {
-        const allCodes = await getNonCoveredCodes();
-        return allCodes.filter(c => 
-          c.code.toLowerCase().includes(input.query.toLowerCase()) ||
-          c.description.toLowerCase().includes(input.query.toLowerCase())
-        );
+        return await searchNonCoveredCodes(input.query);
       }),
   }),
 
@@ -89,13 +77,16 @@ export const dataRouter = router({
   admin: router({
     getStats: protectedProcedure.query(async () => {
       // Only allow authenticated users (protectedProcedure ensures this)
-      const stats = await getStatistics();
+      const medications = await getAllMedications();
+      const conditions = await getAllConditions();
+      const codes = await getAllCodes();
+      const nonCoveredCodes = await getAllNonCoveredCodes();
 
       return {
-        medicationsCount: stats.medications,
-        conditionsCount: stats.conditions,
-        codesCount: stats.codes + stats.branches,
-        branchesCount: stats.branches,
+        medicationsCount: medications.length,
+        conditionsCount: conditions.length,
+        codesCount: codes.length,
+        nonCoveredCodesCount: nonCoveredCodes.length,
       };
     }),
   }),

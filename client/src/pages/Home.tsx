@@ -113,16 +113,10 @@ export default function Home() {
         setTreeData(tree);
         setNonCoveredData(nonCovered);
         
-        // Calculate total codes (main + branches)
-        const totalCodes = tree.reduce((total: number, code: any) => {
-          const branchCount = Array.isArray(code.branches) ? code.branches.length : 0;
-          return total + 1 + branchCount; // 1 for main code + branches
-        }, 0);
-
         setStats({
           medications: main.length,
           conditions: new Set(main.map((item: any) => item.indication)).size,
-          codes: totalCodes
+          codes: tree.length
         });
         
         setLoading(false);

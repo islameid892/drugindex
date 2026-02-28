@@ -62,18 +62,17 @@ export function AnalyticsDashboard() {
     );
   }
 
-  const stats = dashboard?.stats || { medications: 0, conditions: 0, codes: 0, branches: 0 };
-  const totalSearches = 0;
-  const weekSearches = 0;
-  const avgResponseTime = 0;
-  const registeredUsers = 0;
-  const topSearches: any[] = [];
-  const searchTrend: any[] = [];
-  const coverage = { covered: stats.codes, uncovered: 0, rate: 100 };
-  const dbStats = { totalCodes: stats.codes, totalNonCovered: 0, totalMedications: stats.medications, totalConditions: stats.conditions };
-  const todayVolume = 0;
-  const recentSearches: any[] = [];
-  const maxTrend = searchTrend.length > 0 ? Math.max(...searchTrend.map((d: any) => d.searches || 0)) : 1;
+  const totalSearches = dashboard?.totalSearches || 0;
+  const weekSearches = dashboard?.weekSearches || 0;
+  const avgResponseTime = dashboard?.avgResponseTime || 0;
+  const registeredUsers = dashboard?.registeredUsers || 0;
+  const topSearches = dashboard?.topSearches || [];
+  const searchTrend = dashboard?.searchTrend || [];
+  const coverage = dashboard?.coverage || { covered: 0, uncovered: 0, rate: 0 };
+  const dbStats = dashboard?.dbStats || { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
+  const todayVolume = dashboard?.todayVolume || 0;
+  const recentSearches = dashboard?.recentSearches || [];
+  const maxTrend = Math.max(...searchTrend.map((d: any) => d.searches), 1);
   const maxTopSearch = topSearches.length > 0 ? topSearches[0].count : 1;
 
   return (

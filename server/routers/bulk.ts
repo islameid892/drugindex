@@ -1,8 +1,8 @@
 import { router, publicProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import {
-  getAllCodes,
-  getNonCoveredCodes,
+  searchCodes,
+  searchNonCoveredCodes,
 } from '../db';
 
 export const bulkRouter = router({
@@ -16,12 +16,8 @@ export const bulkRouter = router({
       
       const searchQuery = input.query.toUpperCase();
       try {
-        const allCodes = await getAllCodes();
-        const filtered = allCodes.filter(c => 
-          c.code.toUpperCase().includes(searchQuery) ||
-          c.description.toUpperCase().includes(searchQuery)
-        );
-        return filtered
+        const codes = await searchCodes(searchQuery);
+        return codes
           .slice(0, input.limit)
           .map(code => ({
             code: code.code,
@@ -55,16 +51,15 @@ export const bulkRouter = router({
         if (isValidCode) {
           try {
             // Search for code
-            const allCodes = await getAllCodes();
-            const foundCode = allCodes.find(c => c.code.toUpperCase() === item.toUpperCase());
-            if (foundCode) {
+            const codes = await searchCodes(item);
+            if (codes && codes.length > 0) {
+              const code = codes[0];
               result.found = true;
-              result.details.name = foundCode.description;
+              result.details.name = code.description;
               
               // Check if code is covered
-              const nonCoveredList = await getNonCoveredCodes();
-              const isNonCovered = nonCoveredList.some(nc => nc.code.toUpperCase() === item.toUpperCase());
-              result.isCovered = !isNonCovered;
+              const nonCoveredCodes = await searchNonCoveredCodes(item);
+              result.isCovered = nonCoveredCodes.length === 0;
             }
           } catch (error) {
             console.error('Error querying code:', error);
