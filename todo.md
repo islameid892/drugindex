@@ -324,3 +324,10 @@
 ## Phase 31: Bug Fixes - Mounjaro Search & Browse Codes
 - [x] Fix: Mounjaro search returns only 1 result instead of all entries
 - [x] Fix: Browse Codes feature is not working
+
+## Phase 32: Search Results - Branch Button & Non-Covered Styling
+- [x] Add branch expand button next to each ICD code in search results
+- [x] Style non-covered medication cards with red border and NON-COVERED status label
+- [x] Fix medication-code links (re-imported with parent code mapping: 9,302 links)
+- [x] Load branches in search results from database
+- [x] Compute coverage status from non-covered branch codes

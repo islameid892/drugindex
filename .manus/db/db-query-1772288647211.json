@@ -1,0 +1,28 @@
+{
+  "query": "SELECT m.id, m.scientific_name, mt.trade_name, mi.indication, mc.code_id, ic.code, ic.description\nFROM medications m\nLEFT JOIN medication_trade_names mt ON mt.medication_id = m.id\nLEFT JOIN medication_indications mi ON mi.medication_id = m.id\nLEFT JOIN medication_codes mc ON mc.medication_id = m.id\nLEFT JOIN icd_codes ic ON ic.id = mc.code_id\nWHERE LOWER(mt.trade_name) LIKE '%dayvigo%'\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT m.id, m.scientific_name, mt.trade_name, mi.indication, mc.code_id, ic.code, ic.description\nFROM medications m\nLEFT JOIN medication_trade_names mt ON mt.medication_id = m.id\nLEFT JOIN medication_indications mi ON mi.medication_id = m.id\nLEFT JOIN medication_codes mc ON mc.medication_id = m.id\nLEFT JOIN icd_codes ic ON ic.id = mc.code_id\nWHERE LOWER(mt.trade_name) LIKE '%dayvigo%'\nLIMIT 10;",
+  "rows": [
+    {
+      "id": "949",
+      "scientific_name": "LEMBOREXANT",
+      "trade_name": "DAYVIGO 5 mg FC Tab",
+      "indication": "INSOMNIA",
+      "code_id": "NULL",
+      "code": "NULL",
+      "description": "NULL"
+    },
+    {
+      "id": "949",
+      "scientific_name": "LEMBOREXANT",
+      "trade_name": "DAYVIGO 10 mg FC Tab",
+      "indication": "INSOMNIA",
+      "code_id": "NULL",
+      "code": "NULL",
+      "description": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tscientific_name\ttrade_name\tindication\tcode_id\tcode\tdescription\n949\tLEMBOREXANT\tDAYVIGO 5 mg FC Tab\tINSOMNIA\tNULL\tNULL\tNULL\n949\tLEMBOREXANT\tDAYVIGO 10 mg FC Tab\tINSOMNIA\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1602
+}

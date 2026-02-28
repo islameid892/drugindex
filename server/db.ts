@@ -230,6 +230,7 @@ export async function getMedicationsByIds(ids: number[]): Promise<MedicationResu
     db.select().from(medicationIndications).where(inArray(medicationIndications.medicationId, ids)),
     db.select({
       medicationId: medicationCodes.medicationId,
+      codeId: icdCodes.id,
       code: icdCodes.code,
       description: icdCodes.description,
       branchCount: icdCodes.branchCount,
@@ -239,21 +240,43 @@ export async function getMedicationsByIds(ids: number[]): Promise<MedicationResu
       .where(inArray(medicationCodes.medicationId, ids)),
   ]);
 
-  // Check non-covered
-  const allCodes = Array.from(new Set(linkedCodes.map((c) => c.code)));
+  // Load branches for all linked codes
+  const allCodeIds = Array.from(new Set(linkedCodes.map((c) => c.codeId)));
+  const allCodeStrings = Array.from(new Set(linkedCodes.map((c) => c.code)));
+  let branchesData: Array<{ parentCodeId: number; branchCode: string; branchDescription: string }> = [];
+  if (allCodeIds.length > 0) {
+    branchesData = await db.select({
+      parentCodeId: icdBranches.parentCodeId,
+      branchCode: icdBranches.branchCode,
+      branchDescription: icdBranches.branchDescription,
+    }).from(icdBranches).where(inArray(icdBranches.parentCodeId, allCodeIds));
+  }
+
+  // Build branch map: codeId -> branches[]
+  const branchMap = new Map<number, Array<{ branchCode: string; branchDescription: string }>>();
+  for (const b of branchesData) {
+    if (!branchMap.has(b.parentCodeId)) branchMap.set(b.parentCodeId, []);
+    branchMap.get(b.parentCodeId)!.push({ branchCode: b.branchCode, branchDescription: b.branchDescription });
+  }
+
+  // Collect all branch codes for non-covered checking
+  const allBranchCodes = branchesData.map((b) => b.branchCode);
+  const allCodesToCheck = [...allCodeStrings, ...allBranchCodes];
+
+  // Check non-covered: check both parent codes AND branch codes
   let nonCoveredSet = new Set<string>();
-  if (allCodes.length > 0) {
+  if (allCodesToCheck.length > 0) {
+    // Query in batches if needed (non_covered_codes is small, so query all)
     const nc = await db
       .select({ code: nonCoveredCodes.code })
-      .from(nonCoveredCodes)
-      .where(inArray(nonCoveredCodes.code, allCodes));
+      .from(nonCoveredCodes);
     nonCoveredSet = new Set(nc.map((r) => r.code));
   }
 
   // Group
   const tradeMap = new Map<number, string[]>();
   const indicationMap = new Map<number, string[]>();
-  const codeMap = new Map<number, Array<{ code: string; description: string; branchCount: number; isNonCovered: boolean }>>();
+  const codeMap = new Map<number, Array<{ code: string; description: string; branchCount: number; isNonCovered: boolean; branches: Array<{ branchCode: string; branchDescription: string }> }>>();
 
   for (const t of tradeNames) {
     if (!tradeMap.has(t.medicationId)) tradeMap.set(t.medicationId, []);
@@ -265,11 +288,17 @@ export async function getMedicationsByIds(ids: number[]): Promise<MedicationResu
   }
   for (const c of linkedCodes) {
     if (!codeMap.has(c.medicationId)) codeMap.set(c.medicationId, []);
+    const codeBranches = branchMap.get(c.codeId) ?? [];
+    // A code is non-covered if the parent code itself is non-covered,
+    // OR if any of its branches are in the non-covered list
+    const parentNonCovered = nonCoveredSet.has(c.code);
+    const hasNonCoveredBranch = codeBranches.some((b) => nonCoveredSet.has(b.branchCode));
     codeMap.get(c.medicationId)!.push({
       code: c.code,
       description: c.description ?? "",
       branchCount: c.branchCount ?? 0,
-      isNonCovered: nonCoveredSet.has(c.code),
+      isNonCovered: parentNonCovered || hasNonCoveredBranch,
+      branches: codeBranches,
     });
   }
 

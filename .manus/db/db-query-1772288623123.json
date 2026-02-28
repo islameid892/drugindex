@@ -1,0 +1,37 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "rows": [
+    {
+      "TABLE_NAME": "users"
+    },
+    {
+      "TABLE_NAME": "search_analytics"
+    },
+    {
+      "TABLE_NAME": "non_covered_codes"
+    },
+    {
+      "TABLE_NAME": "medications"
+    },
+    {
+      "TABLE_NAME": "medication_trade_names"
+    },
+    {
+      "TABLE_NAME": "medication_indications"
+    },
+    {
+      "TABLE_NAME": "medication_codes"
+    },
+    {
+      "TABLE_NAME": "icd_codes"
+    },
+    {
+      "TABLE_NAME": "icd_branches"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\nusers\nsearch_analytics\nnon_covered_codes\nmedications\nmedication_trade_names\nmedication_indications\nmedication_codes\nicd_codes\nicd_branches\n",
+  "stderr": "",
+  "execution_time_ms": 1589
+}

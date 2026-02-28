@@ -1,0 +1,37 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "icd_branches"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "icd_codes"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "medication_codes"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "medication_indications"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "medication_trade_names"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "medications"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "non_covered_codes"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "search_analytics"
+    },
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_a2JMvfTkjxD7rpSD5GgnMY\nicd_branches\nicd_codes\nmedication_codes\nmedication_indications\nmedication_trade_names\nmedications\nnon_covered_codes\nsearch_analytics\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 1579
+}
