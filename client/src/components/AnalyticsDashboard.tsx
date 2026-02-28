@@ -69,7 +69,7 @@ export function AnalyticsDashboard() {
   const topSearches = dashboard?.topSearches || [];
   const searchTrend = dashboard?.searchTrend || [];
   const coverage = dashboard?.coverage || { covered: 0, uncovered: 0, rate: 0 };
-  const dbStats = dashboard?.dbStats || { totalCodes: 0, totalNonCovered: 0, totalMedications: 0, totalConditions: 0 };
+  const dbStats = dashboard?.dbStats || { totalCodes: 0, nonCoveredCodes: 0, totalDrugEntries: 0, uniqueIndications: 0, uniqueScientificNames: 0, uniqueTradeNames: 0, totalBranches: 0 };
   const todayVolume = dashboard?.todayVolume || 0;
   const recentSearches = dashboard?.recentSearches || [];
   const maxTrend = Math.max(...searchTrend.map((d: any) => d.searches), 1);
@@ -267,15 +267,15 @@ export function AnalyticsDashboard() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Non-Covered</p>
-                      <p className="text-xl font-bold">{dbStats.totalNonCovered.toLocaleString()}</p>
+                      <p className="text-xl font-bold">{dbStats.nonCoveredCodes.toLocaleString()}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Medications</p>
-                      <p className="text-xl font-bold">{dbStats.totalMedications.toLocaleString()}</p>
+                      <p className="text-xl font-bold">{dbStats.totalDrugEntries.toLocaleString()}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Conditions</p>
-                      <p className="text-xl font-bold">{dbStats.totalConditions.toLocaleString()}</p>
+                      <p className="text-xl font-bold">{dbStats.uniqueIndications.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -350,11 +350,11 @@ export function AnalyticsDashboard() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Medications</p>
-              <p className="text-2xl font-bold text-emerald-600">{dbStats.totalMedications.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-emerald-600">{dbStats.totalDrugEntries.toLocaleString()}</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Conditions</p>
-              <p className="text-2xl font-bold text-purple-600">{dbStats.totalConditions.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-purple-600">{dbStats.uniqueIndications.toLocaleString()}</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Coverage Rate</p>

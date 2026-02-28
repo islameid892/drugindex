@@ -77,21 +77,14 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     }
   );
 
-  const searchQuery = trpc.advancedSearch.search.useQuery(
-    { scientificName, tradeNames: tradeName ? [tradeName] : [], indications },
-    { 
-      enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0) && indications.length > 0,
-      staleTime: 30000,
-      gcTime: 60000,
-    }
-  );
+  const searchMutation = trpc.advancedSearch.search.useMutation();
 
-  // Update results when search query completes
+  // Update results when search mutation completes
   useEffect(() => {
-    if (searchQuery.data?.codes) {
-      setResults(searchQuery.data.codes);
+    if (searchMutation.data?.codes) {
+      setResults(searchMutation.data.codes);
     }
-  }, [searchQuery.data]);
+  }, [searchMutation.data]);
 
   const handleSelectScientificName = (name: string) => {
     setScientificName(name);
@@ -349,7 +342,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               )}
 
               {/* Results */}
-              {searchQuery.data?.codes && (
+              {searchMutation.data?.codes && (
                 <div className="mt-6 pt-6 border-t">
                   <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
                   <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -420,8 +413,14 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
             </Button>
           )}
           {step === 2 && indications.length > 0 && (
-            <Button onClick={() => {}} disabled={searchQuery.isLoading} className="text-base px-6 py-2 bg-green-600 hover:bg-green-700">
-              {searchQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+            <Button onClick={() => {
+              searchMutation.mutate({
+                scientificName,
+                tradeNames: tradeName ? [tradeName] : [],
+                indications
+              });
+            }} disabled={searchMutation.isPending} className="text-base px-6 py-2 bg-green-600 hover:bg-green-700">
+              {searchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
               Search
             </Button>
           )}

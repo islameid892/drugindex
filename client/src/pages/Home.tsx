@@ -99,9 +99,9 @@ export default function Home() {
   // Load stats from API
   const statsQuery = trpc.data.stats.useQuery(undefined, { staleTime: 60000 });
   const stats = {
-    medications: statsQuery.data?.medications ?? 0,
-    conditions: statsQuery.data?.conditions ?? 0,
-    codes: statsQuery.data?.codes ?? 0,
+    medications: statsQuery.data?.totalDrugEntries ?? 0,
+    conditions: statsQuery.data?.uniqueIndications ?? 0,
+    codes: statsQuery.data?.totalCodes ?? 0,
   };
 
   // Search from API (server-side)

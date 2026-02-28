@@ -1,17 +1,17 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import {
-  getAllMedications,
-  getAllCodes,
-  getAllNonCoveredCodes,
   searchMedications,
   searchCodes,
   searchNonCoveredCodes,
   getStats,
   getDashboardStats,
-  getMedicationById,
+  getAllCodes,
+  getAllNonCoveredCodes,
   getCodeById,
+  getDb,
 } from "../db";
+import { drugEntries } from "../../drizzle/schema";
 
 const searchQuerySchema = z.object({
   query: z.string()
@@ -22,24 +22,28 @@ const searchQuerySchema = z.object({
 });
 
 export const dataRouter = router({
-  // Medications
+  // Drug search (replaces old medications search)
   medications: router({
-    getAll: publicProcedure
-      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-      .query(async ({ input }) => {
-        return await getAllMedications(input?.limit ?? 100, input?.offset ?? 0);
-      }),
-
     search: publicProcedure
       .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
       .query(async ({ input }) => {
         return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
       }),
 
+    getAll: publicProcedure
+      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        return db.select().from(drugEntries)
+          .limit(input?.limit ?? 2000)
+          .offset(input?.offset ?? 0);
+      }),
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return await getMedicationById(input.id);
+      .query(async () => {
+        // Not needed in new schema - return null
+        return null;
       }),
   }),
 

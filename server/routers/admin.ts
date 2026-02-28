@@ -1,17 +1,14 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
-  getAllMedications,
   getAllCodes,
   getDashboardStats,
   getDb,
-  getMedicationById,
+  searchMedications,
 } from "../db";
 import {
-  medications,
-  medicationTradeNames,
-  medicationIndications,
-  medicationCodes,
+  drugEntries,
+  drugEntryCodes,
   icdCodes,
 } from "../../drizzle/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -25,11 +22,14 @@ const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
 });
 
 export const adminRouter = router({
-  // Get all medications
+  // Get all drug entries (paginated)
   getAllMedications: adminProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
     .query(async ({ input }) => {
-      return await getAllMedications(input?.limit ?? 100, input?.offset ?? 0);
+      const db = await getDb();
+      return db.select().from(drugEntries)
+        .limit(input?.limit ?? 100)
+        .offset(input?.offset ?? 0);
     }),
 
   // Get all codes
@@ -42,121 +42,96 @@ export const adminRouter = router({
     return await getDashboardStats();
   }),
 
-  // Add medication with normalized structure
+  // Add a new drug entry
   addMedication: adminProcedure
     .input(
       z.object({
         scientificName: z.string().min(1),
-        tradeNames: z.array(z.string()).default([]),
-        indications: z.array(z.string()).default([]),
+        tradeName: z.string().min(1),
+        indication: z.string().min(1),
+        icdCodesRaw: z.string().default(""),
         icdCodesList: z.array(z.string()).default([]),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) throw new Error("Database connection failed");
 
-      // Insert medication
-      const [medResult] = await db.insert(medications).values({
+      // Insert drug entry
+      const [result] = await db.insert(drugEntries).values({
         scientificName: input.scientificName,
+        tradeName: input.tradeName,
+        indication: input.indication,
+        icdCodesRaw: input.icdCodesRaw,
       });
-      const medicationId = (medResult as any).insertId as number;
-
-      // Insert trade names
-      if (input.tradeNames.length > 0) {
-        await db.insert(medicationTradeNames).values(
-          input.tradeNames.map((name) => ({ medicationId, tradeName: name }))
-        );
-      }
-
-      // Insert indications
-      if (input.indications.length > 0) {
-        await db.insert(medicationIndications).values(
-          input.indications.map((ind) => ({ medicationId, indication: ind }))
-        );
-      }
+      const entryId = (result as any).insertId as number;
 
       // Link ICD codes
       if (input.icdCodesList.length > 0) {
         const codeRows = await db
-          .select({ id: icdCodes.id, code: icdCodes.code })
+          .select({ id: icdCodes.id })
           .from(icdCodes)
           .where(inArray(icdCodes.code, input.icdCodesList));
         if (codeRows.length > 0) {
-          await db.insert(medicationCodes).values(
-            codeRows.map((c) => ({ medicationId, codeId: c.id }))
+          await db.insert(drugEntryCodes).values(
+            (codeRows as Array<{ id: number }>).map((c) => ({ drugEntryId: entryId, codeId: c.id }))
           );
         }
       }
 
-      return await getMedicationById(medicationId);
+      const [entry] = await db.select().from(drugEntries).where(eq(drugEntries.id, entryId));
+      return entry;
     }),
 
-  // Update medication
+  // Update a drug entry
   updateMedication: adminProcedure
     .input(
       z.object({
         id: z.number(),
         scientificName: z.string().optional(),
-        tradeNames: z.array(z.string()).optional(),
-        indications: z.array(z.string()).optional(),
+        tradeName: z.string().optional(),
+        indication: z.string().optional(),
+        icdCodesRaw: z.string().optional(),
         icdCodesList: z.array(z.string()).optional(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) throw new Error("Database connection failed");
 
-      if (input.scientificName) {
-        await db.update(medications)
-          .set({ scientificName: input.scientificName })
-          .where(eq(medications.id, input.id));
-      }
+      const updateData: Record<string, any> = {};
+      if (input.scientificName !== undefined) updateData.scientificName = input.scientificName;
+      if (input.tradeName !== undefined) updateData.tradeName = input.tradeName;
+      if (input.indication !== undefined) updateData.indication = input.indication;
+      if (input.icdCodesRaw !== undefined) updateData.icdCodesRaw = input.icdCodesRaw;
 
-      if (input.tradeNames !== undefined) {
-        await db.delete(medicationTradeNames).where(eq(medicationTradeNames.medicationId, input.id));
-        if (input.tradeNames.length > 0) {
-          await db.insert(medicationTradeNames).values(
-            input.tradeNames.map((name) => ({ medicationId: input.id, tradeName: name }))
-          );
-        }
-      }
-
-      if (input.indications !== undefined) {
-        await db.delete(medicationIndications).where(eq(medicationIndications.medicationId, input.id));
-        if (input.indications.length > 0) {
-          await db.insert(medicationIndications).values(
-            input.indications.map((ind) => ({ medicationId: input.id, indication: ind }))
-          );
-        }
+      if (Object.keys(updateData).length > 0) {
+        await db.update(drugEntries).set(updateData).where(eq(drugEntries.id, input.id));
       }
 
       if (input.icdCodesList !== undefined) {
-        await db.delete(medicationCodes).where(eq(medicationCodes.medicationId, input.id));
+        await db.delete(drugEntryCodes).where(eq(drugEntryCodes.drugEntryId, input.id));
         if (input.icdCodesList.length > 0) {
           const codeRows = await db
             .select({ id: icdCodes.id })
             .from(icdCodes)
             .where(inArray(icdCodes.code, input.icdCodesList));
           if (codeRows.length > 0) {
-            await db.insert(medicationCodes).values(
-              codeRows.map((c) => ({ medicationId: input.id, codeId: c.id }))
+            await db.insert(drugEntryCodes).values(
+              (codeRows as Array<{ id: number }>).map((c) => ({ drugEntryId: input.id, codeId: c.id }))
             );
           }
         }
       }
 
-      return await getMedicationById(input.id);
+      const [entry] = await db.select().from(drugEntries).where(eq(drugEntries.id, input.id));
+      return entry;
     }),
 
-  // Delete medication
+  // Delete a drug entry
   deleteMedication: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) throw new Error("Database connection failed");
-      // Cascade deletes handle related records
-      await db.delete(medications).where(eq(medications.id, input.id));
+      await db.delete(drugEntries).where(eq(drugEntries.id, input.id));
       return { success: true };
     }),
 });

@@ -331,3 +331,8 @@
 - [x] Fix medication-code links (re-imported with parent code mapping: 9,302 links)
 - [x] Load branches in search results from database
 - [x] Compute coverage status from non-covered branch codes
+
+## Phase 33: Advanced Search - Display Code Branches
+- [ ] Display branches under each ICD-10 code in Advanced Search results
+- [ ] Highlight non-covered branches in red color
+- [ ] Test with various codes that have branches

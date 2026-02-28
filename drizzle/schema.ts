@@ -6,6 +6,7 @@ import {
   timestamp,
   varchar,
   index,
+  boolean,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
@@ -25,6 +26,52 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+// ─── Drug Entries ──────────────────────────────────────────────────────────────
+// Each row from the Excel file becomes one entry.
+// One entry = one (scientific_name, trade_name, indication, icd_codes) combination.
+
+export const drugEntries = mysqlTable(
+  "drug_entries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    scientificName: varchar("scientific_name", { length: 500 }).notNull(),
+    tradeName: varchar("trade_name", { length: 500 }).notNull(),
+    indication: varchar("indication", { length: 500 }).notNull(),
+    // Raw ICD codes string from Excel, e.g. "E11, E28, O24"
+    icdCodesRaw: varchar("icd_codes_raw", { length: 1000 }).notNull().default(""),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => ({
+    sciNameIdx: index("idx_drug_sci_name").on(t.scientificName),
+    tradeNameIdx: index("idx_drug_trade_name").on(t.tradeName),
+    indicationIdx: index("idx_drug_indication").on(t.indication),
+  })
+);
+
+export type DrugEntry = typeof drugEntries.$inferSelect;
+export type InsertDrugEntry = typeof drugEntries.$inferInsert;
+
+// Junction: drug_entries ↔ icd_codes (Many-to-Many)
+// Links each drug entry to its parsed ICD codes
+export const drugEntryCodes = mysqlTable(
+  "drug_entry_codes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    drugEntryId: int("drug_entry_id")
+      .notNull()
+      .references(() => drugEntries.id, { onDelete: "cascade" }),
+    codeId: int("code_id")
+      .notNull()
+      .references(() => icdCodes.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    drugEntryIdx: index("idx_dec_drug_entry_id").on(t.drugEntryId),
+    codeIdx: index("idx_dec_code_id").on(t.codeId),
+  })
+);
+
+export type DrugEntryCode = typeof drugEntryCodes.$inferSelect;
 
 // ─── ICD-10 Codes ──────────────────────────────────────────────────────────────
 
@@ -60,6 +107,11 @@ export const icdBranches = mysqlTable(
   })
 );
 
+export type IcdCode = typeof icdCodes.$inferSelect;
+export type InsertIcdCode = typeof icdCodes.$inferInsert;
+export type IcdBranch = typeof icdBranches.$inferSelect;
+export type InsertIcdBranch = typeof icdBranches.$inferInsert;
+
 // ─── Non-Covered Codes ─────────────────────────────────────────────────────────
 
 export const nonCoveredCodes = mysqlTable(
@@ -75,71 +127,8 @@ export const nonCoveredCodes = mysqlTable(
   })
 );
 
-// ─── Medications ───────────────────────────────────────────────────────────────
-
-export const medications = mysqlTable(
-  "medications",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    scientificName: varchar("scientific_name", { length: 500 }).notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  },
-  (t) => ({
-    sciNameIdx: index("idx_medications_sci_name").on(t.scientificName),
-  })
-);
-
-export const medicationTradeNames = mysqlTable(
-  "medication_trade_names",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    medicationId: int("medication_id")
-      .notNull()
-      .references(() => medications.id, { onDelete: "cascade" }),
-    tradeName: varchar("trade_name", { length: 500 }).notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-  },
-  (t) => ({
-    medIdx: index("idx_trade_names_med_id").on(t.medicationId),
-    tradeNameIdx: index("idx_trade_names_name").on(t.tradeName),
-  })
-);
-
-export const medicationIndications = mysqlTable(
-  "medication_indications",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    medicationId: int("medication_id")
-      .notNull()
-      .references(() => medications.id, { onDelete: "cascade" }),
-    indication: varchar("indication", { length: 500 }).notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-  },
-  (t) => ({
-    medIdx: index("idx_indications_med_id").on(t.medicationId),
-    indicationIdx: index("idx_indications_text").on(t.indication),
-  })
-);
-
-// Junction: medications ↔ icd_codes (Many-to-Many)
-export const medicationCodes = mysqlTable(
-  "medication_codes",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    medicationId: int("medication_id")
-      .notNull()
-      .references(() => medications.id, { onDelete: "cascade" }),
-    codeId: int("code_id")
-      .notNull()
-      .references(() => icdCodes.id, { onDelete: "cascade" }),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-  },
-  (t) => ({
-    medIdx: index("idx_med_codes_med_id").on(t.medicationId),
-    codeIdx: index("idx_med_codes_code_id").on(t.codeId),
-  })
-);
+export type NonCoveredCode = typeof nonCoveredCodes.$inferSelect;
+export type InsertNonCoveredCode = typeof nonCoveredCodes.$inferInsert;
 
 // ─── Search Analytics ──────────────────────────────────────────────────────────
 
@@ -159,47 +148,34 @@ export const searchAnalytics = mysqlTable(
   })
 );
 
+export type SearchAnalytic = typeof searchAnalytics.$inferSelect;
+export type InsertSearchAnalytic = typeof searchAnalytics.$inferInsert;
+
 // ─── Relations ─────────────────────────────────────────────────────────────────
+
+export const drugEntriesRelations = relations(drugEntries, ({ many }) => ({
+  codes: many(drugEntryCodes),
+}));
+
+export const drugEntryCodesRelations = relations(drugEntryCodes, ({ one }) => ({
+  drugEntry: one(drugEntries, {
+    fields: [drugEntryCodes.drugEntryId],
+    references: [drugEntries.id],
+  }),
+  code: one(icdCodes, {
+    fields: [drugEntryCodes.codeId],
+    references: [icdCodes.id],
+  }),
+}));
 
 export const icdCodesRelations = relations(icdCodes, ({ many }) => ({
   branches: many(icdBranches),
-  medicationCodes: many(medicationCodes),
+  drugEntryCodes: many(drugEntryCodes),
 }));
 
 export const icdBranchesRelations = relations(icdBranches, ({ one }) => ({
   parentCode: one(icdCodes, {
     fields: [icdBranches.parentCodeId],
-    references: [icdCodes.id],
-  }),
-}));
-
-export const medicationsRelations = relations(medications, ({ many }) => ({
-  tradeNames: many(medicationTradeNames),
-  indications: many(medicationIndications),
-  medicationCodes: many(medicationCodes),
-}));
-
-export const medicationTradeNamesRelations = relations(medicationTradeNames, ({ one }) => ({
-  medication: one(medications, {
-    fields: [medicationTradeNames.medicationId],
-    references: [medications.id],
-  }),
-}));
-
-export const medicationIndicationsRelations = relations(medicationIndications, ({ one }) => ({
-  medication: one(medications, {
-    fields: [medicationIndications.medicationId],
-    references: [medications.id],
-  }),
-}));
-
-export const medicationCodesRelations = relations(medicationCodes, ({ one }) => ({
-  medication: one(medications, {
-    fields: [medicationCodes.medicationId],
-    references: [medications.id],
-  }),
-  code: one(icdCodes, {
-    fields: [medicationCodes.codeId],
     references: [icdCodes.id],
   }),
 }));
@@ -214,19 +190,3 @@ export const searchAnalyticsRelations = relations(searchAnalytics, ({ one }) => 
     references: [users.id],
   }),
 }));
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-export type IcdCode = typeof icdCodes.$inferSelect;
-export type InsertIcdCode = typeof icdCodes.$inferInsert;
-export type IcdBranch = typeof icdBranches.$inferSelect;
-export type InsertIcdBranch = typeof icdBranches.$inferInsert;
-export type NonCoveredCode = typeof nonCoveredCodes.$inferSelect;
-export type InsertNonCoveredCode = typeof nonCoveredCodes.$inferInsert;
-export type Medication = typeof medications.$inferSelect;
-export type InsertMedication = typeof medications.$inferInsert;
-export type MedicationTradeName = typeof medicationTradeNames.$inferSelect;
-export type MedicationIndication = typeof medicationIndications.$inferSelect;
-export type MedicationCode = typeof medicationCodes.$inferSelect;
-export type SearchAnalytic = typeof searchAnalytics.$inferSelect;
-export type InsertSearchAnalytic = typeof searchAnalytics.$inferInsert;

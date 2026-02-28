@@ -86,8 +86,9 @@ export default function AdminPanel() {
     try {
       await addMedicationMutation.mutateAsync({
         scientificName: formData.scientificName,
-        tradeNames: formData.tradeNames.split(",").map((s) => s.trim()).filter(Boolean),
-        indications: formData.indication ? formData.indication.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        tradeName: formData.tradeNames,
+        indication: formData.indication,
+        icdCodesRaw: formData.icdCodes,
         icdCodesList: formData.icdCodes.split(",").map((s) => s.trim()).filter(Boolean),
       });
     } catch (error) {
