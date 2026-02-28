@@ -10,6 +10,10 @@ import {
   getAllNonCoveredCodes,
   getCodeById,
   getDb,
+  browseDrugsByTradeName,
+  browseDrugsByTradeNameCount,
+  browseConditions,
+  browseConditionsCount,
 } from "../db";
 import { drugEntries } from "../../drizzle/schema";
 
@@ -80,6 +84,36 @@ export const dataRouter = router({
         return await searchNonCoveredCodes(input.query);
       }),
   }),
+
+  // Browse: Search Drugs by Trade Name
+  browseDrugs: publicProcedure
+    .input(z.object({
+      query: z.string().min(1).max(200),
+      limit: z.number().optional(),
+      offset: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      const [results, total] = await Promise.all([
+        browseDrugsByTradeName(input.query, input.limit ?? 20, input.offset ?? 0),
+        browseDrugsByTradeNameCount(input.query),
+      ]);
+      return { results, total };
+    }),
+
+  // Browse: Search Conditions
+  browseConditions: publicProcedure
+    .input(z.object({
+      query: z.string().min(1).max(200),
+      limit: z.number().optional(),
+      offset: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      const [results, total] = await Promise.all([
+        browseConditions(input.query, input.limit ?? 20, input.offset ?? 0),
+        browseConditionsCount(input.query),
+      ]);
+      return { results, total };
+    }),
 
   // Stats
   stats: publicProcedure.query(async () => {

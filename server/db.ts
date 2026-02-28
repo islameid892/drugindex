@@ -602,3 +602,140 @@ export async function upsertUser(data: {
     return getUserByOpenId(data.openId);
   }
 }
+
+// ─── Browse: Search Drugs by Trade Name ────────────────────────────────────────
+// Returns grouped data: for a trade name search, show the scientific name + all its indications + codes
+
+export async function browseDrugsByTradeName(query: string, limit = 20, offset = 0): Promise<{
+  tradeName: string;
+  scientificName: string;
+  indications: Array<{
+    indication: string;
+    codes: CodeInfo[];
+  }>;
+}[]> {
+  const db = await getDb();
+  const q = `%${query}%`;
+
+  // Find distinct trade names matching the query
+  const tradeNames = await db
+    .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
+    .from(drugEntries)
+    .where(ciLike(drugEntries.tradeName, q))
+    .groupBy(drugEntries.tradeName, drugEntries.scientificName)
+    .orderBy(drugEntries.tradeName)
+    .limit(limit)
+    .offset(offset);
+
+  if (tradeNames.length === 0) return [];
+
+  // For each trade name, get all indications + codes
+  const results = [];
+  for (const tn of tradeNames as Array<{ tradeName: string; scientificName: string }>) {
+    const entries = await db
+      .select()
+      .from(drugEntries)
+      .where(and(
+        ciLike(drugEntries.tradeName, tn.tradeName),
+        eq(drugEntries.scientificName, tn.scientificName)
+      ))
+      .limit(100);
+
+    const enriched = await enrichDrugEntriesWithCodes(entries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>);
+
+    const indicationMap = new Map<string, CodeInfo[]>();
+    for (const e of enriched) {
+      if (!indicationMap.has(e.indication)) indicationMap.set(e.indication, []);
+      for (const code of e.icdCodes) {
+        const existing = indicationMap.get(e.indication)!;
+        if (!existing.find(c => c.code === code.code)) {
+          existing.push(code);
+        }
+      }
+    }
+
+    results.push({
+      tradeName: tn.tradeName,
+      scientificName: tn.scientificName,
+      indications: Array.from(indicationMap.entries()).map(([indication, codes]) => ({ indication, codes })),
+    });
+  }
+
+  return results;
+}
+
+export async function browseDrugsByTradeNameCount(query: string): Promise<number> {
+  const db = await getDb();
+  const q = `%${query}%`;
+  const result = await db
+    .select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` })
+    .from(drugEntries)
+    .where(ciLike(drugEntries.tradeName, q));
+  return Number((result as Array<{ count: number }>)[0]?.count ?? 0);
+}
+
+// ─── Browse: Search Conditions ─────────────────────────────────────────────────
+// Returns: condition name, scientific names, trade names, codes
+
+export async function browseConditions(query: string, limit = 20, offset = 0): Promise<{
+  condition: string;
+  scientificNames: string[];
+  tradeNames: string[];
+  codes: CodeInfo[];
+}[]> {
+  const db = await getDb();
+  const q = `%${query}%`;
+
+  // Find distinct indications matching the query
+  const conditions = await db
+    .select({ indication: drugEntries.indication })
+    .from(drugEntries)
+    .where(ciLike(drugEntries.indication, q))
+    .groupBy(drugEntries.indication)
+    .orderBy(drugEntries.indication)
+    .limit(limit)
+    .offset(offset);
+
+  if (conditions.length === 0) return [];
+
+  const results = [];
+  for (const cond of conditions as Array<{ indication: string }>) {
+    const entries = await db
+      .select()
+      .from(drugEntries)
+      .where(eq(drugEntries.indication, cond.indication))
+      .limit(200);
+
+    const enriched = await enrichDrugEntriesWithCodes(entries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>);
+
+    const scientificNames = [...new Set(enriched.map(e => e.scientificName))].sort();
+    const tradeNames = [...new Set(enriched.map(e => e.tradeName))].sort();
+
+    // Collect unique codes
+    const codeMap = new Map<string, CodeInfo>();
+    for (const e of enriched) {
+      for (const code of e.icdCodes) {
+        if (!codeMap.has(code.code)) codeMap.set(code.code, code);
+      }
+    }
+
+    results.push({
+      condition: cond.indication,
+      scientificNames,
+      tradeNames,
+      codes: Array.from(codeMap.values()),
+    });
+  }
+
+  return results;
+}
+
+export async function browseConditionsCount(query: string): Promise<number> {
+  const db = await getDb();
+  const q = `%${query}%`;
+  const result = await db
+    .select({ count: sql<number>`COUNT(DISTINCT indication)` })
+    .from(drugEntries)
+    .where(ciLike(drugEntries.indication, q));
+  return Number((result as Array<{ count: number }>)[0]?.count ?? 0);
+}
