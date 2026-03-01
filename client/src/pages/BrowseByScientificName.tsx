@@ -9,7 +9,6 @@ import { Link } from "wouter";
 export default function BrowseByScientificName() {
   const [, params] = useRoute("/browse/scientific-name/:scientificName");
   const scientificName = params?.scientificName ? decodeURIComponent(params.scientificName) : "";
-  const [filterSameConc, setFilterSameConc] = useState(false);
   const [baseConcentration, setBaseConcentration] = useState<string | null>(null);
   const [customConcentration, setCustomConcentration] = useState<string>("");
   const [suggestedRange, setSuggestedRange] = useState<{ min: number; max: number } | null>(null);
@@ -62,24 +61,14 @@ export default function BrowseByScientificName() {
       }
     }
     
-    // Apply concentration filter if enabled
-    if (filterSameConc) {
-      const filterValue = customConcentration || baseConcentration;
-      if (filterValue) {
-        unique = unique.filter(drug => {
-          const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
-          const drugConc = match ? parseFloat(match[1]) : null;
-          if (!drugConc) return false;
-          
-          // If custom input, use suggested range
-          if (customConcentration && suggestedRange) {
-            return isInRange(drugConc, suggestedRange.min, suggestedRange.max);
-          }
-          
-          // Otherwise use exact match
-          return drugConc === parseFloat(filterValue);
-        });
-      }
+    // Apply concentration filter automatically if custom concentration is entered
+    if (customConcentration && suggestedRange) {
+      unique = unique.filter(drug => {
+        const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
+        const drugConc = match ? parseFloat(match[1]) : null;
+        if (!drugConc) return false;
+        return isInRange(drugConc, suggestedRange.min, suggestedRange.max);
+      });
     }
     
     // Sort alphabetically by trade name
@@ -132,54 +121,33 @@ export default function BrowseByScientificName() {
             </div>
           </div>
           
-          {/* Smart Concentration Filter */}
+          {/* Custom Concentration Filter Input */}
           {baseConcentration && (
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setFilterSameConc(!filterSameConc)}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 ${
-                    filterSameConc
-                      ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
-                      : "bg-muted/60 text-foreground hover:bg-muted/80 border border-border/50"
-                  }`}
-                >
-                  <Filter className="h-4 w-4" />
-                  {filterSameConc ? `Showing ${filteredDrugs.length}` : `Filter`} ({baseConcentration})
-                </button>
-                {filterSameConc && (
-                  <span className="text-sm text-muted-foreground">
-                    {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""}
-                  </span>
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Filter by Concentration
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder="Enter concentration (e.g., 500)"
+                  value={customConcentration}
+                  onChange={(e) => setCustomConcentration(e.target.value)}
+                  className="h-11 text-base border-2 border-sky-300/50 rounded-lg focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all bg-sky-50/30 dark:bg-sky-950/20"
+                />
+                {customConcentration && (
+                  <button
+                    onClick={() => setCustomConcentration("")}
+                    className="px-4 py-2.5 text-sm font-semibold bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                  >
+                    Clear
+                  </button>
                 )}
               </div>
-              
-              {/* Suggested Range Info */}
-              {filterSameConc && suggestedRange && !customConcentration && (
-                <div className="text-sm text-muted-foreground bg-sky-50/50 dark:bg-sky-950/20 p-3 rounded-lg border border-sky-200/30 dark:border-sky-800/30">
-                  💡 AI suggests: {suggestedRange.min.toFixed(0)} - {suggestedRange.max.toFixed(0)}mg
-                </div>
-              )}
-              
-              {/* Custom Concentration Input */}
-              {filterSameConc && (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Enter custom concentration (e.g., 500)"
-                    value={customConcentration}
-                    onChange={(e) => setCustomConcentration(e.target.value)}
-                    className="h-10 text-sm border-2 border-border rounded-lg focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
-                  />
-                  {customConcentration && (
-                    <button
-                      onClick={() => setCustomConcentration("")}
-                      className="px-3 py-2 text-sm font-semibold bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
+              {customConcentration && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Showing {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""} in range {suggestedRange?.min.toFixed(0)} - {suggestedRange?.max.toFixed(0)}mg
+                </p>
               )}
             </div>
           )}
@@ -209,21 +177,24 @@ export default function BrowseByScientificName() {
           </div>
         ) : (
           /* Trade Names Grid */
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {filteredDrugs.map((drug, idx) => (
               <div
                 key={idx}
-                className="group relative rounded-xl border border-border/40 bg-gradient-to-br from-sky-50/40 via-card to-blue-50/30 dark:from-sky-950/20 dark:via-card dark:to-blue-950/10 p-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-sky-400/60 dark:hover:border-sky-600/60 overflow-hidden"
+                className="group relative rounded-lg border-2 border-transparent bg-gradient-to-r from-sky-100/60 via-blue-50/40 to-cyan-100/50 dark:from-sky-900/30 dark:via-blue-900/20 dark:to-cyan-900/20 p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-400/70 dark:hover:border-sky-500/70 overflow-hidden"
               >
-                {/* Background accent */}
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-500/0 via-sky-500/0 to-sky-500/0 group-hover:from-sky-500/5 group-hover:via-sky-500/5 group-hover:to-sky-500/0 transition-all duration-300 pointer-events-none" />
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-sky-400/0 via-blue-400/0 to-cyan-400/0 group-hover:from-sky-400/8 group-hover:via-blue-400/8 group-hover:to-cyan-400/8 transition-all duration-300 pointer-events-none" />
+                
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-500 via-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Content */}
-                <div className="relative flex items-center justify-between">
+                <div className="relative flex items-center justify-between gap-3">
                   <h3 className="text-base font-bold text-foreground truncate group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
                     {drug.tradeName}
                   </h3>
-                  <div className="flex-shrink-0 ml-3 w-2 h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex-shrink-0 w-2 h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 opacity-60 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
             ))}
