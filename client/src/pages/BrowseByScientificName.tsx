@@ -1,8 +1,6 @@
 import { useRoute } from "wouter";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChevronLeft, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, Loader2, AlertCircle, Pill } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
@@ -22,123 +20,105 @@ export default function BrowseByScientificName() {
 
   if (!scientificName) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2 mb-6">
               <ChevronLeft className="h-4 w-4" />
               Back to Home
             </Button>
           </Link>
-          <Card className="p-8 text-center">
+          <div className="rounded-2xl border border-border/50 bg-card p-8 text-center shadow-sm">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">No Scientific Name Selected</h1>
-            <p className="text-slate-600">Please select a scientific name from Browse Drugs.</p>
-          </Card>
+            <h1 className="text-2xl font-bold text-foreground mb-2">No Scientific Name Selected</h1>
+            <p className="text-muted-foreground">Please select a scientific name from Browse Drugs.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10 p-4 md:p-8">
+      <div className="max-w-2xl mx-auto">
         <Link href="/">
-          <Button variant="ghost" size="sm" className="gap-2 mb-6">
+          <Button variant="ghost" size="sm" className="gap-2 mb-8">
             <ChevronLeft className="h-4 w-4" />
             Back to Home
           </Button>
         </Link>
 
+        {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-            {scientificName}
-          </h1>
-          <p className="text-slate-600">
-            All medications containing {scientificName} (100% match)
-          </p>
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg flex-shrink-0">
+              <Pill className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                {scientificName}
+              </h1>
+              <p className="text-muted-foreground">
+                {filteredDrugs.length} trade name{filteredDrugs.length !== 1 ? "s" : ""} available
+              </p>
+            </div>
+          </div>
         </div>
 
+        {/* Loading State */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-            <span className="ml-3 text-slate-600">Loading medications...</span>
+            <Loader2 className="h-8 w-8 text-sky-600 animate-spin" />
+            <span className="ml-3 text-muted-foreground">Loading medications...</span>
           </div>
         ) : error ? (
-          <Card className="p-8 border-red-200 bg-red-50">
+          <div className="rounded-2xl border border-red-200/50 bg-red-50 dark:bg-red-950/20 p-6 shadow-sm">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-900">Error Loading Medications</h3>
-                <p className="text-red-700 text-sm mt-1">{error?.message || "An error occurred"}</p>
+                <h3 className="font-semibold text-red-900 dark:text-red-300">Error Loading Medications</h3>
+                <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error?.message || "An error occurred"}</p>
               </div>
             </div>
-          </Card>
+          </div>
         ) : filteredDrugs.length === 0 ? (
-          <Card className="p-8 text-center">
+          <div className="rounded-2xl border border-border/50 bg-card p-8 text-center shadow-sm">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Medications Found</h3>
-            <p className="text-slate-600">No medications found with this scientific name.</p>
-          </Card>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Medications Found</h3>
+            <p className="text-muted-foreground">No medications found with this scientific name.</p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-slate-600 mb-4">
-              Found {filteredDrugs.length} medication{filteredDrugs.length !== 1 ? "s" : ""}
-            </div>
-            <div className="grid gap-4">
-              {filteredDrugs.map((drug, idx) => (
-                <Card key={idx} className="p-6 hover:shadow-lg transition-shadow">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900">{drug.tradeName}</h3>
-                      <p className="text-sm text-blue-600 font-medium">{drug.scientificName}</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase">Indication</p>
-                        <p className="text-slate-700">{drug.indication}</p>
-                      </div>
-                      
-                      {drug.icdCodes && drug.icdCodes.length > 0 && (
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 uppercase mb-2">
-                            ICD-10 Codes ({drug.icdCodes.length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {drug.icdCodes.map((code, cIdx) => (
-                              <div
-                                key={cIdx}
-                                className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md"
-                              >
-                                <p className="text-sm font-semibold text-blue-700">{code.code}</p>
-                                {code.branches && code.branches.length > 0 && (
-                                  <p className="text-xs text-blue-600">
-                                    {code.branches.length} branch{code.branches.length !== 1 ? "es" : ""}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          drug.coverageStatus === "COVERED"
-                            ? "bg-green-100 text-green-800"
-                            : drug.coverageStatus === "NON-COVERED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {drug.coverageStatus}
-                        </span>
-                      </div>
-                    </div>
+          /* Trade Names Grid */
+          <div className="space-y-3">
+            {filteredDrugs.map((drug, idx) => (
+              <div
+                key={idx}
+                className="group rounded-xl border border-border/50 bg-gradient-to-r from-card to-card/80 p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-300/50 dark:hover:border-sky-700/50"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-foreground truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                      {drug.tradeName}
+                    </h3>
                   </div>
-                </Card>
-              ))}
-            </div>
+                  
+                  {/* Coverage Badge */}
+                  {drug.coverageStatus && (
+                    <div className="flex-shrink-0">
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${
+                        drug.coverageStatus === "COVERED"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : drug.coverageStatus === "NON-COVERED"
+                          ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                      }`}>
+                        {drug.coverageStatus}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

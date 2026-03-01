@@ -1,17 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, ChevronUp, Search, X, Loader2, ArrowRight } from "lucide-react";
+import { Search, X, Loader2, ChevronLeft } from "lucide-react";
 
 interface AdvancedSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Custom debounce hook for better performance
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -20,9 +18,7 @@ function useDebounce<T>(value: T, delay: number): T {
       setDebouncedValue(value);
     }, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [value, delay]);
 
   return debouncedValue;
@@ -44,18 +40,16 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   const [showTradeNameDropdown, setShowTradeNameDropdown] = useState(false);
   const [showIndicationDropdown, setShowIndicationDropdown] = useState(false);
 
-  // Debounce inputs for better performance (300ms delay)
   const debouncedScientificNameInput = useDebounce(scientificNameInput, 300);
   const debouncedTradeNameInput = useDebounce(tradeNameInput, 300);
   const debouncedIndicationInput = useDebounce(indicationInput, 300);
 
-  // API Queries with debounced inputs
   const scientificNameSuggestions = trpc.advancedSearch.scientificNameSuggestions.useQuery(
     { query: debouncedScientificNameInput, limit: 8 },
     { 
       enabled: debouncedScientificNameInput.length > 0,
-      staleTime: 30000, // Cache for 30 seconds
-      gcTime: 60000, // Keep in cache for 1 minute
+      staleTime: 30000,
+      gcTime: 60000,
     }
   );
 
@@ -79,7 +73,6 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   const searchMutation = trpc.advancedSearch.search.useMutation();
 
-  // Update results when search mutation completes
   useEffect(() => {
     if (searchMutation.data?.codes) {
       setResults(searchMutation.data.codes);
@@ -142,152 +135,148 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10">
-        <DialogHeader className="border-b border-border/50 pb-6 pt-6 px-8 bg-gradient-to-r from-sky-50/50 via-background to-blue-50/30 dark:from-sky-950/40 dark:via-background dark:to-blue-950/20">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg">
-                <Search className="h-6 w-6 text-white" />
-              </div>
-              <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Advanced Search</DialogTitle>
-            </div>
-            <span className="text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-sky-100 to-blue-100 dark:from-sky-900/40 dark:to-blue-900/40 text-sky-700 dark:text-sky-300 px-4 py-2.5 rounded-full border border-sky-200/50 dark:border-sky-800/50">
-              Step {step} of 2
-            </span>
+      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col bg-background">
+        {/* Simple Clean Header */}
+        <div className="border-b border-border/50 px-8 py-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-foreground">Advanced Search</h1>
+            <button onClick={handleClose} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-6 w-6" />
+            </button>
           </div>
-        </DialogHeader>
+        </div>
 
+        {/* Main Content */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
-          {/* Step 1: Scientific Name & Trade Name */}
-          {step === 1 && (
-            <div className="space-y-8">
-              {/* Scientific Name Field */}
+          {step === 1 ? (
+            /* Step 1: Simple Input Fields */
+            <div className="max-w-2xl space-y-6">
+              {/* Scientific Name */}
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center text-sm font-bold shadow-md">1</div>
-                  <h3 className="font-semibold text-lg">Scientific Name</h3>
-                </div>
-                
+                <label className="block text-sm font-semibold text-foreground mb-3">Scientific Name</label>
                 <div className="relative">
                   <Input
-                    placeholder="Type scientific name..."
+                    placeholder="Search by scientific name..."
                     value={scientificNameInput}
                     onChange={e => {
                       setScientificNameInput(e.target.value);
                       setShowScientificDropdown(true);
                     }}
                     onFocus={() => setShowScientificDropdown(true)}
-                    className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
+                    className="h-11 text-sm border border-border rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                   />
                   
-                  {/* Scientific Name Suggestions Dropdown */}
                   {showScientificDropdown && debouncedScientificNameInput.length > 0 && scientificName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 max-h-[500px] overflow-y-auto backdrop-blur-sm">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 max-h-[300px] overflow-y-auto">
                       {scientificNameSuggestions.isLoading && (
-                        <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Loading...
                         </div>
                       )}
                       {scientificNameSuggestions.data?.length === 0 && !scientificNameSuggestions.isLoading && (
-                        <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">No results</div>
                       )}
                       {scientificNameSuggestions.data?.map(item => (
                         <button
                           key={item.name}
                           onClick={() => handleSelectScientificName(item.name)}
-                          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 text-sm flex justify-between items-center transition-colors"
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted border-b border-border/30 last:border-b-0 text-sm transition-colors"
                         >
-                          <span className="font-medium">{item.name}</span>
-                          <span className="text-gray-500 text-xs bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-foreground">{item.name}</span>
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">{item.count}</span>
+                          </div>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-
                 {scientificName && (
-                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-sm flex items-center justify-between">
-                    <span>✓ Selected: <strong>{scientificName}</strong></span>
-                    <button onClick={() => { setScientificName(""); setScientificNameInput(""); }} className="text-green-700 hover:text-green-900">
+                  <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-lg flex items-center justify-between">
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{scientificName}</strong></span>
+                    <button onClick={() => { setScientificName(""); setScientificNameInput(""); }} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Trade Name Field */}
+              {/* Trade Name */}
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center text-sm font-bold shadow-md">2</div>
-                  <h3 className="font-semibold text-lg">Trade Name <span className="text-gray-500 font-normal">(Optional)</span></h3>
-                </div>
-
+                <label className="block text-sm font-semibold text-foreground mb-3">Trade Name <span className="font-normal text-muted-foreground">(Optional)</span></label>
                 <div className="relative">
                   <Input
-                    placeholder="Type trade name..."
+                    placeholder="Search by trade name..."
                     value={tradeNameInput}
                     onChange={e => {
                       setTradeNameInput(e.target.value);
                       setShowTradeNameDropdown(true);
                     }}
                     onFocus={() => setShowTradeNameDropdown(true)}
-                    className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
+                    className="h-11 text-sm border border-border rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                   />
 
-                  {/* Trade Name Suggestions Dropdown */}
                   {showTradeNameDropdown && debouncedTradeNameInput.length > 0 && tradeName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 max-h-[500px] overflow-y-auto backdrop-blur-sm">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 max-h-[300px] overflow-y-auto">
                       {tradeNameSuggestions.isLoading && (
-                        <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Loading...
                         </div>
                       )}
                       {tradeNameSuggestions.data?.length === 0 && !tradeNameSuggestions.isLoading && (
-                        <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">No results</div>
                       )}
                       {tradeNameSuggestions.data?.map(item => (
                         <button
                           key={item.name}
                           onClick={() => handleSelectTradeName(item.name)}
-                          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0 text-sm transition-colors"
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted border-b border-border/30 last:border-b-0 text-sm transition-colors"
                         >
-                          <span className="font-medium">{item.name}</span>
+                          <span className="font-medium text-foreground">{item.name}</span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-
                 {tradeName && (
-                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-sm flex items-center justify-between">
-                    <span>✓ Selected: <strong>{tradeName}</strong></span>
-                    <button onClick={() => { setTradeName(""); setTradeNameInput(""); }} className="text-green-700 hover:text-green-900">
+                  <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-lg flex items-center justify-between">
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{tradeName}</strong></span>
+                    <button onClick={() => { setTradeName(""); setTradeNameInput(""); }} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Info message */}
-              {!scientificName && !tradeName && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
-                  Fill in either Scientific Name or Trade Name to continue
-                </div>
-              )}
+              {/* Next Button */}
+              <div className="pt-4">
+                <Button
+                  onClick={() => setStep(2)}
+                  disabled={!scientificName && !tradeName}
+                  className="w-full h-11 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg transition-all"
+                >
+                  Next: Select Indications
+                </Button>
+              </div>
             </div>
-          )}
-
-          {/* Step 2: Indications */}
-          {step === 2 && (scientificName || tradeName) && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold">3</div>
-                <h3 className="font-semibold text-lg">Select Indications</h3>
+          ) : (
+            /* Step 2: Indications */
+            <div className="max-w-2xl">
+              <div className="mb-6">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium text-sm mb-4"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </button>
+                <h2 className="text-lg font-bold text-foreground">Select Indications</h2>
+                <p className="text-sm text-muted-foreground mt-1">Choose indications to search for related ICD-10 codes</p>
               </div>
 
-              <div className="relative mb-3">
+              <div className="space-y-3 mb-6">
                 <Input
                   placeholder="Search indications..."
                   value={indicationInput}
@@ -296,49 +285,42 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                     setShowIndicationDropdown(true);
                   }}
                   onFocus={() => setShowIndicationDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowIndicationDropdown(false), 200)}
-                  className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
+                  className="h-11 text-sm border border-border rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
                 />
 
-                {/* Indications Suggestions Dropdown */}
-                {showIndicationDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[600px] overflow-y-auto">
-                    {indicationsSuggestions.isLoading && (
-                      <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Loading...
-                      </div>
-                    )}
-                    {!indicationsSuggestions.isLoading && indicationsSuggestions.data?.length === 0 && (
-                      <div className="px-3 py-3 text-sm text-gray-500 text-center">No results found</div>
-                    )}
-                    {indicationsSuggestions.data && indicationsSuggestions.data.map(item => (
-                      <button
-                        key={item.indication}
-                        onClick={() => {
-                          handleToggleIndication(item.indication);
-                          setIndicationInput("");
-                          setShowIndicationDropdown(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-green-50 border-b last:border-b-0 text-sm transition-colors"
-                      >
-                        {item.indication}
-                      </button>
-                    ))}
+                {showIndicationDropdown && indicationsSuggestions.data && (
+                  <div className="bg-card border border-border rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+                    {indicationsSuggestions.data.map((item: any) => {
+                      const indicationText = typeof item === 'string' ? item : item.indication;
+                      return (
+                        <button
+                          key={indicationText}
+                          onClick={() => handleToggleIndication(indicationText)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-muted border-b border-border/30 last:border-b-0 text-sm transition-colors flex items-center gap-3"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={indications.includes(indicationText)}
+                            readOnly
+                            className="w-4 h-4"
+                          />
+                          <span className="text-foreground">{indicationText}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* Selected Indications */}
               {indications.length > 0 && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
-                  <div className="text-sm font-semibold text-green-900 mb-2">Selected Indications ({indications.length}):</div>
+                <div className="mb-6">
+                  <p className="text-sm font-semibold text-foreground mb-3">Selected Indications:</p>
                   <div className="flex flex-wrap gap-2">
                     {indications.map(indication => (
-                      <div key={indication} className="bg-green-200 text-green-900 px-3 py-1.5 rounded text-sm flex items-center gap-2">
+                      <div key={indication} className="px-3 py-1.5 bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 rounded-lg text-sm font-medium flex items-center gap-2">
                         {indication}
-                        <button onClick={() => handleToggleIndication(indication)} className="hover:text-green-700">
-                          <X className="h-4 w-4" />
+                        <button onClick={() => handleToggleIndication(indication)} className="hover:text-sky-900 dark:hover:text-sky-200">
+                          <X className="h-3 w-3" />
                         </button>
                       </div>
                     ))}
@@ -346,88 +328,47 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                 </div>
               )}
 
-              {/* Results */}
-              {searchMutation.data?.codes && (
-                <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-semibold text-base mb-4">ICD-10 Codes ({results.length})</h4>
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                    {results.map((result: any) => {
-                      const isNonCovered = result.isCovered === false || result.coverage === 'non-covered';
-                      const bgColor = isNonCovered ? 'bg-red-50 hover:bg-red-100 border-red-200' : 'bg-gray-50 hover:bg-gray-100';
-                      const textColor = isNonCovered ? 'text-red-700' : 'text-gray-600';
-                      return (
-                      <div key={result.code} className={`border rounded-lg p-4 ${bgColor} transition-colors`}>
-                        <button
-                          onClick={() => toggleBranches(result.code)}
-                          className="w-full flex items-center justify-between p-2 rounded"
-                        >
-                          <div className="text-left">
-                            <div className="flex items-center gap-2">
-                              <div className="font-semibold text-base">{result.code}</div>
-                              {isNonCovered && (
-                                <span className="px-2 py-0.5 bg-red-200 text-red-800 text-xs font-semibold rounded">NOT COVERED</span>
-                              )}
-                            </div>
-                            <div className={`text-sm ${textColor} mt-1`}>{result.name}</div>
-                          </div>
-                          {expandedCodes.has(result.code) ? (
-                            <ChevronUp className={`h-5 w-5 ${isNonCovered ? 'text-red-500' : 'text-gray-500'}`} />
-                          ) : (
-                            <ChevronDown className={`h-5 w-5 ${isNonCovered ? 'text-red-500' : 'text-gray-500'}`} />
-                          )}
-                        </button>
+              <Button
+                onClick={() => searchMutation.mutate({ scientificName, tradeNames: tradeName ? [tradeName] : [], indications })}
+                disabled={searchMutation.isPending}
+                className="w-full h-11 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg transition-all"
+              >
+                {searchMutation.isPending ? "Searching..." : "Search"}
+              </Button>
 
-                        {/* Branches */}
-                        {expandedCodes.has(result.code) && result.branches && result.branches.length > 0 && (
-                          <div className={`mt-3 ml-4 space-y-2 border-l-2 ${isNonCovered ? 'border-red-300' : 'border-blue-300'} pl-4`}>
-                            {Array.isArray(result.branches) && result.branches.map((branch: any) => {
-                              const branchNonCovered = branch.isCovered === false || branch.coverage === 'non-covered';
-                              return (
-                              <div key={branch.code} className={`text-sm py-1 ${branchNonCovered ? 'bg-red-50 p-2 rounded' : ''}`}>
-                                <div className={`font-medium ${branchNonCovered ? 'text-red-700' : 'text-blue-700'}`}>{branch.code}</div>
-                                <div className={`mt-0.5 ${branchNonCovered ? 'text-red-600' : 'text-gray-600'}`}>{branch.description || branch.name || 'No description'}</div>
-                              </div>
-                              );
-                            })}
-                          </div>
+              {results.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <h3 className="text-lg font-bold text-foreground">Results ({results.length})</h3>
+                  {results.map((code, idx) => (
+                    <div key={idx} className="p-4 border border-border rounded-lg bg-card">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-foreground">{code.code}</p>
+                          <p className="text-sm text-muted-foreground">{code.description}</p>
+                        </div>
+                        {code.branches && code.branches.length > 0 && (
+                          <button
+                            onClick={() => toggleBranches(code.code)}
+                            className="text-sky-600 hover:text-sky-700"
+                          >
+                            {expandedCodes.has(code.code) ? "Hide" : "Show"} Branches
+                          </button>
                         )}
                       </div>
-                    );
-                    })}
-                  </div>
+                      {expandedCodes.has(code.code) && code.branches && (
+                        <div className="mt-3 space-y-2 border-t border-border/30 pt-3">
+                          {code.branches.map((branch: any, bIdx: number) => (
+                            <div key={bIdx} className="text-sm text-muted-foreground pl-4">
+                              • {branch.code}: {branch.description}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Footer Buttons */}
-        <div className="border-t p-6 flex justify-between gap-3">
-          {step === 2 && (
-            <Button variant="outline" onClick={handleBack} className="text-base px-6 py-2">
-              ← Back
-            </Button>
-          )}
-          <div className="flex-1" />
-          <Button variant="outline" onClick={handleClose} className="text-base px-6 py-2">
-            Close
-          </Button>
-          {step === 1 && (scientificName || tradeName) && (
-            <Button onClick={() => setStep(2)} className="text-base px-6 py-2 bg-blue-600 hover:bg-blue-700">
-              Next <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
-          {step === 2 && indications.length > 0 && (
-            <Button onClick={() => {
-              searchMutation.mutate({
-                scientificName,
-                tradeNames: tradeName ? [tradeName] : [],
-                indications
-              });
-            }} disabled={searchMutation.isPending} className="text-base px-6 py-2 bg-green-600 hover:bg-green-700">
-              {searchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
-              Search
-            </Button>
           )}
         </div>
       </DialogContent>
