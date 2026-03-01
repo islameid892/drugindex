@@ -336,9 +336,3 @@
 - [ ] Display branches under each ICD-10 code in Advanced Search results
 - [ ] Highlight non-covered branches in red color
 - [ ] Test with various codes that have branches
-
-## Phase 34: Browse Search Drug UX Improvements
-- [ ] تحديث BrowseModal: عرض مختصر (Trade Name + Scientific Name) قابل للتوسع
-- [ ] إضافة أيقونة روابط في رأس كل drug card
-- [ ] إنشاء صفحة جديدة لعرض جميع الأدوية بنفس المادة الفعالة
-- [ ] إضافة route للصفحة الجديدة في App.tsx
