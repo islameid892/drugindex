@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ChevronLeft, Loader2, AlertCircle, Pill, Filter } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
@@ -10,7 +11,25 @@ export default function BrowseByScientificName() {
   const scientificName = params?.scientificName ? decodeURIComponent(params.scientificName) : "";
   const [filterSameConc, setFilterSameConc] = useState(false);
   const [baseConcentration, setBaseConcentration] = useState<string | null>(null);
+  const [customConcentration, setCustomConcentration] = useState<string>("");
+  const [suggestedRange, setSuggestedRange] = useState<{ min: number; max: number } | null>(null);
   
+  
+  // Helper function to calculate AI-suggested range (±10% or ±50mg, whichever is larger)
+  const calculateSuggestedRange = (conc: number) => {
+    const percent10 = conc * 0.1;
+    const delta = Math.max(percent10, 50);
+    return {
+      min: Math.max(0, conc - delta),
+      max: conc + delta
+    };
+  };
+
+  // Helper function to check if concentration is in range
+  const isInRange = (conc: number, min: number, max: number) => {
+    return conc >= min && conc <= max;
+  };
+
   const { data: drugs, isLoading, error } = trpc.data.medications.search.useQuery(
     { query: scientificName, limit: 1000 },
     { enabled: !!scientificName }
@@ -31,21 +50,36 @@ export default function BrowseByScientificName() {
       return true;
     });
     
-    // Set base concentration from first drug if not set
+    // Set base concentration from first drug and calculate range if not set
     if (unique.length > 0 && !baseConcentration) {
       const firstDrug = unique[0];
       const match = firstDrug.tradeName.match(/(\d+(?:\.\d+)?)/);
       const concentration = match ? match[1] : null;
-      if (concentration) setBaseConcentration(concentration);
+      if (concentration) {
+        setBaseConcentration(concentration);
+        const concNum = parseFloat(concentration);
+        setSuggestedRange(calculateSuggestedRange(concNum));
+      }
     }
     
     // Apply concentration filter if enabled
-    if (filterSameConc && baseConcentration) {
-      unique = unique.filter(drug => {
-        const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
-        const drugConc = match ? match[1] : null;
-        return drugConc === baseConcentration;
-      });
+    if (filterSameConc) {
+      const filterValue = customConcentration || baseConcentration;
+      if (filterValue) {
+        unique = unique.filter(drug => {
+          const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
+          const drugConc = match ? parseFloat(match[1]) : null;
+          if (!drugConc) return false;
+          
+          // If custom input, use suggested range
+          if (customConcentration && suggestedRange) {
+            return isInRange(drugConc, suggestedRange.min, suggestedRange.max);
+          }
+          
+          // Otherwise use exact match
+          return drugConc === parseFloat(filterValue);
+        });
+      }
     }
     
     // Sort alphabetically by trade name
@@ -98,24 +132,54 @@ export default function BrowseByScientificName() {
             </div>
           </div>
           
-          {/* Filter Button */}
+          {/* Smart Concentration Filter */}
           {baseConcentration && (
-            <div className="flex items-center gap-3 mt-4">
-              <button
-                onClick={() => setFilterSameConc(!filterSameConc)}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 ${
-                  filterSameConc
-                    ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
-                    : "bg-muted/60 text-foreground hover:bg-muted/80 border border-border/50"
-                }`}
-              >
-                <Filter className="h-4 w-4" />
-                {filterSameConc ? `Showing ${filteredDrugs.length}` : `Filter`} ({baseConcentration})
-              </button>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setFilterSameConc(!filterSameConc)}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 ${
+                    filterSameConc
+                      ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
+                      : "bg-muted/60 text-foreground hover:bg-muted/80 border border-border/50"
+                  }`}
+                >
+                  <Filter className="h-4 w-4" />
+                  {filterSameConc ? `Showing ${filteredDrugs.length}` : `Filter`} ({baseConcentration})
+                </button>
+                {filterSameConc && (
+                  <span className="text-sm text-muted-foreground">
+                    {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              
+              {/* Suggested Range Info */}
+              {filterSameConc && suggestedRange && !customConcentration && (
+                <div className="text-sm text-muted-foreground bg-sky-50/50 dark:bg-sky-950/20 p-3 rounded-lg border border-sky-200/30 dark:border-sky-800/30">
+                  💡 AI suggests: {suggestedRange.min.toFixed(0)} - {suggestedRange.max.toFixed(0)}mg
+                </div>
+              )}
+              
+              {/* Custom Concentration Input */}
               {filterSameConc && (
-                <span className="text-sm text-muted-foreground">
-                  {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Enter custom concentration (e.g., 500)"
+                    value={customConcentration}
+                    onChange={(e) => setCustomConcentration(e.target.value)}
+                    className="h-10 text-sm border-2 border-border rounded-lg focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
+                  />
+                  {customConcentration && (
+                    <button
+                      onClick={() => setCustomConcentration("")}
+                      className="px-3 py-2 text-sm font-semibold bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
