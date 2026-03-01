@@ -9,25 +9,7 @@ import { Link } from "wouter";
 export default function BrowseByScientificName() {
   const [, params] = useRoute("/browse/scientific-name/:scientificName");
   const scientificName = params?.scientificName ? decodeURIComponent(params.scientificName) : "";
-  const [baseConcentration, setBaseConcentration] = useState<string | null>(null);
   const [customConcentration, setCustomConcentration] = useState<string>("");
-  const [suggestedRange, setSuggestedRange] = useState<{ min: number; max: number } | null>(null);
-  
-  
-  // Helper function to calculate AI-suggested range (±10% or ±50mg, whichever is larger)
-  const calculateSuggestedRange = (conc: number) => {
-    const percent10 = conc * 0.1;
-    const delta = Math.max(percent10, 50);
-    return {
-      min: Math.max(0, conc - delta),
-      max: conc + delta
-    };
-  };
-
-  // Helper function to check if concentration is in range
-  const isInRange = (conc: number, min: number, max: number) => {
-    return conc >= min && conc <= max;
-  };
 
   const { data: drugs, isLoading, error } = trpc.data.medications.search.useQuery(
     { query: scientificName, limit: 1000 },
@@ -49,26 +31,18 @@ export default function BrowseByScientificName() {
       return true;
     });
     
-    // Set base concentration from first drug and calculate range if not set
-    if (unique.length > 0 && !baseConcentration) {
-      const firstDrug = unique[0];
-      const match = firstDrug.tradeName.match(/(\d+(?:\.\d+)?)/);
-      const concentration = match ? match[1] : null;
-      if (concentration) {
-        setBaseConcentration(concentration);
-        const concNum = parseFloat(concentration);
-        setSuggestedRange(calculateSuggestedRange(concNum));
+    // Apply concentration filter: exact match on the number entered by user
+    if (customConcentration.trim() !== "") {
+      const targetConc = parseFloat(customConcentration);
+      if (!isNaN(targetConc)) {
+        unique = unique.filter(drug => {
+          // Extract all numbers from trade name
+          const matches = drug.tradeName.match(/(\d+(?:\.\d+)?)/g);
+          if (!matches) return false;
+          // Check if any number in the trade name exactly matches the target
+          return matches.some(m => parseFloat(m) === targetConc);
+        });
       }
-    }
-    
-    // Apply concentration filter automatically if custom concentration is entered
-    if (customConcentration && suggestedRange) {
-      unique = unique.filter(drug => {
-        const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
-        const drugConc = match ? parseFloat(match[1]) : null;
-        if (!drugConc) return false;
-        return isInRange(drugConc, suggestedRange.min, suggestedRange.max);
-      });
     }
     
     // Sort alphabetically by trade name
@@ -122,35 +96,33 @@ export default function BrowseByScientificName() {
           </div>
           
           {/* Custom Concentration Filter Input */}
-          {baseConcentration && (
-            <div className="mt-6">
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                Filter by Concentration
-              </label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  placeholder="Enter concentration (e.g., 500)"
-                  value={customConcentration}
-                  onChange={(e) => setCustomConcentration(e.target.value)}
-                  className="h-11 text-base border-2 border-sky-300/50 rounded-lg focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all bg-sky-50/30 dark:bg-sky-950/20"
-                />
-                {customConcentration && (
-                  <button
-                    onClick={() => setCustomConcentration("")}
-                    className="px-4 py-2.5 text-sm font-semibold bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
+          <div className="mt-6">
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Filter by Concentration
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Enter concentration (e.g., 500)"
+                value={customConcentration}
+                onChange={(e) => setCustomConcentration(e.target.value)}
+                className="h-11 text-base border-2 border-sky-300/50 rounded-lg focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all bg-sky-50/30 dark:bg-sky-950/20"
+              />
               {customConcentration && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Showing {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""} in range {suggestedRange?.min.toFixed(0)} - {suggestedRange?.max.toFixed(0)}mg
-                </p>
+                <button
+                  onClick={() => setCustomConcentration("")}
+                  className="px-4 py-2.5 text-sm font-semibold bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                >
+                  Clear
+                </button>
               )}
             </div>
-          )}
+            {customConcentration && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Showing {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""} matching concentration {customConcentration}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Loading State */}
