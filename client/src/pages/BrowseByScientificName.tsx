@@ -13,7 +13,7 @@ export default function BrowseByScientificName() {
     { enabled: !!scientificName }
   );
 
-  // Filter to show only drugs with exact scientific name match and remove duplicates
+  // Filter to show only drugs with exact scientific name match, remove duplicates, and sort alphabetically
   const filteredDrugs = (() => {
     const filtered = drugs?.filter(
       (drug) => drug.scientificName.toUpperCase() === scientificName.toUpperCase()
@@ -21,12 +21,15 @@ export default function BrowseByScientificName() {
     
     // Remove duplicate trade names - keep only first occurrence
     const seen = new Set<string>();
-    return filtered.filter(drug => {
+    const unique = filtered.filter(drug => {
       const tradeName = drug.tradeName.toUpperCase();
       if (seen.has(tradeName)) return false;
       seen.add(tradeName);
       return true;
     });
+    
+    // Sort alphabetically by trade name
+    return unique.sort((a, b) => a.tradeName.localeCompare(b.tradeName));
   })();
 
   if (!scientificName) {
@@ -106,19 +109,10 @@ export default function BrowseByScientificName() {
                 key={idx}
                 className="group rounded-xl border border-border/50 bg-gradient-to-r from-card to-card/80 p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-300/50 dark:hover:border-sky-700/50"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-foreground truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                      {drug.tradeName}
-                    </h3>
-                  </div>
-                  
-                  {/* Price Placeholder - Reserved for future integration */}
-                  <div className="flex-shrink-0">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-muted text-muted-foreground">
-                      Price
-                    </span>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                    {drug.tradeName}
+                  </h3>
                 </div>
               </div>
             ))}
