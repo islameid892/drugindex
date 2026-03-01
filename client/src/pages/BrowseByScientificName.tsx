@@ -34,14 +34,16 @@ export default function BrowseByScientificName() {
     // Set base concentration from first drug if not set
     if (unique.length > 0 && !baseConcentration) {
       const firstDrug = unique[0];
-      const concentration = firstDrug.tradeName.match(/(\d+(?:\.\d+)?\s*(?:mg|ml|%))/i)?.[1] || null;
+      const match = firstDrug.tradeName.match(/(\d+(?:\.\d+)?)/);
+      const concentration = match ? match[1] : null;
       if (concentration) setBaseConcentration(concentration);
     }
     
     // Apply concentration filter if enabled
     if (filterSameConc && baseConcentration) {
       unique = unique.filter(drug => {
-        const drugConc = drug.tradeName.match(/(\d+(?:\.\d+)?\s*(?:mg|ml|%))/i)?.[1] || null;
+        const match = drug.tradeName.match(/(\d+(?:\.\d+)?)/);
+        const drugConc = match ? match[1] : null;
         return drugConc === baseConcentration;
       });
     }
