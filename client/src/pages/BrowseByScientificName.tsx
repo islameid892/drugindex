@@ -148,26 +148,16 @@ export default function BrowseByScientificName() {
             <p className="text-muted-foreground">No medications found with this scientific name.</p>
           </div>
         ) : (
-          /* Trade Names Grid */
-          <div className="space-y-2">
+          /* Trade Names Pill Badges Grid */
+          <div className="flex flex-wrap gap-2.5 justify-start">
             {filteredDrugs.map((drug, idx) => (
               <div
                 key={idx}
-                className="group relative rounded-lg border-2 border-transparent bg-gradient-to-r from-sky-100/60 via-blue-50/40 to-cyan-100/50 dark:from-sky-900/30 dark:via-blue-900/20 dark:to-cyan-900/20 p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-400/70 dark:hover:border-sky-500/70 overflow-hidden"
+                className="group inline-flex items-center px-4 py-2.5 rounded-full border border-sky-300/60 bg-sky-50/70 dark:bg-sky-900/25 dark:border-sky-700/50 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-400/80 dark:hover:border-sky-600/70 hover:bg-sky-100/80 dark:hover:bg-sky-900/40 cursor-default"
               >
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-400/0 via-blue-400/0 to-cyan-400/0 group-hover:from-sky-400/8 group-hover:via-blue-400/8 group-hover:to-cyan-400/8 transition-all duration-300 pointer-events-none" />
-                
-                {/* Left accent bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-500 via-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                {/* Content */}
-                <div className="relative flex items-center justify-between gap-3">
-                  <h3 className="text-base font-bold text-foreground truncate group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
-                    {drug.tradeName}
-                  </h3>
-                  <div className="flex-shrink-0 w-2 h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 opacity-60 group-hover:opacity-100 transition-opacity" />
-                </div>
+                <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-200 group-hover:text-sky-700 dark:group-hover:text-sky-100 transition-colors whitespace-nowrap">
+                  {drug.tradeName}
+                </h3>
               </div>
             ))}
           </div>
