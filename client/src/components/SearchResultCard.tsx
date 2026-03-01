@@ -196,16 +196,16 @@ export function SearchResultCard({ data }: SearchResultCardProps) {
             : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
           }
         </button>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-2">
           {visibleTradeNames.map((name, i) => (
-            <span key={i} className="inline-block px-2.5 py-1 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 text-xs rounded-lg border border-sky-200 dark:border-sky-800 font-medium">
+            <span key={i} className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-sky-100/80 to-blue-100/60 dark:from-sky-900/40 dark:to-blue-900/30 text-sky-800 dark:text-sky-200 text-xs rounded-full border border-sky-300/60 dark:border-sky-700/50 font-semibold shadow-sm hover:shadow-md transition-all hover:border-sky-400/80 dark:hover:border-sky-600/70">
               {name}
             </span>
           ))}
           {!tradeNamesExpanded && data.tradeNames.length > 4 && (
             <button
               onClick={() => setTradeNamesExpanded(true)}
-              className="inline-block px-2.5 py-1 bg-muted text-muted-foreground text-xs rounded-lg border border-border hover:bg-muted/80 transition-colors"
+              className="inline-flex items-center px-3 py-1.5 bg-muted/70 dark:bg-muted/40 text-muted-foreground text-xs rounded-full border border-border hover:bg-muted/90 dark:hover:bg-muted/60 transition-all font-semibold"
             >
               +{data.tradeNames.length - 4} more
             </button>
