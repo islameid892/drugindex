@@ -142,11 +142,16 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col">
-        <DialogHeader className="border-b pb-4 pt-4 px-8">
+      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-sky-50/30 dark:to-sky-950/10">
+        <DialogHeader className="border-b border-border/50 pb-6 pt-6 px-8 bg-gradient-to-r from-sky-50/50 via-background to-blue-50/30 dark:from-sky-950/40 dark:via-background dark:to-blue-950/20">
           <div className="flex items-center justify-between w-full">
-            <DialogTitle className="text-3xl font-bold">Advanced Search</DialogTitle>
-            <span className="text-sm font-semibold bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg">
+                <Search className="h-6 w-6 text-white" />
+              </div>
+              <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Advanced Search</DialogTitle>
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-sky-100 to-blue-100 dark:from-sky-900/40 dark:to-blue-900/40 text-sky-700 dark:text-sky-300 px-4 py-2.5 rounded-full border border-sky-200/50 dark:border-sky-800/50">
               Step {step} of 2
             </span>
           </div>
@@ -159,7 +164,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               {/* Scientific Name Field */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center text-sm font-bold shadow-md">1</div>
                   <h3 className="font-semibold text-lg">Scientific Name</h3>
                 </div>
                 
@@ -172,12 +177,12 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                       setShowScientificDropdown(true);
                     }}
                     onFocus={() => setShowScientificDropdown(true)}
-                    className="h-10 text-sm"
+                    className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
                   />
                   
                   {/* Scientific Name Suggestions Dropdown */}
                   {showScientificDropdown && debouncedScientificNameInput.length > 0 && scientificName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[500px] overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 max-h-[500px] overflow-y-auto backdrop-blur-sm">
                       {scientificNameSuggestions.isLoading && (
                         <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -214,7 +219,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               {/* Trade Name Field */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">2</div>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center text-sm font-bold shadow-md">2</div>
                   <h3 className="font-semibold text-lg">Trade Name <span className="text-gray-500 font-normal">(Optional)</span></h3>
                 </div>
 
@@ -227,12 +232,12 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                       setShowTradeNameDropdown(true);
                     }}
                     onFocus={() => setShowTradeNameDropdown(true)}
-                    className="h-10 text-sm"
+                    className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
                   />
 
                   {/* Trade Name Suggestions Dropdown */}
                   {showTradeNameDropdown && debouncedTradeNameInput.length > 0 && tradeName.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-[500px] overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 max-h-[500px] overflow-y-auto backdrop-blur-sm">
                       {tradeNameSuggestions.isLoading && (
                         <div className="px-3 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -292,7 +297,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                   }}
                   onFocus={() => setShowIndicationDropdown(true)}
                   onBlur={() => setTimeout(() => setShowIndicationDropdown(false), 200)}
-                  className="h-10 text-sm"
+                  className="h-12 text-sm border-2 border-border rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all bg-muted/40"
                 />
 
                 {/* Indications Suggestions Dropdown */}
