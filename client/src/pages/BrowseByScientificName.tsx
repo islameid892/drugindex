@@ -100,17 +100,24 @@ export default function BrowseByScientificName() {
           
           {/* Filter Button */}
           {baseConcentration && (
-            <button
-              onClick={() => setFilterSameConc(!filterSameConc)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-base transition-all ${
-                filterSameConc
-                  ? "bg-sky-600 text-white shadow-lg"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <Filter className="h-4 w-4" />
-              Same Concentration ({baseConcentration})
-            </button>
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={() => setFilterSameConc(!filterSameConc)}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 ${
+                  filterSameConc
+                    ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
+                    : "bg-muted/60 text-foreground hover:bg-muted/80 border border-border/50"
+                }`}
+              >
+                <Filter className="h-4 w-4" />
+                {filterSameConc ? `Showing ${filteredDrugs.length}` : `Filter`} ({baseConcentration})
+              </button>
+              {filterSameConc && (
+                <span className="text-sm text-muted-foreground">
+                  {filteredDrugs.length} result{filteredDrugs.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
@@ -138,16 +145,21 @@ export default function BrowseByScientificName() {
           </div>
         ) : (
           /* Trade Names Grid */
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {filteredDrugs.map((drug, idx) => (
               <div
                 key={idx}
-                className="group rounded-xl border border-border/50 bg-gradient-to-r from-card to-card/80 p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:border-sky-300/50 dark:hover:border-sky-700/50"
+                className="group relative rounded-xl border border-border/40 bg-gradient-to-br from-sky-50/40 via-card to-blue-50/30 dark:from-sky-950/20 dark:via-card dark:to-blue-950/10 p-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-sky-400/60 dark:hover:border-sky-600/60 overflow-hidden"
               >
-                <div>
-                  <h3 className="text-lg font-bold text-foreground truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                {/* Background accent */}
+                <div className="absolute inset-0 bg-gradient-to-r from-sky-500/0 via-sky-500/0 to-sky-500/0 group-hover:from-sky-500/5 group-hover:via-sky-500/5 group-hover:to-sky-500/0 transition-all duration-300 pointer-events-none" />
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-between">
+                  <h3 className="text-base font-bold text-foreground truncate group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
                     {drug.tradeName}
                   </h3>
+                  <div className="flex-shrink-0 ml-3 w-2 h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
             ))}

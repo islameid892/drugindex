@@ -147,6 +147,18 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
         <div className="border-b border-border/50 px-8 py-8 bg-gradient-to-r from-sky-50/50 to-blue-50/30 dark:from-sky-950/30 dark:to-blue-950/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              {step === 2 && (
+                <button 
+                  onClick={() => {
+                    setStep(1);
+                    setResults([]);
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-2"
+                  title="Back to search"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+              )}
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg">
                 <Search className="h-7 w-7 text-white" />
               </div>
