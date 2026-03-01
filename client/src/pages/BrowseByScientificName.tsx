@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Loader2, AlertCircle, Pill } from "lucide-react";
+import { ChevronLeft, Loader2, AlertCircle, Pill, Filter } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 
 export default function BrowseByScientificName() {
   const [, params] = useRoute("/browse/scientific-name/:scientificName");
   const scientificName = params?.scientificName ? decodeURIComponent(params.scientificName) : "";
+  const [filterSameConc, setFilterSameConc] = useState(false);
+  const [baseConcentration, setBaseConcentration] = useState<string | null>(null);
   
   const { data: drugs, isLoading, error } = trpc.data.medications.search.useQuery(
     { query: scientificName, limit: 1000 },
@@ -15,18 +18,33 @@ export default function BrowseByScientificName() {
 
   // Filter to show only drugs with exact scientific name match, remove duplicates, and sort alphabetically
   const filteredDrugs = (() => {
-    const filtered = drugs?.filter(
+    let filtered = drugs?.filter(
       (drug) => drug.scientificName.toUpperCase() === scientificName.toUpperCase()
     ) || [];
     
     // Remove duplicate trade names - keep only first occurrence
     const seen = new Set<string>();
-    const unique = filtered.filter(drug => {
+    let unique = filtered.filter(drug => {
       const tradeName = drug.tradeName.toUpperCase();
       if (seen.has(tradeName)) return false;
       seen.add(tradeName);
       return true;
     });
+    
+    // Set base concentration from first drug if not set
+    if (unique.length > 0 && !baseConcentration) {
+      const firstDrug = unique[0];
+      const concentration = firstDrug.tradeName.match(/(\d+(?:\.\d+)?\s*(?:mg|ml|%))/i)?.[1] || null;
+      if (concentration) setBaseConcentration(concentration);
+    }
+    
+    // Apply concentration filter if enabled
+    if (filterSameConc && baseConcentration) {
+      unique = unique.filter(drug => {
+        const drugConc = drug.tradeName.match(/(\d+(?:\.\d+)?\s*(?:mg|ml|%))/i)?.[1] || null;
+        return drugConc === baseConcentration;
+      });
+    }
     
     // Sort alphabetically by trade name
     return unique.sort((a, b) => a.tradeName.localeCompare(b.tradeName));
@@ -77,6 +95,21 @@ export default function BrowseByScientificName() {
               </p>
             </div>
           </div>
+          
+          {/* Filter Button */}
+          {baseConcentration && (
+            <button
+              onClick={() => setFilterSameConc(!filterSameConc)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-base transition-all ${
+                filterSameConc
+                  ? "bg-sky-600 text-white shadow-lg"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              Same Concentration ({baseConcentration})
+            </button>
+          )}
         </div>
 
         {/* Loading State */}

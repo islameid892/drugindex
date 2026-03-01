@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, X, Loader2, ChevronLeft, ChevronRight, Copy, Check } from "lucide-react";
 
 interface AdvancedSearchModalProps {
   isOpen: boolean;
@@ -35,6 +35,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   const [indicationInput, setIndicationInput] = useState("");
   
   const [expandedCodes, setExpandedCodes] = useState<Set<string>>(new Set());
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [results, setResults] = useState<any[]>([]);
   const [showScientificDropdown, setShowScientificDropdown] = useState(false);
   const [showTradeNameDropdown, setShowTradeNameDropdown] = useState(false);
@@ -131,6 +132,12 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     setStep(1);
     setIndications([]);
     setIndicationInput("");
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
 
   return (
@@ -360,10 +367,26 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                         )}
                       </div>
                       {expandedCodes.has(code.code) && code.branches && (
-                        <div className="mt-4 space-y-2 border-t-2 border-border/30 pt-4">
+                        <div className="mt-4 space-y-3 border-t-2 border-border/30 pt-4">
                           {code.branches.map((branch: any, bIdx: number) => (
-                            <div key={bIdx} className="text-base text-muted-foreground pl-6">
-                              • {branch.code}: {branch.description}
+                            <div key={bIdx} className="flex items-start justify-between gap-3 p-3 bg-muted/50 rounded-lg">
+                              <div className="flex-1 min-w-0">
+                                <span className="inline-block px-3 py-1.5 bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 rounded-lg font-bold text-base">
+                                  {branch.code}
+                                </span>
+                                <p className="text-base text-muted-foreground mt-2">{branch.description}</p>
+                              </div>
+                              <button
+                                onClick={() => handleCopyCode(branch.code)}
+                                className="flex-shrink-0 p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground mt-1"
+                                title="Copy code"
+                              >
+                                {copiedCode === branch.code ? (
+                                  <Check className="h-5 w-5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="h-5 w-5" />
+                                )}
+                              </button>
                             </div>
                           ))}
                         </div>
