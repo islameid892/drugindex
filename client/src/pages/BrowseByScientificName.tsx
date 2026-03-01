@@ -13,10 +13,21 @@ export default function BrowseByScientificName() {
     { enabled: !!scientificName }
   );
 
-  // Filter to show only drugs with exact scientific name match
-  const filteredDrugs = drugs?.filter(
-    (drug) => drug.scientificName.toUpperCase() === scientificName.toUpperCase()
-  ) || [];
+  // Filter to show only drugs with exact scientific name match and remove duplicates
+  const filteredDrugs = (() => {
+    const filtered = drugs?.filter(
+      (drug) => drug.scientificName.toUpperCase() === scientificName.toUpperCase()
+    ) || [];
+    
+    // Remove duplicate trade names - keep only first occurrence
+    const seen = new Set<string>();
+    return filtered.filter(drug => {
+      const tradeName = drug.tradeName.toUpperCase();
+      if (seen.has(tradeName)) return false;
+      seen.add(tradeName);
+      return true;
+    });
+  })();
 
   if (!scientificName) {
     return (
@@ -102,20 +113,12 @@ export default function BrowseByScientificName() {
                     </h3>
                   </div>
                   
-                  {/* Coverage Badge */}
-                  {drug.coverageStatus && (
-                    <div className="flex-shrink-0">
-                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${
-                        drug.coverageStatus === "COVERED"
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                          : drug.coverageStatus === "NON-COVERED"
-                          ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-                          : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                      }`}>
-                        {drug.coverageStatus}
-                      </span>
-                    </div>
-                  )}
+                  {/* Price Placeholder - Reserved for future integration */}
+                  <div className="flex-shrink-0">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-muted text-muted-foreground">
+                      Price
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
