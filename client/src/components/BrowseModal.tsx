@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
-import { X, Search, ChevronDown, ChevronRight, Pill, Activity, AlertTriangle, Loader2 } from "lucide-react";
+import { X, Search, ChevronDown, ChevronRight, Pill, Activity, AlertTriangle, Loader2, Link as LinkIcon, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLocation } from "wouter";
 
 type BrowseType = "drugs" | "conditions" | "codes" | "non-covered";
 
@@ -17,6 +18,7 @@ function DrugBrowse() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("A");
   const [expandedCodes, setExpandedCodes] = useState<Set<string>>(new Set());
+  const [, navigate] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,6 +44,10 @@ function DrugBrowse() {
     });
   };
 
+  const handleViewAlternatives = (scientificName: string) => {
+    navigate(`/browse/scientific-name/${encodeURIComponent(scientificName)}`);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border bg-background">
@@ -63,7 +69,7 @@ function DrugBrowse() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
@@ -79,26 +85,36 @@ function DrugBrowse() {
         )}
 
         {!isLoading && data?.results.map((drug, idx) => (
-          <div key={idx} className="border border-border rounded-xl overflow-hidden bg-card">
-            <div className="bg-sky-50 dark:bg-sky-950/50 px-4 py-3 border-b border-border">
-              <div className="flex items-start gap-2">
-                <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Pill className="h-4 w-4 text-white" />
+          <div key={idx} className="group border border-border rounded-2xl overflow-hidden bg-card shadow-sm hover:shadow-lg transition-all duration-300 hover:border-sky-300/50">
+            <div className="bg-gradient-to-r from-sky-50 via-sky-50/50 to-blue-50/30 dark:from-sky-950/40 dark:via-sky-950/30 dark:to-blue-950/20 px-4 py-4 border-b border-border/50">
+              <div className="flex items-start gap-3 justify-between">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
+                    <Pill className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-foreground text-sm leading-tight">{drug.tradeName}</h3>
+                    <p className="text-xs text-sky-700 dark:text-sky-300 font-semibold mt-1">{drug.scientificName}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-foreground text-sm">{drug.tradeName}</h3>
-                  <p className="text-xs text-sky-600 dark:text-sky-400 font-medium mt-0.5">
-                    Scientific: {drug.scientificName}
-                  </p>
-                </div>
+                <button
+                  onClick={() => handleViewAlternatives(drug.scientificName)}
+                  className="flex-shrink-0 p-2 rounded-lg bg-sky-100 dark:bg-sky-900/40 hover:bg-sky-200 dark:hover:bg-sky-900/60 text-sky-600 dark:text-sky-400 transition-all duration-200 hover:scale-110 hover:shadow-md"
+                  title="View all trade names with same active ingredient"
+                >
+                  <LinkIcon className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
-            <div className="divide-y divide-border/50">
+            <div className="divide-y divide-border/30">
               {drug.indications.map((ind, iIdx) => (
-                <div key={iIdx} className="px-4 py-3">
-                  <p className="text-sm font-semibold text-foreground mb-2">{ind.indication}</p>
-                  <div className="space-y-1.5">
+                <div key={iIdx} className="px-4 py-3.5 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-start gap-2 mb-2.5">
+                    <Sparkles className="h-3.5 w-3.5 text-sky-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm font-semibold text-foreground">{ind.indication}</p>
+                  </div>
+                  <div className="space-y-1.5 ml-0.5">
                     {ind.codes.map((code, cIdx) => {
                       const key = `${idx}-${iIdx}-${cIdx}`;
                       const isExpanded = expandedCodes.has(key);
@@ -106,13 +122,13 @@ function DrugBrowse() {
                         <div key={cIdx}>
                           <button
                             onClick={() => code.branches.length > 0 && toggleCode(key)}
-                            className={`w-full flex items-center gap-2 text-left px-3 py-2 rounded-lg transition-colors ${
+                            className={`w-full flex items-center gap-2.5 text-left px-3 py-2.5 rounded-lg transition-all duration-200 ${
                               code.isNonCovered
-                                ? "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
-                                : "bg-muted/50 hover:bg-muted"
+                                ? "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 hover:bg-red-100/50 dark:hover:bg-red-950/50"
+                                : "bg-muted/40 hover:bg-muted/70 border border-transparent hover:border-sky-200/50 dark:hover:border-sky-800/50"
                             }`}
                           >
-                            <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
+                            <span className={`font-mono text-xs font-bold px-2.5 py-1 rounded-md flex-shrink-0 ${
                               code.isNonCovered
                                 ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
                                 : "bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300"
@@ -121,29 +137,29 @@ function DrugBrowse() {
                             </span>
                             <span className="text-xs text-muted-foreground flex-1 truncate">{code.description}</span>
                             {code.isNonCovered && (
-                              <span className="text-xs text-red-600 dark:text-red-400 font-medium flex-shrink-0">Non-Covered</span>
+                              <Badge variant="destructive" className="text-xs flex-shrink-0">Non-Covered</Badge>
                             )}
                             {code.branches.length > 0 && (
                               <span className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
-                                <span>{code.branches.length}</span>
-                                {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                <span className="text-xs font-medium">{code.branches.length}</span>
+                                {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                               </span>
                             )}
                           </button>
                           {isExpanded && code.branches.length > 0 && (
-                            <div className="ml-4 mt-1 space-y-1 border-l-2 border-sky-200 dark:border-sky-800 pl-3">
+                            <div className="ml-4 mt-1.5 space-y-1 border-l-2 border-sky-200 dark:border-sky-800 pl-3">
                               {code.branches.map((branch, bIdx) => (
-                                <div key={bIdx} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs ${
-                                  branch.isNonCovered ? "bg-red-50 dark:bg-red-950/30" : "bg-muted/30"
+                                <div key={bIdx} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                                  branch.isNonCovered ? "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
                                 }`}>
                                   <span className={`font-mono font-bold flex-shrink-0 ${
                                     branch.isNonCovered ? "text-red-600 dark:text-red-400" : "text-sky-600 dark:text-sky-400"
                                   }`}>
                                     {branch.branchCode}
                                   </span>
-                                  <span className="text-muted-foreground flex-1">{branch.branchDescription}</span>
+                                  <span className="flex-1">{branch.branchDescription}</span>
                                   {branch.isNonCovered && (
-                                    <span className="text-red-500 text-xs flex-shrink-0">✕</span>
+                                    <span className="text-red-500 flex-shrink-0 font-bold">✕</span>
                                   )}
                                 </div>
                               ))}
@@ -153,7 +169,7 @@ function DrugBrowse() {
                       );
                     })}
                     {ind.codes.length === 0 && (
-                      <p className="text-xs text-muted-foreground italic">No codes linked</p>
+                      <p className="text-xs text-muted-foreground italic pl-2">No codes linked</p>
                     )}
                   </div>
                 </div>
