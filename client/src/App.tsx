@@ -9,6 +9,7 @@ import { Suspense, lazy, useEffect } from "react";
 import Home from "./pages/Home";
 import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
 import { AdvancedSearchFAB } from "./components/AdvancedSearchFAB";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -162,6 +163,7 @@ function App() {
             <Toaster />
             <Router />
             <AdvancedSearchFAB />
+            <PWAInstallPrompt />
           </TooltipProvider>
         </FavoritesProvider>
       </ThemeProvider>
