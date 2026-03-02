@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, X, Loader2, ChevronLeft, ChevronRight, Copy, Check } from "lucide-react";
+import { Search, X, Loader2, ChevronLeft, ChevronRight, Copy, Check, AlertTriangle } from "lucide-react";
 
 interface AdvancedSearchModalProps {
   isOpen: boolean;
@@ -362,11 +362,21 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               {results.length > 0 && (
                 <div className="mt-8 space-y-4">
                   <h3 className="text-2xl font-bold text-foreground">Results ({results.length})</h3>
-                  {results.map((code, idx) => (
-                    <div key={idx} className="p-6 border-2 border-border rounded-xl bg-card">
+                  {results.map((code, idx) => {
+                    const isUCode = code.code.startsWith('U');
+                    return (
+                    <div key={idx} className={`p-6 border-2 rounded-xl ${isUCode ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-950/20' : 'border-border bg-card'}`}>
                       <div className="flex items-center justify-between gap-4 mb-3">
-                        <div>
-                          <p className="font-bold text-lg text-foreground">{code.code}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className={`font-bold text-lg ${isUCode ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'}`}>{code.code}</p>
+                            {isUCode && (
+                              <div className="flex items-center gap-1 px-2 py-1 bg-orange-200 dark:bg-orange-900/50 rounded-md">
+                                <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">Please read note</span>
+                              </div>
+                            )}
+                          </div>
                           <p className="text-base text-muted-foreground mt-1">{code.description}</p>
                         </div>
                         {code.branches && code.branches.length > 0 && (
@@ -380,6 +390,13 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                       </div>
                       {expandedCodes.has(code.code) && code.branches && (
                         <div className="mt-4 space-y-3 border-t-2 border-border/30 pt-4">
+                          {isUCode && (
+                            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 border-l-4 border-orange-500 rounded-md mb-3">
+                              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">
+                                ⚠️ Note: "U" codes are not allowed to be used as primary/Principal Diagnosis.
+                              </p>
+                            </div>
+                          )}
                           {code.branches.map((branch: any, bIdx: number) => (
                             <div key={bIdx} className="flex items-start justify-between gap-3 p-3 bg-muted/50 rounded-lg">
                               <div className="flex-1 min-w-0">
@@ -404,7 +421,8 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
