@@ -28,6 +28,7 @@ const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
+const AdminNotifications = lazy(() => import("./pages/AdminNotifications"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -137,6 +138,11 @@ function Router() {
       <Route path={"/admin"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <AdminPanel />
+        </Suspense>
+      )} />
+      <Route path={"/admin/notifications"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <AdminNotifications />
         </Suspense>
       )} />
       <Route path={"/404"} component={NotFound} />
