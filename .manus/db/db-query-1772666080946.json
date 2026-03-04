@@ -1,0 +1,35 @@
+{
+  "query": "SELECT de.id, de.trade_name, de.icd_codes_raw FROM drug_entries de WHERE de.trade_name LIKE '%SYSTANE%' LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT de.id, de.trade_name, de.icd_codes_raw FROM drug_entries de WHERE de.trade_name LIKE '%SYSTANE%' LIMIT 5",
+  "rows": [
+    {
+      "id": "44976",
+      "trade_name": "SYSTANE ULTRA UD LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops",
+      "icd_codes_raw": "B30, B00.52, B00.53, B01.81, B02.31, B02.33, B05.81, B30, H16"
+    },
+    {
+      "id": "44977",
+      "trade_name": "SYSTANE ULTRA UD LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops",
+      "icd_codes_raw": "H10.1"
+    },
+    {
+      "id": "44978",
+      "trade_name": "SYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops",
+      "icd_codes_raw": "B30, B00.52, B00.53, B01.81, B02.31, B02.33, B05.81, B30, H16"
+    },
+    {
+      "id": "44979",
+      "trade_name": "SYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops",
+      "icd_codes_raw": "H10.1"
+    },
+    {
+      "id": "44980",
+      "trade_name": "SYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops",
+      "icd_codes_raw": "H10.8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttrade_name\ticd_codes_raw\n44976\tSYSTANE ULTRA UD LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops\tB30, B00.52, B00.53, B01.81, B02.31, B02.33, B05.81, B30, H16\n44977\tSYSTANE ULTRA UD LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops\tH10.1\n44978\tSYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops\tB30, B00.52, B00.53, B01.81, B02.31, B02.33, B05.81, B30, H16\n44979\tSYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops\tH10.1\n44980\tSYSTANE LUBRICANT EYE 0.4/0.3 mg, mg Eye Drops\tH10.8\n",
+  "stderr": "",
+  "execution_time_ms": 1621
+}

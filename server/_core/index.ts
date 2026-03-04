@@ -11,6 +11,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import superjson from "superjson";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -69,10 +70,11 @@ async function startServer() {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "https://pagead2.googlesyndication.com"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        styleElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https:"],
-        fontSrc: ["'self'", "https://fonts.googleapis.com"],
+        connectSrc: ["'self'", "https:", "wss:"],
+        fontSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
       },
     },
     hsts: {
@@ -141,6 +143,13 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      responseMeta() {
+        return {
+          headers: {
+            'content-type': 'application/json',
+          },
+        };
+      },
     })
   );
 

@@ -1,0 +1,38 @@
+{
+  "query": "SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL",
+  "rows": [
+    {
+      "CONSTRAINT_NAME": "fk_1",
+      "TABLE_NAME": "search_analytics",
+      "COLUMN_NAME": "user_id",
+      "REFERENCED_TABLE_NAME": "users",
+      "REFERENCED_COLUMN_NAME": "id"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_1",
+      "TABLE_NAME": "icd_branches",
+      "COLUMN_NAME": "parent_code_id",
+      "REFERENCED_TABLE_NAME": "icd_codes",
+      "REFERENCED_COLUMN_NAME": "id"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_dec_drug_entry",
+      "TABLE_NAME": "drug_entry_codes",
+      "COLUMN_NAME": "drug_entry_id",
+      "REFERENCED_TABLE_NAME": "drug_entries",
+      "REFERENCED_COLUMN_NAME": "id"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_dec_code",
+      "TABLE_NAME": "drug_entry_codes",
+      "COLUMN_NAME": "code_id",
+      "REFERENCED_TABLE_NAME": "icd_codes",
+      "REFERENCED_COLUMN_NAME": "id"
+    }
+  ],
+  "messages": [],
+  "stdout": "CONSTRAINT_NAME\tTABLE_NAME\tCOLUMN_NAME\tREFERENCED_TABLE_NAME\tREFERENCED_COLUMN_NAME\nfk_1\tsearch_analytics\tuser_id\tusers\tid\nfk_1\ticd_branches\tparent_code_id\ticd_codes\tid\nfk_dec_drug_entry\tdrug_entry_codes\tdrug_entry_id\tdrug_entries\tid\nfk_dec_code\tdrug_entry_codes\tcode_id\ticd_codes\tid\n",
+  "stderr": "",
+  "execution_time_ms": 2325
+}

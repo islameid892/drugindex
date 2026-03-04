@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE drug_entry_codes DROP FOREIGN KEY drug_entry_codes_ibfk_1; ALTER TABLE drug_entry_codes DROP FOREIGN KEY drug_entry_codes_ibfk_2; ALTER TABLE icd_branches DROP FOREIGN KEY icd_branches_ibfk_1; ALTER TABLE drug_entry_codes ADD CONSTRAINT drug_entry_codes_ibfk_1 FOREIGN KEY (drug_entry_id) REFERENCES drug_entries(id) ON DELETE CASCADE ON UPDATE CASCADE; ALTER TABLE drug_entry_codes ADD CONSTRAINT drug_entry_codes_ibfk_2 FOREIGN KEY (code_id) REFERENCES icd_codes(id) ON DELETE CASCADE ON UPDATE CASCADE; ALTER TABLE icd_branches ADD CONSTRAINT icd_branches_ibfk_1 FOREIGN KEY (parent_code_id) REFERENCES icd_codes(id) ON DELETE CASCADE ON UPDATE CASCADE",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute ALTER TABLE drug_entry_codes DROP FOREIGN KEY drug_entry_codes_ibfk_1; ALTER TABLE drug_entry_codes DROP FOREIGN KEY drug_entry_codes_ibfk_2; ALTER TABLE icd_branches DROP FOREIGN KEY icd_branches_ibfk_1; ALTER TABLE drug_entry_codes ADD CONSTRAINT drug_entry_codes_ibfk_1 FOREIGN KEY (drug_entry_id) REFERENCES drug_entries(id) ON DELETE CASCADE ON UPDATE CASCADE; ALTER TABLE drug_entry_codes ADD CONSTRAINT drug_entry_codes_ibfk_2 FOREIGN KEY (code_id) REFERENCES icd_codes(id) ON DELETE CASCADE ON UPDATE CASCADE; ALTER TABLE icd_branches ADD CONSTRAINT icd_branches_ibfk_1 FOREIGN KEY (parent_code_id) REFERENCES icd_codes(id) ON DELETE CASCADE ON UPDATE CASCADE",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1091 (42000) at line 1: Can't DROP 'drug_entry_codes_ibfk_1'; check that column/key exists"
+  ]
+}

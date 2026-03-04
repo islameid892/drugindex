@@ -60,10 +60,10 @@ export const drugEntryCodes = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     drugEntryId: int("drug_entry_id")
       .notNull()
-      .references(() => drugEntries.id, { onDelete: "cascade" }),
+      .references(() => drugEntries.id, { onDelete: "cascade", onUpdate: "cascade" }),
     codeId: int("code_id")
       .notNull()
-      .references(() => icdCodes.id, { onDelete: "cascade" }),
+      .references(() => icdCodes.id, { onDelete: "cascade", onUpdate: "cascade" }),
   },
   (t) => ({
     drugEntryIdx: index("idx_dec_drug_entry_id").on(t.drugEntryId),
@@ -96,7 +96,7 @@ export const icdBranches = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     parentCodeId: int("parent_code_id")
       .notNull()
-      .references(() => icdCodes.id, { onDelete: "cascade" }),
+      .references(() => icdCodes.id, { onDelete: "cascade", onUpdate: "cascade" }),
     branchCode: varchar("branch_code", { length: 20 }).notNull(),
     branchDescription: text("branch_description").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
