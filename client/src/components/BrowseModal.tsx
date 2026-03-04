@@ -637,14 +637,14 @@ function CodesBrowse() {
 
 const MODAL_CONFIG = {
   drugs: {
-    title: "Search Drugs",
+    title: "Browse drugs",
     subtitle: "Search by trade name",
     iconBg: "bg-sky-500",
     icon: <Pill className="h-5 w-5 text-white" />,
     component: DrugBrowse,
   },
   conditions: {
-    title: "Find Conditions",
+    title: "Search conditions",
     subtitle: "Search by medical condition",
     iconBg: "bg-emerald-500",
     icon: <Activity className="h-5 w-5 text-white" />,
@@ -691,8 +691,10 @@ export default function BrowseModal({ isOpen, type, onClose }: BrowseModalProps)
           </button>
         </div>
 
-        {/* Content */}
-        <Component />
+        {/* Content - Apply Roboto font */}
+        <div style={{fontFamily: 'Roboto, sans-serif'}}>
+          <Component />
+        </div>
       </div>
     </div>
   );
