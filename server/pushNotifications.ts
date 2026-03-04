@@ -1,9 +1,18 @@
-import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { randomUUID } from 'crypto';
+import webpush from 'web-push';
 
 // Database client will be initialized when needed
 let dbClient: any = null;
+
+// Initialize web-push with VAPID keys
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:admin@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 async function getDbClient() {
   if (!dbClient) {
@@ -13,7 +22,7 @@ async function getDbClient() {
       password: process.env.DATABASE_PASSWORD || '',
       database: process.env.DATABASE_NAME || 'icd10_db',
     });
-    dbClient = drizzle(connection);
+    dbClient = connection;
   }
   return dbClient;
 }
@@ -48,14 +57,14 @@ export async function registerPushSubscription(
 
     // Check if endpoint already exists
     const db = await getDbClient();
-    const existing = await db.query(
+    const [existing] = await db.execute(
       'SELECT id FROM push_subscriptions WHERE endpoint = ?',
       [subscription.endpoint]
     );
 
     if (existing && existing.length > 0) {
       // Update existing subscription
-      await db.query(
+      await db.execute(
         'UPDATE push_subscriptions SET updated_at = ?, is_active = true WHERE endpoint = ?',
         [now, subscription.endpoint]
       );
@@ -63,7 +72,7 @@ export async function registerPushSubscription(
     }
 
     // Insert new subscription
-    await db.query(
+    await db.execute(
       `INSERT INTO push_subscriptions (id, endpoint, auth_key, p256dh_key, user_id, created_at, updated_at, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, true)`,
       [
@@ -90,7 +99,7 @@ export async function registerPushSubscription(
 export async function unregisterPushSubscription(endpoint: string) {
   try {
     const db = await getDbClient();
-    await db.query(
+    await db.execute(
       'UPDATE push_subscriptions SET is_active = false WHERE endpoint = ?',
       [endpoint]
     );
@@ -107,7 +116,7 @@ export async function unregisterPushSubscription(endpoint: string) {
 export async function getActivePushSubscriptions() {
   try {
     const db = await getDbClient();
-    const subscriptions = await db.query(
+    const [subscriptions] = await db.execute(
       'SELECT endpoint, auth_key, p256dh_key FROM push_subscriptions WHERE is_active = true'
     );
     return subscriptions || [];
@@ -138,7 +147,7 @@ export async function sendBroadcastPushNotification(
     }
 
     // Log the notification
-    await db.query(
+    await db.execute(
       `INSERT INTO push_notifications (id, title, body, icon, badge, tag, sent_at, sent_by, recipient_count, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -161,12 +170,39 @@ export async function sendBroadcastPushNotification(
 
     for (const sub of subscriptions) {
       try {
-        // In production, you would send via Web Push Protocol
-        // For now, we'll just log it
-        console.log(`Push notification queued for: ${sub.endpoint}`);
+        // Convert database format to web-push format
+        const subscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            auth: sub.auth_key,
+            p256dh: sub.p256dh_key
+          }
+        };
+
+        // Send via Web Push Protocol
+        await webpush.sendNotification(
+          subscription,
+          JSON.stringify({
+            title: payload.title,
+            body: payload.body,
+            icon: payload.icon,
+            badge: payload.badge,
+            tag: payload.tag,
+            data: payload.data
+          })
+        );
+        console.log(`Push notification sent to: ${sub.endpoint}`);
         sent++;
-      } catch (error) {
-        console.error(`Failed to send to ${sub.endpoint}:`, error);
+      } catch (error: any) {
+        console.error(`Failed to send to ${sub.endpoint}:`, error.message);
+        // If subscription is invalid, mark it as inactive
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          try {
+            await unregisterPushSubscription(sub.endpoint);
+          } catch (e) {
+            console.error('Error unregistering invalid subscription:', e);
+          }
+        }
         failed++;
       }
     }
@@ -184,7 +220,7 @@ export async function sendBroadcastPushNotification(
 export async function getPushNotificationHistory(limit = 20) {
   try {
     const db = await getDbClient();
-    const notifications = await db.query(
+    const [notifications] = await db.execute(
       `SELECT id, title, body, sent_at, sent_by, recipient_count
        FROM push_notifications
        ORDER BY sent_at DESC

@@ -6,7 +6,7 @@ import BrowseModal from "@/components/BrowseModal";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { BulkVerification } from "@/components/BulkVerification";
 import { Button } from "@/components/ui/button";
-import { Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3, Upload, X } from "lucide-react";
+import { Loader2, Stethoscope, Pill, Activity, Database, Search, Sparkles, ChevronRight, ChevronLeft, Heart, BarChart3, Upload, X, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import InfographicsSection from "@/components/InfographicsSection";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { trpc } from '@/lib/trpc';
 
 // Helper function to load data with compression support
@@ -206,6 +207,21 @@ export default function Home() {
               >
                 <BarChart3 className="h-4 w-4" />
                 Analytics
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Toggle notification settings visibility
+                  const notifElement = document.getElementById('notification-settings');
+                  if (notifElement) {
+                    notifElement.classList.toggle('hidden');
+                  }
+                }}
+                className="gap-2 border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="hidden sm:inline">Notifications</span>
               </Button>
               <Link href="/favorites">
                 <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
@@ -422,6 +438,29 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Notification Settings Modal */}
+        <div id="notification-settings" className="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold">Notifications</h2>
+              <button 
+                onClick={() => {
+                  const notifElement = document.getElementById('notification-settings');
+                  if (notifElement) {
+                    notifElement.classList.add('hidden');
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <NotificationSettings />
+            </div>
+          </div>
+        </div>
 
         {/* Non-Covered Codes Browse Button */}
         {!query && !loading && (
