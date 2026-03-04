@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Link } from "wouter";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import InfographicsSection from "@/components/InfographicsSection";
 import { trpc } from '@/lib/trpc';
 
@@ -77,6 +79,7 @@ export default function Home() {
   const [recentSearches, setRecentSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'Ibuprofen']);
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const { favorites } = useFavorites();
+  const { user, isAuthenticated, logout } = useAuth();
 
   // Debounce query for API calls
   useEffect(() => {
@@ -231,6 +234,26 @@ export default function Home() {
                   <span className="font-semibold">{favorites.length}</span>
                 </Button>
               </Link>
+              {isAuthenticated && user ? (
+                <>
+                  {user.role === 'admin' && (
+                    <Link href="/admin">
+                      <Button variant="outline" size="sm" className="gap-2 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950">
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => logout()} className="gap-2">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <a href={getLoginUrl()}>
+                  <Button size="sm" className="gap-2 bg-sky-600 hover:bg-sky-700 text-white">
+                    Login
+                  </Button>
+                </a>
+              )}
             </div>
 
             {/* Mobile Stats and Favorites */}
@@ -261,6 +284,26 @@ export default function Home() {
                   <span className="font-semibold text-xs">{favorites.length}</span>
                 </Button>
               </Link>
+              {isAuthenticated && user ? (
+                <>
+                  {user.role === 'admin' && (
+                    <Link href="/admin">
+                      <Button variant="outline" size="sm" className="gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950 h-8 px-2">
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => logout()} className="gap-1 h-8 px-2">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <a href={getLoginUrl()}>
+                  <Button size="sm" className="gap-1 bg-sky-600 hover:bg-sky-700 text-white h-8 px-2">
+                    Login
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </div>
