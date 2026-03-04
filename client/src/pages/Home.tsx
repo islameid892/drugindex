@@ -261,6 +261,19 @@ export default function Home() {
               >
                 <BarChart3 className="h-3 w-3" />
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const notifElement = document.getElementById('notification-settings');
+                  if (notifElement) {
+                    notifElement.classList.toggle('hidden');
+                  }
+                }}
+                className="gap-0 border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950 h-7 px-1.5"
+              >
+                <Bell className="h-3 w-3" />
+              </Button>
               <Link href="/favorites">
                 <Button variant="outline" size="sm" className="gap-0 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950 h-7 px-1.5">
                   <Heart className="h-3 w-3" />
@@ -290,6 +303,29 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Stats - Only show on small screens */}
+      <div className="sm:hidden bg-gradient-to-r from-sky-50 to-emerald-50 dark:from-sky-950 dark:to-emerald-950 border-b border-border/40 py-3">
+        <div className="container flex items-center justify-around gap-2 text-xs font-medium">
+          <div className="flex flex-col items-center gap-1">
+            <Pill className="h-4 w-4 text-sky-600" />
+            <span className="font-semibold text-foreground">{stats.medications.toLocaleString()}</span>
+            <span className="text-muted-foreground text-xs">Meds</span>
+          </div>
+          <div className="w-px h-12 bg-border/40" />
+          <div className="flex flex-col items-center gap-1">
+            <Activity className="h-4 w-4 text-emerald-600" />
+            <span className="font-semibold text-foreground">{stats.conditions.toLocaleString()}</span>
+            <span className="text-muted-foreground text-xs">Conditions</span>
+          </div>
+          <div className="w-px h-12 bg-border/40" />
+          <div className="flex flex-col items-center gap-1">
+            <Database className="h-4 w-4 text-purple-600" />
+            <span className="font-semibold text-foreground">{stats.codes.toLocaleString()}</span>
+            <span className="text-muted-foreground text-xs">Codes</span>
+          </div>
+        </div>
+      </div>
 
       <main className="flex-1 container py-12 space-y-12">
         {/* Hero Section */}
