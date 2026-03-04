@@ -1,3 +1,4 @@
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit2, Search, LogOut, Bell } from "lucide-react";
-import { Link } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { Plus, Trash2, Edit2, Search, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminPanel() {
@@ -121,12 +120,6 @@ export default function AdminPanel() {
             <span className="text-sm text-slate-600">
               Welcome, <strong>{user?.name || user?.email}</strong>
             </span>
-            <Link href="/admin/notifications">
-              <Button variant="outline" className="gap-2">
-                <Bell className="h-4 w-4" />
-                Notifications
-              </Button>
-            </Link>
             <Button onClick={() => logout()} variant="outline" className="gap-2">
               <LogOut className="h-4 w-4" />
               Logout
