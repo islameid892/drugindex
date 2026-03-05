@@ -44,6 +44,20 @@ export function useHomeSearch() {
   // Track search mutation
   const trackSearchMutation = trpc.analytics.trackSearch.useMutation();
 
+  // Auto-scroll to search results on desktop when query changes
+  useEffect(() => {
+    if (query.trim().length > 0) {
+      // Delay scroll to allow sticky search bar to render first
+      const timer = setTimeout(() => {
+        const resultsSection = document.querySelector('[data-search-results]');
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [query]);
+
   // Track search when user stops typing (debounced)
   useEffect(() => {
     if (!query || query.trim().length < 2) return;

@@ -21,7 +21,7 @@ export function SearchResultsSection({
   onPageChange,
 }: SearchResultsSectionProps) {
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500" data-search-results>
       {/* Results Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
