@@ -34,7 +34,7 @@ export default function InfographicsSection() {
   return (
     <>
       {/* Infographics Grid */}
-      <section className="py-16 bg-gradient-to-b from-transparent via-sky-50/50 to-transparent dark:via-slate-900/50">
+      <section className="why-section py-16 bg-gradient-to-b from-transparent via-sky-50/50 to-transparent dark:via-slate-900/50">
         <div className="container">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Why ICD-10 Search Engine?</h2>
@@ -47,7 +47,7 @@ export default function InfographicsSection() {
             {infographics.map(infographic => (
               <div
                 key={infographic.id}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-sky-100 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow"
+                className="infographic-card bg-white dark:bg-slate-800 rounded-lg border border-sky-100 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow"
               >
                 {/* Preview Image */}
                 <div className="relative h-48 bg-slate-100 overflow-hidden group">

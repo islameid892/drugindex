@@ -247,3 +247,50 @@
   scrollbar-color: #94a3b8 #f1f5f9;
   scrollbar-width: thin;
 }
+
+/* Custom Dark Mode Styles for Why Section */
+.dark .why-section h2 {
+  color: #e2e8f0;
+}
+
+.dark .why-section p {
+  color: #cbd5e1;
+}
+
+.dark .infographic-card {
+  background: #1e293b;
+  border-radius: 12px;
+  filter: brightness(0.95);
+}
+
+.dark .infographic-card h3 {
+  color: #f1f5f9;
+}
+
+.dark .infographic-card p {
+  color: #cbd5e1;
+}
+
+
+/* Custom Dark Mode Styles for Why Section */
+.dark .why-section h2 {
+  color: #e2e8f0;
+}
+
+.dark .why-section p {
+  color: #cbd5e1;
+}
+
+.dark .infographic-card {
+  background: #1e293b;
+  border-radius: 12px;
+  filter: brightness(0.95);
+}
+
+.dark .infographic-card h3 {
+  color: #f1f5f9;
+}
+
+.dark .infographic-card p {
+  color: #cbd5e1;
+}
