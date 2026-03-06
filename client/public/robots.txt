@@ -7,7 +7,6 @@ Allow: /*.js
 Allow: /*.css
 Allow: /*.json
 Allow: /data/
-Allow: /api/
 Allow: /about
 Allow: /contact
 Allow: /privacy
@@ -17,13 +16,21 @@ Allow: /database
 Allow: /tools
 Allow: /tools/image-to-pdf
 Allow: /tools/merge-pdf
-Allow: /favorites
 Allow: /drug/
 Allow: /code/
 Allow: /condition/
+
+# ✅ Block search query parameters from being indexed
+Disallow: /*?q=
+Disallow: /*?search=
+Disallow: /*?query=
+
+# Block admin/internal pages
 Disallow: /admin
 Disallow: /admin/
+Disallow: /api/
 Disallow: /404
+Disallow: /favorites
 
 # Specific rules for Google
 User-agent: Googlebot

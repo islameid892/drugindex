@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,18 @@ import { Link } from "wouter";
 export default function Favorites() {
   const { favorites, removeFavorite, clearFavorites } = useFavorites();
   const [viewMode, setViewMode] = useState<"aggregated" | "detailed">("aggregated");
+
+  // ✅ Add noindex meta tag for this user-only page
+  useEffect(() => {
+    const noindexMeta = document.createElement('meta');
+    noindexMeta.name = 'robots';
+    noindexMeta.content = 'noindex, nofollow';
+    document.head.appendChild(noindexMeta);
+
+    return () => {
+      document.head.removeChild(noindexMeta);
+    };
+  }, []);
 
   if (favorites.length === 0) {
     return (
