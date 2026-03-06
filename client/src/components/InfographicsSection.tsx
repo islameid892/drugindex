@@ -34,11 +34,11 @@ export default function InfographicsSection() {
   return (
     <>
       {/* Infographics Grid */}
-      <section className="py-16 bg-gradient-to-b from-transparent via-sky-50/50 to-transparent">
+      <section className="py-16 bg-gradient-to-b from-transparent via-sky-50/50 to-transparent dark:via-slate-900/50">
         <div className="container">
           <div className="text-center mb-12 space-y-4">
-            <h2 className="text-4xl font-bold text-slate-900">Why ICD-10 Search Engine?</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Why ICD-10 Search Engine?</h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
               See how our platform transforms healthcare coding and insurance approval processes
             </p>
           </div>
@@ -47,7 +47,7 @@ export default function InfographicsSection() {
             {infographics.map(infographic => (
               <div
                 key={infographic.id}
-                className="bg-white rounded-lg border border-sky-100 overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-slate-800 rounded-lg border border-sky-100 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-shadow"
               >
                 {/* Preview Image */}
                 <div className="relative h-48 bg-slate-100 overflow-hidden group">
@@ -70,10 +70,10 @@ export default function InfographicsSection() {
 
                 {/* Content */}
                 <div className="p-6 space-y-4">
-                  <h3 className="font-semibold text-slate-900 line-clamp-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-2">
                     {infographic.title}
                   </h3>
-                  <p className="text-sm text-slate-600 line-clamp-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
                     {infographic.description}
                   </p>
                   <button
@@ -96,49 +96,49 @@ export default function InfographicsSection() {
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedId(null)}
         >
-          <div
-            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto relative"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedId(null)}
-              className="sticky top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow float-right m-4"
+            <div
+              className="bg-white dark:bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto relative"
+              onClick={e => e.stopPropagation()}
             >
-              <X className="h-6 w-6 text-slate-600" />
-            </button>
-
-            {/* Title */}
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-2xl font-bold text-slate-900">
-                {selected.title}
-              </h2>
-              <p className="text-slate-600 mt-2">
-                {selected.description}
-              </p>
-            </div>
-
-            {/* Image */}
-            <div className="p-6 bg-slate-50">
-              <img
-                src={selected.image}
-                alt={selected.alt}
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-slate-200 bg-white flex justify-between items-center">
-              <p className="text-sm text-slate-600">
-                Click outside or press the X button to close
-              </p>
+              {/* Close Button */}
               <button
                 onClick={() => setSelectedId(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg font-medium transition-colors"
+                className="sticky top-4 right-4 z-10 bg-white dark:bg-slate-700 rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow float-right m-4"
               >
-                Close
+                <X className="h-6 w-6 text-slate-600 dark:text-slate-300" />
               </button>
-            </div>
+
+              {/* Title */}
+              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {selected.title}
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  {selected.description}
+                </p>
+              </div>
+
+              {/* Image */}
+              <div className="p-6 bg-slate-50 dark:bg-slate-900">
+                <img
+                  src={selected.image}
+                  alt={selected.alt}
+                  className="w-full h-auto rounded-lg"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Click outside or press the X button to close
+                </p>
+                <button
+                  onClick={() => setSelectedId(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
           </div>
         </div>
       )}
