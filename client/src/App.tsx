@@ -156,7 +156,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="light"
-        // switchable
+        switchable
       >
         <FavoritesProvider>
           <TooltipProvider>

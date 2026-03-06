@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Pill, Activity, Database, BarChart3, Heart } from "lucide-react";
+import { Stethoscope, Pill, Activity, Database, BarChart3, Heart, Moon, Sun } from "lucide-react";
 import { Link } from "wouter";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface HomeHeaderProps {
   stats: {
@@ -14,6 +15,7 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
   const { favorites } = useFavorites();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm">
@@ -51,6 +53,20 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
             <Button
               variant="outline"
               size="sm"
+              onClick={toggleTheme}
+              className="gap-2"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onAnalyticsClick}
               className="gap-2 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950"
             >
@@ -79,6 +95,19 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
               <Database className="h-3 w-3 text-purple-600" />
               <span className="font-semibold text-purple-900 dark:text-purple-100 text-xs">{stats.codes}</span>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleTheme}
+              className="h-8 px-2"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-3 w-3" />
+              ) : (
+                <Moon className="h-3 w-3" />
+              )}
+            </Button>
             <Button
               variant="outline"
               size="sm"
