@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
 import { AdvancedSearchFAB } from "./components/AdvancedSearchFAB";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
+import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -164,6 +165,7 @@ function App() {
             <Router />
             <AdvancedSearchFAB />
             <PWAInstallPrompt />
+            <PWAUpdateNotification />
           </TooltipProvider>
         </FavoritesProvider>
       </ThemeProvider>
