@@ -1,14 +1,14 @@
-import { useEffect, useState, useRef, useCallback } from “react”;
-import { trpc } from “@/lib/trpc”;
-import { Button } from “@/components/ui/button”;
-import { Card, CardContent, CardHeader, CardTitle } from “@/components/ui/card”;
-import { Tabs, TabsContent, TabsList, TabsTrigger } from “@/components/ui/tabs”;
+import { useEffect, useState, useRef, useCallback } from "react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 Search, Users, Zap, Target, Database, Pill,
 Activity, TrendingUp, RefreshCw, ArrowLeft,
 Clock, BarChart3, CheckCircle2, XCircle,
-} from “lucide-react”;
-import { useLocation } from “wouter”;
+} from "lucide-react";
+import { useLocation } from "wouter";
 
 // Types
 interface WeeklyTrend  { date: string; count: number }
@@ -46,15 +46,15 @@ return value;
 }
 
 // Sparkline SVG
-function Sparkline({ data, color = “#38bdf8” }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = "#38bdf8" }: { data: number[]; color?: string }) {
 if (!data || data.length < 2) return null;
-const max = Math.max(…data, 1);
+const max = Math.max(...data, 1);
 const W = 72; const H = 34;
-const pts = data.map((v, i) => `${(i / (data.length - 1)) * W},${H - (v / max) * (H - 2) - 1}`).join(” “);
+const pts = data.map((v, i) => `${(i / (data.length - 1)) * W},${H - (v / max) * (H - 2) - 1}`).join(" ");
 const area = `M0,${H} ${pts.split(" ").map((p) => `L${p}`).join(" ")} L${W},${H} Z`;
 const id = `sg${color.replace(/[^a-z0-9]/gi, "")}`;
 return (
-<svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className=“opacity-60 shrink-0”>
+<svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="opacity-60 shrink-0">
 <defs>
 <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
 <stop offset="0%" stopColor={color} stopOpacity="0.35" />
@@ -69,7 +69,7 @@ return (
 
 // Coverage progress bar
 function CoverageBar({ value }: { value: number }) {
-const color = value >= 80 ? “#22c55e” : value >= 50 ? “#f59e0b” : “#ef4444”;
+const color = value >= 80 ? "#22c55e" : value >= 50 ? "#f59e0b" : "#ef4444";
 return (
 <div className="mt-3 space-y-1">
 <div className="flex justify-between text-xs text-slate-400">
@@ -77,7 +77,7 @@ return (
 <span style={{ color }}>{value}%</span>
 </div>
 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-<div className=“h-full rounded-full transition-all duration-1000 ease-out” style={{ width: `${value}%`, background: color }} />
+<div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${value}%`, background: color }} />
 </div>
 </div>
 );
@@ -133,7 +133,7 @@ onSuccess: () => { setLastUpdated(new Date()); setCountdown(REFRESH_INTERVAL); }
 
 const data = query.data as AnalyticsData | undefined;
 
-// ✅ مفيش auth guard — الصفحة عامة للكل
+// ✅ مفيش auth guard - الصفحة عامة للكل
 
 useEffect(() => {
 if (countdownRef.current) clearInterval(countdownRef.current);
@@ -168,10 +168,10 @@ return (
 <div className="container py-8 space-y-6">
 <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded w-64 animate-pulse" />
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-{[…Array(4)].map((*, i) => <SkeletonCard key={i} />)}
+{[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
 </div>
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-{[…Array(4)].map((*, i) => <SkeletonCard key={i} />)}
+{[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
 </div>
 </div>
 </div>
@@ -192,7 +192,7 @@ return (
 );
 }
 
-const maxTrend = Math.max(…(data.weeklyTrends?.map((t) => t.count) ?? [1]), 1);
+const maxTrend = Math.max(...(data.weeklyTrends?.map((t) => t.count) ?? [1]), 1);
 
 return (
 <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -444,11 +444,7 @@ return (
       </TabsContent>
 
     </Tabs>
-
   </div>
-
 </div>
-```
-
 );
 }
