@@ -31,16 +31,25 @@ const prevRef = useRef(0);
 useEffect(() => {
 const start = prevRef.current;
 const diff = target - start;
-if (diff === 0) return;
+if (diff === 0) {
+setValue(target);
+return;
+}
 const t0 = performance.now();
+let animationId: number;
 const tick = (now: number) => {
 const p = Math.min((now - t0) / duration, 1);
 const ease = 1 - Math.pow(1 - p, 3);
 setValue(Math.round(start + diff * ease));
-if (p < 1) requestAnimationFrame(tick);
-else prevRef.current = target;
+if (p < 1) {
+animationId = requestAnimationFrame(tick);
+} else {
+prevRef.current = target;
+setValue(target);
+}
 };
-requestAnimationFrame(tick);
+animationId = requestAnimationFrame(tick);
+return () => cancelAnimationFrame(animationId);
 }, [target, duration]);
 return value;
 }
