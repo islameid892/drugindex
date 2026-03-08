@@ -212,10 +212,16 @@ export const appRouter = router({
           .where(gte(searchAnalytics.createdAt, sql`DATE_SUB(NOW(), INTERVAL 7 DAY)`));
         const searchesThisWeek = Number(weekSearchesResult[0]?.count) || 0;
 
+        // Get today's start time in UTC
+        const todayStart = new Date();
+        todayStart.setUTCHours(0, 0, 0, 0);
+        const todayEnd = new Date(todayStart);
+        todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
+        
         const todaySearchesResult = await database
           .select({ count: count() })
           .from(searchAnalytics)
-          .where(sql`DATE(${searchAnalytics.createdAt}) = CURDATE()`);
+          .where(sql`${searchAnalytics.createdAt} >= ${todayStart} AND ${searchAnalytics.createdAt} < ${todayEnd}`);
         const searchesToday = Number(todaySearchesResult[0]?.count) || 0;
 
         // 2. Registered Users
