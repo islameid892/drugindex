@@ -1,0 +1,9 @@
+{
+  "query": "SELECT DISTINCT indication, COUNT(*) as drug_count\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''\nGROUP BY indication\nHAVING COUNT(CASE WHEN icd_codes_raw IS NULL OR icd_codes_raw = '' OR icd_codes_raw = '[]' THEN 1 END) > 0\nLIMIT 50",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT indication, COUNT(*) as drug_count\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''\nGROUP BY indication\nHAVING COUNT(CASE WHEN icd_codes_raw IS NULL OR icd_codes_raw = '' OR icd_codes_raw = '[]' THEN 1 END) > 0\nLIMIT 50",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1598
+}

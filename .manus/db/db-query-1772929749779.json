@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as count_empty, \n       COUNT(CASE WHEN icd_codes_raw IS NULL OR icd_codes_raw = '' OR icd_codes_raw = '[]' THEN 1 END) as count_no_codes\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as count_empty, \n       COUNT(CASE WHEN icd_codes_raw IS NULL OR icd_codes_raw = '' OR icd_codes_raw = '[]' THEN 1 END) as count_no_codes\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''",
+  "rows": [
+    {
+      "count_empty": "56377",
+      "count_no_codes": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "count_empty\tcount_no_codes\n56377\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}

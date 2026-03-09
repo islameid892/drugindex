@@ -11,9 +11,10 @@ interface HomeHeaderProps {
     codes: number;
   };
   onAnalyticsClick: () => void;
+  isStale?: boolean;
 }
 
-export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
+export function HomeHeader({ stats, onAnalyticsClick, isStale = false }: HomeHeaderProps) {
   const { favorites } = useFavorites();
   const { theme, toggleTheme } = useTheme();
 
@@ -34,17 +35,17 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
           
           {/* Desktop Stats and Favorites */}
           <div className="flex items-center gap-3 text-xs font-medium text-foreground hidden md:flex">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Pill className="h-4 w-4 text-sky-600" />
               <span className="font-semibold text-sky-900 dark:text-sky-100">{stats.medications.toLocaleString()}</span>
               <span className="text-sky-700 dark:text-sky-300">Meds</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Activity className="h-4 w-4 text-emerald-600" />
               <span className="font-semibold text-emerald-900 dark:text-emerald-100">{stats.conditions.toLocaleString()}</span>
               <span className="text-emerald-700 dark:text-emerald-300">Conditions</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Database className="h-4 w-4 text-purple-600" />
               <span className="font-semibold text-purple-900 dark:text-purple-100">{stats.codes.toLocaleString()}</span>
               <span className="text-purple-700 dark:text-purple-300">Codes</span>

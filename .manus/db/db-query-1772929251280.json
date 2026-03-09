@@ -1,0 +1,112 @@
+{
+  "query": "SELECT de.indication, de.icd_codes_raw, COUNT(*) as count\nFROM drug_entries de\nGROUP BY de.indication, de.icd_codes_raw\nORDER BY count DESC\nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT de.indication, de.icd_codes_raw, COUNT(*) as count\nFROM drug_entries de\nGROUP BY de.indication, de.icd_codes_raw\nORDER BY count DESC\nLIMIT 20",
+  "rows": [
+    {
+      "indication": "HYPERTENSION",
+      "icd_codes_raw": "I10, I11, I12, I13, I15",
+      "count": "613"
+    },
+    {
+      "indication": "CORONARY ARTERY DISEASE",
+      "icd_codes_raw": "I20, I25",
+      "count": "566"
+    },
+    {
+      "indication": "PAIN MANAGEMENT IN CANCER PATIENTS",
+      "icd_codes_raw": "R52, G89.3",
+      "count": "564"
+    },
+    {
+      "indication": "Pyogenic Arthritis",
+      "icd_codes_raw": "M00",
+      "count": "504"
+    },
+    {
+      "indication": "NON-ST WAVE ELEVATED MYOCARDIAL INFARCTION (NSTEMI)",
+      "icd_codes_raw": "I21.4",
+      "count": "501"
+    },
+    {
+      "indication": "POSTOPERATIVE PAIN",
+      "icd_codes_raw": "G89.18",
+      "count": "484"
+    },
+    {
+      "indication": "OSTEOMYELITIS",
+      "icd_codes_raw": "M86",
+      "count": "468"
+    },
+    {
+      "indication": "PSORIATIC ARTHRITIS",
+      "icd_codes_raw": "M07, L40.5",
+      "count": "459"
+    },
+    {
+      "indication": "LOW BACK PAIN",
+      "icd_codes_raw": "M54.5",
+      "count": "458"
+    },
+    {
+      "indication": "TRAVEL RELATED INFECTIONS-TREATMENT",
+      "icd_codes_raw": "B06, B50, B51, B52, B53, B54, B55, B26, A00, A01.0, A39, A83.0, A95, A97, J09, J11, B34.2, B97.2, A35, A36, A37.0, A20, A92, A80, A27, A15, A16, A22",
+      "count": "455"
+    },
+    {
+      "indication": "BACTERIAL TONSILLOPHARYNGITIS TREATMENT AND PREVENTION",
+      "icd_codes_raw": "J03, J35.0",
+      "count": "455"
+    },
+    {
+      "indication": "REACTIVE ARTHROPATHY, UNSPECIFIED",
+      "icd_codes_raw": "M07.60, M02.9",
+      "count": "449"
+    },
+    {
+      "indication": "SINUSITIS",
+      "icd_codes_raw": "J01, J32",
+      "count": "443"
+    },
+    {
+      "indication": "HOSPITAL AND VENTILATER ACQUIRED PNEUMONIA",
+      "icd_codes_raw": "J18.9, J95. 851",
+      "count": "431"
+    },
+    {
+      "indication": "RENAL TRANSPLANT",
+      "icd_codes_raw": "Z94.0",
+      "count": "420"
+    },
+    {
+      "indication": "INTRA-ABDOMINAL INFECTIONS",
+      "icd_codes_raw": "K35, K81, K83, K57, K63, K26, S36",
+      "count": "412"
+    },
+    {
+      "indication": "RENAL AND URETERIC STONES",
+      "icd_codes_raw": "N20, N20.1, N20.2, N20.9, Q63.82, N23",
+      "count": "407"
+    },
+    {
+      "indication": "HUMAN IMMUNODEFICIENCY VIRUS",
+      "icd_codes_raw": "B20",
+      "count": "401"
+    },
+    {
+      "indication": "ST-WAVE ELEVATED MYOCARDIAL INFARCTION (STEMI)",
+      "icd_codes_raw": "I21.0, I21.1, I21.2, I21.3",
+      "count": "399"
+    },
+    {
+      "indication": "MARGINAL ZONE LYMPHOMA",
+      "icd_codes_raw": "C88.4",
+      "count": "396"
+    }
+  ],
+  "messages": [
+    "ENTEROPATHIC ARTHROPATHIES, UNSPECIFIED SITE"
+  ],
+  "stdout": "indication\ticd_codes_raw\tcount\nHYPERTENSION\tI10, I11, I12, I13, I15\t613\nCORONARY ARTERY DISEASE\tI20, I25\t566\nPAIN MANAGEMENT IN CANCER PATIENTS\tR52, G89.3\t564\nPyogenic Arthritis\tM00\t504\nNON-ST WAVE ELEVATED MYOCARDIAL INFARCTION (NSTEMI)\tI21.4\t501\nPOSTOPERATIVE PAIN\tG89.18\t484\nOSTEOMYELITIS\tM86\t468\nPSORIATIC ARTHRITIS\tM07, L40.5\t459\nLOW BACK PAIN\tM54.5\t458\nTRAVEL RELATED INFECTIONS-TREATMENT\tB06, B50, B51, B52, B53, B54, B55, B26, A00, A01.0, A39, A83.0, A95, A97, J09, J11, B34.2, B97.2, A35, A36, A37.0, A20, A92, A80, A27, A15, A16, A22\t455\nBACTERIAL TONSILLOPHARYNGITIS TREATMENT AND PREVENTION\tJ03, J35.0\t455\nENTEROPATHIC ARTHROPATHIES, UNSPECIFIED SITE\n\nREACTIVE ARTHROPATHY, UNSPECIFIED\tM07.60, M02.9\t449\nSINUSITIS\tJ01, J32\t443\nHOSPITAL AND VENTILATER ACQUIRED PNEUMONIA\tJ18.9, J95. 851\t431\nRENAL TRANSPLANT\tZ94.0\t420\nINTRA-ABDOMINAL INFECTIONS\tK35, K81, K83, K57, K63, K26, S36\t412\nRENAL AND URETERIC STONES\tN20, N20.1, N20.2, N20.9, Q63.82, N23\t407\nHUMAN IMMUNODEFICIENCY VIRUS\tB20\t401\nST-WAVE ELEVATED MYOCARDIAL INFARCTION (STEMI)\tI21.0, I21.1, I21.2, I21.3\t399\nMARGINAL ZONE LYMPHOMA\tC88.4\t396\n",
+  "stderr": "",
+  "execution_time_ms": 1622
+}

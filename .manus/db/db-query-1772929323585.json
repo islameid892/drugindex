@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COUNT(*) as total, \n  SUM(CASE WHEN icd_codes_raw = '' THEN 1 ELSE 0 END) as empty_codes,\n  SUM(CASE WHEN icd_codes_raw IS NULL THEN 1 ELSE 0 END) as null_codes,\n  SUM(CASE WHEN icd_codes_raw != '' AND icd_codes_raw IS NOT NULL THEN 1 ELSE 0 END) as with_codes\nFROM drug_entries",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total, \n  SUM(CASE WHEN icd_codes_raw = '' THEN 1 ELSE 0 END) as empty_codes,\n  SUM(CASE WHEN icd_codes_raw IS NULL THEN 1 ELSE 0 END) as null_codes,\n  SUM(CASE WHEN icd_codes_raw != '' AND icd_codes_raw IS NOT NULL THEN 1 ELSE 0 END) as with_codes\nFROM drug_entries",
+  "rows": [
+    {
+      "total": "56377",
+      "empty_codes": "0",
+      "null_codes": "0",
+      "with_codes": "56377"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tempty_codes\tnull_codes\twith_codes\n56377\t0\t0\t56377\n",
+  "stderr": "",
+  "execution_time_ms": 1623
+}
