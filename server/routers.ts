@@ -8,6 +8,7 @@ import { bulkRouter } from "./routers/bulk";
 import { ocrRouter } from "./routers/ocr";
 import { toolsRouter } from "./routers/tools";
 import { advancedSearchRouter } from "./routers/advancedSearch";
+import { monitoringRouter } from "./routers/monitoring";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -45,6 +46,7 @@ export const appRouter = router({
   ocr: ocrRouter,
   tools: toolsRouter,
   advancedSearch: advancedSearchRouter,
+  monitoring: monitoringRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
