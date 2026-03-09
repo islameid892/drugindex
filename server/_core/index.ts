@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import net from "net";
+import compression from "compression";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -114,6 +115,18 @@ async function startServer() {
     }
   });
 
+  // Compression middleware - gzip compression for responses
+  app.use(compression({
+    level: 6,
+    threshold: 1024,
+    filter: (req: Request, res: Response) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  }));
+
   // Apply rate limiting
   app.use(limiter);
 
@@ -137,7 +150,7 @@ async function startServer() {
   // Apply stricter rate limiting to API endpoints
   app.use('/api/', apiLimiter);
 
-  // tRPC API
+  // tRPC API with response optimization
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -147,6 +160,8 @@ async function startServer() {
         return {
           headers: {
             'content-type': 'application/json',
+            'cache-control': 'public, max-age=300',
+            'vary': 'Accept-Encoding',
           },
         };
       },
@@ -165,6 +180,8 @@ async function startServer() {
     res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     // Permissions Policy
     res.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    // Vary header for cache
+    res.header('Vary', 'Accept-Encoding');
     next();
   });
 
@@ -193,6 +210,8 @@ async function startServer() {
     console.log('✅ HSTS enabled');
     console.log('✅ Input validation and sanitization');
     console.log('✅ Trust proxy enabled for accurate rate limiting');
+    console.log('✅ Response compression (gzip) enabled');
+    console.log('✅ Cache control headers configured');
   });
 }
 
