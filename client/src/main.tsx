@@ -8,17 +8,40 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
-// Optimized QueryClient configuration for better performance
+// Optimized QueryClient configuration for better performance and stability
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
-      retry: 1,
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        // Retry up to 3 times for other errors
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => {
+        // Exponential backoff: 1s, 2s, 4s
+        return Math.min(1000 * 2 ** attemptIndex, 30000);
+      },
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true, // Refetch when connection restored
+      refetchOnMount: 'stale', // Refetch if data is stale on mount
     },
     mutations: {
-      retry: 1,
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        // Retry up to 2 times for mutations
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => {
+        return Math.min(1000 * 2 ** attemptIndex, 30000);
+      },
     },
   },
 });
@@ -33,6 +56,17 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   window.location.href = getLoginUrl();
 };
+
+// Monitor network connectivity
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    console.log('[Network] Connection restored');
+    queryClient.refetchQueries();
+  });
+  window.addEventListener('offline', () => {
+    console.log('[Network] Connection lost');
+  });
+}
 
 // Error handling with optimized logging
 if (process.env.NODE_ENV !== 'production') {
