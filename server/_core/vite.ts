@@ -58,7 +58,20 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static files with proper cache headers and ETag
+  app.use(express.static(distPath, {
+    maxAge: '1d', // Cache for 1 day
+    etag: true, // Enable ETag
+    lastModified: true, // Enable Last-Modified header
+    setHeaders: (res, filePath) => {
+      // Cache busting for versioned assets
+      if (filePath.match(/\.[a-f0-9]{8}\.(js|css|png|jpg|gif|svg|woff|woff2)$/)) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for versioned files
+      } else {
+        res.set('Cache-Control', 'public, max-age=86400'); // 1 day for other files
+      }
+    },
+  }));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {

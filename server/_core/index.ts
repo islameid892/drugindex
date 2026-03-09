@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
+import type { RateLimitRequestHandler } from "express-rate-limit";
 import { createServer } from "http";
 import net from "net";
 import compression from "compression";
@@ -33,21 +34,27 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// Rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Increased from 100 to 300 requests per windowMs
+// Rate limiting middleware - ACTUALLY ENFORCE LIMITS
+const limiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 30, // 30 requests per minute globally
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers
-  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many requests',
+      retryAfter: (req as any).rateLimit?.resetTime,
+    });
+  },
 });
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Increased from 50 to 200 requests per windowMs
+const apiLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 20, // 20 API requests per minute
   message: 'Too many API requests from this IP, please try again later.',
-  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 async function startServer() {
@@ -183,6 +190,19 @@ async function startServer() {
     // Vary header for cache
     res.header('Vary', 'Accept-Encoding');
     next();
+  });
+
+  // Health check endpoint - MUST be AFTER rate limiting so it's rate limited too
+  // (moved below rate limiting middleware)
+
+  // Health check endpoint - NOW RATE LIMITED
+  app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'healthy',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+    });
   });
 
   // development mode uses Vite, production mode uses static files
