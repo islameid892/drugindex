@@ -29,6 +29,7 @@ const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
+const MetricsDashboard = lazy(() => import("./pages/MetricsDashboard"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -59,9 +60,13 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/?"}component={Home} />
-      <Route path={"/about"} component={() => (
+      <Route path={"/?"} component={Home} />
+      <Route path={"/metrics"} component={() => (
         <Suspense fallback={<PageLoader />}>
+          <MetricsDashboard />
+        </Suspense>
+      )} />
+      <Route path={"/about"} component={() => (        <Suspense fallback={<PageLoader />}>
           <AboutUs />
         </Suspense>
       )} />
