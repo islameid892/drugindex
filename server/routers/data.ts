@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, searchProcedure, analyticsProcedure } from "../_core/trpc";
 import { z } from "zod";
 import {
   searchMedications,
@@ -34,12 +34,12 @@ const getCacheStats = () => ({
 });
 
 export const dataRouter = router({
-  // Cache stats (for monitoring)
-  cacheStats: publicProcedure.query(() => getCacheStats()),
+  // Cache stats (for monitoring) - with rate limiting
+  cacheStats: analyticsProcedure.query(() => getCacheStats()),
 
   // Drug search (replaces old medications search)
   medications: router({
-    search: publicProcedure
+    search: searchProcedure
       .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
       .query(async ({ input }) => {
         return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
@@ -127,8 +127,8 @@ export const dataRouter = router({
     }),
 
 
-  // Main search: grouped by scientific name (with caching)
-  searchGrouped: publicProcedure
+  // Main search: grouped by scientific name (with caching and rate limiting)
+  searchGrouped: searchProcedure
     .input(z.object({
       query: z.string().min(1).max(200),
       limit: z.number().optional(),
@@ -152,8 +152,8 @@ export const dataRouter = router({
     }),
 
 
-  // Stats (with caching)
-  stats: publicProcedure.query(async () => {
+  // Stats (with caching and rate limiting)
+  stats: analyticsProcedure.query(async () => {
     const cacheKey = 'stats:all';
     
     // Check cache first
@@ -172,8 +172,8 @@ export const dataRouter = router({
   }),
 
 
-  // Dashboard stats (protected, with caching)
-  dashboardStats: protectedProcedure.query(async () => {
+  // Dashboard stats (protected, with caching and rate limiting)
+  dashboardStats: protectedProcedure.query(async ({ ctx }) => {
     const cacheKey = 'stats:dashboard';
     
     // Check cache first
