@@ -12,9 +12,9 @@ export function useHomeSearch() {
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
   const lastTrackedQuery = useRef('');
 
-  // Debounce query for API calls
+  // Debounce query for API calls (350ms as per optimization plan)
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), 400);
+    const timer = setTimeout(() => setDebouncedQuery(query), 350);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -24,9 +24,16 @@ export function useHomeSearch() {
   }, [query]);
 
   // Grouped search from API (server-side) - groups results by scientific name
+  // Skip API call if query is less than 2 characters
   const searchQuery = trpc.data.searchGrouped.useQuery(
     { query: debouncedQuery, limit: 30 },
-    { enabled: debouncedQuery.trim().length >= 1, staleTime: 30000 }
+    { 
+      enabled: debouncedQuery.trim().length >= 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      gcTime: 10 * 60 * 1000,   // 10 minutes garbage collection
+      retry: 2,                  // Retry failed requests
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    }
   );
 
   const searchLoading = searchQuery.isFetching;
@@ -70,14 +77,17 @@ export function useHomeSearch() {
         resultCount: groupedResults.length,
         responseTime: 0,
       });
-    }, 1500);
+    }, 1000); // Reduced from 1500ms to 1000ms
 
     return () => clearTimeout(timer);
   }, [query, groupedResults.length]);
 
   const handleQueryChange = (val: string) => {
-    setQuery(val);
-    setShowSuggestions(true);
+    // Trim and update query
+    const trimmedVal = val.trim();
+    setQuery(trimmedVal);
+    // Show suggestions only if query is not empty
+    setShowSuggestions(trimmedVal.length > 0);
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
