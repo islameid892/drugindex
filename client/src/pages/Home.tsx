@@ -68,6 +68,7 @@ export default function Home() {
       {/* Header */}
       <HomeHeader 
         stats={stats} 
+        onAnalyticsClick={() => setShowDashboard(true)}
         isStale={isStale}
       />
 
