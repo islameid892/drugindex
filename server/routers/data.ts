@@ -16,8 +16,6 @@ import {
   browseConditionsCount,
   searchGroupedByScientificName,
 } from "../db";
-import { searchCache, analyticsCache } from "../cache";
-import { liveAnalytics } from "../liveAnalytics";
 import { drugEntries } from "../../drizzle/schema";
 
 const searchQuerySchema = z.object({
@@ -28,25 +26,14 @@ const searchQuerySchema = z.object({
     .transform((val) => val.replace(/[<>"']/g, "")),
 });
 
-// Add cache stats endpoint for monitoring
-const getCacheStats = () => ({
-  search: searchCache.getStats(),
-  analytics: analyticsCache.getStats(),
-});
-
 export const dataRouter = router({
-  // Cache stats (for monitoring) - with rate limiting
-  cacheStats: analyticsProcedure.query(() => getCacheStats()),
 
   // Drug search (replaces old medications search)
   medications: router({
     search: searchProcedure
       .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
-      .query(async ({ input, ctx }) => {
-        const results = await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
-        // Log search to analytics
-        await liveAnalytics.logSearch(input.query, results.length, ctx.user?.id);
-        return results;
+      .query(async ({ input }) => {
+        return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
       }),
 
     getAll: publicProcedure
@@ -76,11 +63,8 @@ export const dataRouter = router({
 
     search: publicProcedure
       .input(searchQuerySchema)
-      .query(async ({ input, ctx }) => {
-        const results = await searchCodes(input.query);
-        // Log search to analytics
-        await liveAnalytics.logSearch(input.query, results.length, ctx.user?.id);
-        return results;
+      .query(async ({ input }) => {
+        return await searchCodes(input.query);
       }),
 
     getById: publicProcedure
@@ -141,60 +125,18 @@ export const dataRouter = router({
       limit: z.number().optional(),
     }))
     .query(async ({ input }) => {
-      const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
-      
-      // Check cache first
-      const cached = searchCache.get(cacheKey);
-      if (cached) {
-        return cached;
-      }
-      
-      // If not in cache, fetch from database
-      const results = await searchGroupedByScientificName(input.query, input.limit ?? 30);
-      
-      // Store in cache for future requests
-      searchCache.set(cacheKey, results);
-      
-      return results;
+      return await searchGroupedByScientificName(input.query, input.limit ?? 30);
     }),
 
 
-  // Stats (with caching and rate limiting)
+  // Stats
   stats: analyticsProcedure.query(async () => {
-    const cacheKey = 'stats:all';
-    
-    // Check cache first
-    const cached = analyticsCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-    
-    // If not in cache, fetch from database
-    const stats = await getStats();
-    
-    // Store in cache
-    analyticsCache.set(cacheKey, stats);
-    
-    return stats;
+    return await getStats();
   }),
 
 
-  // Dashboard stats (protected, with caching and rate limiting)
+  // Dashboard stats (protected)
   dashboardStats: protectedProcedure.query(async ({ ctx }) => {
-    const cacheKey = 'stats:dashboard';
-    
-    // Check cache first
-    const cached = analyticsCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-    
-    // If not in cache, fetch from database
-    const stats = await getDashboardStats();
-    
-    // Store in cache
-    analyticsCache.set(cacheKey, stats);
-    
-    return stats;
+    return await getDashboardStats();
   }),
 });
