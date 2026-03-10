@@ -10,11 +10,11 @@ interface HomeHeaderProps {
     conditions: number;
     codes: number;
   };
-  onAnalyticsClick: () => void;
+
   isStale?: boolean;
 }
 
-export function HomeHeader({ stats, onAnalyticsClick, isStale = false }: HomeHeaderProps) {
+export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
   const { favorites } = useFavorites();
   const { theme, toggleTheme } = useTheme();
 
@@ -64,15 +64,6 @@ export function HomeHeader({ stats, onAnalyticsClick, isStale = false }: HomeHea
                 <Moon className="h-4 w-4" />
               )}
               <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAnalyticsClick}
-              className="gap-2 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
             </Button>
             <Link href="/metrics">
               <Button
