@@ -17,6 +17,7 @@ import {
   searchGroupedByScientificName,
 } from "../db";
 import { searchCache, analyticsCache } from "../cache";
+import { liveAnalytics } from "../liveAnalytics";
 import { drugEntries } from "../../drizzle/schema";
 
 const searchQuerySchema = z.object({
@@ -41,8 +42,11 @@ export const dataRouter = router({
   medications: router({
     search: searchProcedure
       .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
-      .query(async ({ input }) => {
-        return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
+      .query(async ({ input, ctx }) => {
+        const results = await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
+        // Log search to analytics
+        await liveAnalytics.logSearch(input.query, results.length, ctx.user?.id);
+        return results;
       }),
 
     getAll: publicProcedure
@@ -72,8 +76,11 @@ export const dataRouter = router({
 
     search: publicProcedure
       .input(searchQuerySchema)
-      .query(async ({ input }) => {
-        return await searchCodes(input.query);
+      .query(async ({ input, ctx }) => {
+        const results = await searchCodes(input.query);
+        // Log search to analytics
+        await liveAnalytics.logSearch(input.query, results.length, ctx.user?.id);
+        return results;
       }),
 
     getById: publicProcedure
