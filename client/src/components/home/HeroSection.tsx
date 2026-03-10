@@ -25,13 +25,14 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-50 via-emerald-50 to-sky-100 dark:from-sky-950 dark:via-emerald-950 dark:to-sky-900 border border-sky-100 dark:border-sky-800 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700" id="hero-section">
-      {/* Background Image */}
+      {/* Background Image - Optimized with lazy loading */}
       <div 
         className="absolute inset-0 opacity-40"
         style={{
           backgroundImage: "url('https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/BxzzjCwZPqngcueX.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          willChange: 'background-image',
         }}
       />
       
