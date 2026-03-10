@@ -51,7 +51,7 @@ const limiter: RateLimitRequestHandler = rateLimit({
 
 const apiLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 20, // 20 API requests per minute
+  max: 60, // 60 API requests per minute
   message: 'Too many API requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -134,6 +134,16 @@ async function startServer() {
     },
   }));
 
+  // Health check endpoint - BEFORE rate limiting
+  app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'healthy',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+    });
+  });
+
   // Apply rate limiting
   app.use(limiter);
 
@@ -192,18 +202,7 @@ async function startServer() {
     next();
   });
 
-  // Health check endpoint - MUST be AFTER rate limiting so it's rate limited too
-  // (moved below rate limiting middleware)
 
-  // Health check endpoint - NOW RATE LIMITED
-  app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'healthy',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-    });
-  });
 
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
