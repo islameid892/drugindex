@@ -34,27 +34,56 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// Rate limiting middleware - ACTUALLY ENFORCE LIMITS
-const limiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 30, // 30 requests per minute globally
+// Rate limiting middleware - PROFESSIONAL IMPLEMENTATION
+const globalLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minute window
+  max: 100, // 100 requests per 15 minutes globally
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true, // Return rate limit info in the RateLimit-* headers
-  legacyHeaders: false, // Disable the X-RateLimit-* headers
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path === '/health' || req.path.startsWith('/public'),
   handler: (req, res) => {
+    const rateLimit = (req as any).rateLimit;
     res.status(429).json({
       error: 'Too many requests',
-      retryAfter: (req as any).rateLimit?.resetTime,
+      message: 'You have exceeded the rate limit. Please try again later.',
+      retryAfter: rateLimit?.resetTime,
+      remaining: rateLimit?.remaining || 0,
     });
   },
 });
 
 const apiLimiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 60, // 60 API requests per minute
-  message: 'Too many API requests from this IP, please try again later.',
+  windowMs: 1 * 60 * 1000,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === '/health',
+  handler: (req, res) => {
+    const rateLimit = (req as any).rateLimit;
+    res.status(429).json({
+      error: 'Too many API requests',
+      message: 'API rate limit exceeded. Please try again later.',
+      retryAfter: rateLimit?.resetTime,
+      remaining: rateLimit?.remaining || 0,
+    });
+  },
+});
+
+const searchLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    const rateLimit = (req as any).rateLimit;
+    res.status(429).json({
+      error: 'Search rate limit exceeded',
+      message: 'Too many search requests. Please try again later.',
+      retryAfter: rateLimit?.resetTime,
+      remaining: rateLimit?.remaining || 0,
+    });
+  },
 });
 
 async function startServer() {
@@ -144,8 +173,8 @@ async function startServer() {
     });
   });
 
-  // Apply rate limiting
-  app.use(limiter);
+  // Apply global rate limiting
+  app.use(globalLimiter);
 
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
@@ -166,6 +195,11 @@ async function startServer() {
 
   // Apply stricter rate limiting to API endpoints
   app.use('/api/', apiLimiter);
+
+  // Apply stricter rate limiting to search endpoints
+  app.use('/api/trpc/data.searchByScientificName', searchLimiter);
+  app.use('/api/trpc/data.searchByTradeNames', searchLimiter);
+  app.use('/api/trpc/data.searchByIcdCodes', searchLimiter);
 
   // tRPC API with response optimization
   app.use(
@@ -223,7 +257,10 @@ async function startServer() {
     console.log('Security features enabled:');
     console.log('✅ Helmet security headers');
     console.log('✅ CORS protection');
-    console.log('✅ Rate limiting (100 req/15min global, 50 req/15min API)');
+    console.log('✅ Rate limiting:');
+    console.log('   - Global: 100 req/15min');
+    console.log('   - API: 60 req/min');
+    console.log('   - Search: 30 req/min');
     console.log('✅ XSS protection');
     console.log('✅ NoSQL injection protection');
     console.log('✅ HSTS enabled');
@@ -231,6 +268,7 @@ async function startServer() {
     console.log('✅ Trust proxy enabled for accurate rate limiting');
     console.log('✅ Response compression (gzip) enabled');
     console.log('✅ Cache control headers configured');
+    console.log('✅ X-RateLimit headers enabled');
   });
 }
 
