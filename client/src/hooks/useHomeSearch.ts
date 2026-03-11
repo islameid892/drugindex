@@ -25,8 +25,9 @@ export function useHomeSearch() {
 
   // Grouped search from API (server-side) - groups results by scientific name
   // Skip API call if query is less than 2 characters
+  // Trim the query before sending to API
   const searchQuery = trpc.data.searchGrouped.useQuery(
-    { query: debouncedQuery, limit: 30 },
+    { query: debouncedQuery.trim(), limit: 30 },
     { 
       enabled: debouncedQuery.trim().length >= 2,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
@@ -68,12 +69,13 @@ export function useHomeSearch() {
   // Track search when user stops typing (debounced)
   useEffect(() => {
     if (!query || query.trim().length < 2) return;
-    if (query === lastTrackedQuery.current) return;
+    const trimmedQuery = query.trim();
+    if (trimmedQuery === lastTrackedQuery.current) return;
 
     const timer = setTimeout(() => {
-      lastTrackedQuery.current = query;
+      lastTrackedQuery.current = trimmedQuery;
       trackSearchMutation.mutate({
-        query: query.trim(),
+        query: trimmedQuery,
         resultCount: groupedResults.length,
         responseTime: 0,
       });
@@ -83,11 +85,11 @@ export function useHomeSearch() {
   }, [query, groupedResults.length]);
 
   const handleQueryChange = (val: string) => {
-    // Only trim leading/trailing whitespace, preserve internal spaces for multi-word searches
-    const trimmedVal = val.trim();
-    setQuery(trimmedVal);
-    // Show suggestions only if query is not empty
-    setShowSuggestions(trimmedVal.length > 0);
+    // Preserve raw input including spaces - only trim when sending to API
+    // This prevents spaces from disappearing as the user types
+    setQuery(val);
+    // Show suggestions only if trimmed query is not empty
+    setShowSuggestions(val.trim().length > 0);
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
