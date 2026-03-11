@@ -82,7 +82,7 @@ export function SearchBar({
         {/* Search icon - positioned on the right */}
         <div className={cn(
           "absolute inset-y-0 right-0 pr-2 sm:pr-4 flex items-center pointer-events-none transition-all duration-300 z-10",
-          isFocused || hasValue ? "text-sky-500" : "text-muted-foreground"
+          isFocused || hasValue ? "text-sky-600" : "text-slate-400"
         )}>
           <div className={cn(
             "relative transition-all duration-300 flex items-center justify-center",
@@ -110,13 +110,13 @@ export function SearchBar({
             value.trim().length > 0 && setIsDropdownOpen(true);
           }}
           onBlur={() => setIsFocused(false)}
-          className="pl-3 sm:pl-4 pr-10 sm:pr-14 h-12 sm:h-14 text-base sm:text-lg shadow-sm border-muted-foreground/20 focus-visible:ring-sky-500/30 focus-visible:border-sky-500 transition-all rounded-xl bg-background/80 backdrop-blur-sm text-left"
+          className="pl-3 sm:pl-4 pr-10 sm:pr-14 h-12 sm:h-14 text-base sm:text-lg text-slate-900 placeholder:text-slate-500 shadow-lg shadow-sky-500/10 border border-slate-200 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:border-sky-500 transition-all rounded-xl bg-white dark:bg-white text-left"
           placeholder={placeholder}
         />
 
         {/* Spell correction suggestion */}
         {spellSuggestion && (
-          <div className="absolute left-8 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+          <div className="absolute left-8 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
             Did you mean{" "}
             <button
               onClick={handleApplySpellCorrection}
@@ -132,7 +132,7 @@ export function SearchBar({
         {value && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-12 sm:right-16 flex items-center text-muted-foreground hover:text-foreground transition-colors p-0.5 sm:p-1 rounded hover:bg-accent/50 flex-shrink-0"
+            className="absolute inset-y-0 right-12 sm:right-16 flex items-center text-slate-400 hover:text-slate-600 transition-colors p-0.5 sm:p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-200 flex-shrink-0"
             aria-label="Clear search"
           >
             <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
