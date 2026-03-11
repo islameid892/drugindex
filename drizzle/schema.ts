@@ -166,7 +166,7 @@ export const userSessions = mysqlTable(
     ipAddress: varchar("ip_address", { length: 45 }),
     userAgent: text("user_agent"),
     lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => ({
     sessionIdIdx: index("idx_user_sessions_session").on(t.sessionId),

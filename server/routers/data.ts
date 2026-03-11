@@ -133,20 +133,42 @@ export const dataRouter = router({
       query: z.string().min(1).max(200),
       limit: z.number().optional(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const startTime = Date.now();
       const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
       
       // Check cache first
       const cached = searchCache.get(cacheKey);
       if (cached) {
+        // Log even cache hits
+        const responseTimeMs = Date.now() - startTime;
+        const { trackSearch } = await import("../db");
+        trackSearch({
+          query: input.query,
+          resultsCount: cached.length,
+          responseTimeMs,
+          userId: ctx.user?.id || null,
+          ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',
+        }).catch(err => console.error('Failed to track search:', err));
         return cached;
       }
       
       // If not in cache, fetch from database
       const results = await searchGroupedByScientificName(input.query, input.limit ?? 30);
+      const responseTimeMs = Date.now() - startTime;
       
       // Store in cache for future requests
       searchCache.set(cacheKey, results);
+      
+      // Track search in analytics
+      const { trackSearch } = await import("../db");
+      trackSearch({
+        query: input.query,
+        resultsCount: results.length,
+        responseTimeMs,
+        userId: ctx.user?.id || null,
+        ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',
+      }).catch(err => console.error('Failed to track search:', err));
       
       return results;
     }),
