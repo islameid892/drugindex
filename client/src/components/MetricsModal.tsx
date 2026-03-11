@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Activity, Clock, BarChart3, Users, Search } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { ResponseTimeChart } from "@/components/charts/ResponseTimeChart";
+import { HourlyActivityChart } from "@/components/charts/HourlyActivityChart";
 
 interface MetricsModalProps {
   open: boolean;
@@ -15,13 +17,13 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
 
   // Fetch metrics data with auto-refresh every 5 seconds
   const { data: metricsData, isLoading: metricsLoading } = trpc.monitoring.getMetrics.useQuery(undefined, {
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
     staleTime: 2000,
   });
 
   // Fetch analytics data with auto-refresh every 5 seconds
   const { data: analyticsData, isLoading: analyticsLoading } = trpc.monitoring.getAnalytics.useQuery(undefined, {
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
     staleTime: 2000,
   });
 
@@ -29,7 +31,7 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-sky-600" />
@@ -56,66 +58,87 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
               </div>
             ) : metricsData ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Total Searches */}
+              <div className="space-y-4">
+                {/* Response Time Chart */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader>
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Search className="h-4 w-4 text-sky-600" />
-                      Total Searches (24h)
+                      <Clock className="h-4 w-4 text-sky-600" />
+                      Response Time Analysis
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-sky-600">
-                      {metricsData.totalSearches || 0}
-                    </div>
+                    <ResponseTimeChart
+                      data={[]}
+                      avgResponseTime={metricsData.avgResponseTime}
+                      minResponseTime={metricsData.minResponseTime}
+                      maxResponseTime={metricsData.maxResponseTime}
+                    />
                   </CardContent>
                 </Card>
 
-                {/* Average Response Time */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-emerald-600" />
-                      Avg Response Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-emerald-600">
-                      {metricsData.avgResponseTime?.toFixed(2) || 0}ms
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Total Searches */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Search className="h-4 w-4 text-sky-600" />
+                        Total Searches (24h)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-sky-600">
+                        {metricsData.totalSearches || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                {/* Min Response Time */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-purple-600" />
-                      Min Response Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-purple-600">
-                      {metricsData.minResponseTime || 0}ms
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Average Response Time */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-emerald-600" />
+                        Avg Response Time
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-emerald-600">
+                        {metricsData.avgResponseTime?.toFixed(2) || 0}ms
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                {/* Max Response Time */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-red-600" />
-                      Max Response Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-600">
-                      {metricsData.maxResponseTime || 0}ms
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Min Response Time */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-purple-600" />
+                        Min Response Time
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-purple-600">
+                        {metricsData.minResponseTime || 0}ms
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Max Response Time */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-red-600" />
+                        Max Response Time
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-red-600">
+                        {metricsData.maxResponseTime || 0}ms
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             ) : null}
           </TabsContent>
@@ -210,7 +233,7 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                   </CardContent>
                 </Card>
 
-                {/* Hourly Activity */}
+                {/* Hourly Activity Chart */}
                 {analyticsData.hourlyActivity && analyticsData.hourlyActivity.length > 0 && (
                   <Card>
                     <CardHeader>
@@ -220,17 +243,7 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {analyticsData.hourlyActivity.map((activity, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1">
-                            <span className="text-sm text-muted-foreground">{activity.hour}</span>
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 bg-sky-200 dark:bg-sky-900 rounded" style={{ width: `${Math.min(activity.count * 2, 100)}px` }}></div>
-                              <span className="text-sm font-medium w-8 text-right">{activity.count}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <HourlyActivityChart data={analyticsData.hourlyActivity} />
                     </CardContent>
                   </Card>
                 )}
