@@ -761,20 +761,31 @@ export async function searchGroupedByScientificName(
   limit = 30
 ): Promise<GroupedDrugResult[]> {
   const db = await getDb();
-  const q = `%${query}%`;
+  
+  // Split query by spaces to handle multi-word searches
+  const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+  
+  // Build search conditions for each word
+  const searchConditions = words.map(word => {
+    const q = `%${word}%`;
+    return or(
+      ciLike(drugEntries.scientificName, q),
+      ciLike(drugEntries.tradeName, q),
+      ciLike(drugEntries.indication, q),
+      ciLike(drugEntries.icdCodesRaw, q)
+    );
+  });
+  
+  // Combine all conditions with AND (all words must match)
+  const combinedCondition = searchConditions.length > 0 
+    ? and(...searchConditions) 
+    : undefined;
 
   // Step 1: Find distinct scientific names matching the query
   const sciNames = await db
     .select({ scientificName: drugEntries.scientificName })
     .from(drugEntries)
-    .where(
-      or(
-        ciLike(drugEntries.scientificName, q),
-        ciLike(drugEntries.tradeName, q),
-        ciLike(drugEntries.indication, q),
-        ciLike(drugEntries.icdCodesRaw, q)
-      )
-    )
+    .where(combinedCondition)
     .groupBy(drugEntries.scientificName)
     .orderBy(drugEntries.scientificName)
     .limit(limit);

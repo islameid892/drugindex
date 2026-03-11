@@ -83,7 +83,7 @@ export function useHomeSearch() {
   }, [query, groupedResults.length]);
 
   const handleQueryChange = (val: string) => {
-    // Trim and update query
+    // Only trim leading/trailing whitespace, preserve internal spaces for multi-word searches
     const trimmedVal = val.trim();
     setQuery(trimmedVal);
     // Show suggestions only if query is not empty
