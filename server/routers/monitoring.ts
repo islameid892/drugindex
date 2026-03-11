@@ -40,27 +40,20 @@ export const monitoringRouter = router({
   /**
    * Get all metrics (public - for unified dashboard)
    */
-  getMetrics: publicProcedure.query(() => {
-    const report = metrics.getReport();
+  getMetrics: publicProcedure.query(async () => {
+    const { getSearchMetrics } = await import("../db");
+    const metrics = await getSearchMetrics(24);
+    
     return {
-      totalRequests: report.totalRequests,
-      requestsPerMinute: Math.round(report.requestsPerSecond * 60 * 100) / 100,
-      cacheHitRate: report.cache.hitRate,
-      cacheHits: report.cache.hits,
-      cacheMisses: report.cache.misses,
-      avgResponseTime: report.responseTime.avg,
-      p95ResponseTime: report.responseTime.p95,
-      errorRate: report.errorRate,
-      totalErrors: report.errorCount,
+      totalSearches: metrics.totalSearches,
+      avgResponseTime: metrics.avgResponseTime,
+      minResponseTime: metrics.minResponseTime,
+      maxResponseTime: metrics.maxResponseTime,
       responseTimeDistribution: [
         { range: '0-50ms', count: 0 },
         { range: '50-100ms', count: 0 },
         { range: '100-500ms', count: 0 },
         { range: '500ms+', count: 0 },
-      ],
-      requestTypes: [
-        { type: 'Search', count: report.searchRequests },
-        { type: 'Analytics', count: report.analyticsRequests },
       ],
     };
   }),
@@ -68,29 +61,33 @@ export const monitoringRouter = router({
   /**
    * Get analytics data (public - for unified dashboard)
    */
-  getAnalytics: publicProcedure.query(() => {
-    const report = metrics.getReport();
+  getAnalytics: publicProcedure.query(async () => {
+    const { getRecentSearches, getActiveUsersCount, getTopSearches, getHourlyActivity } = await import("../db");
+    
+    const [recentSearches, activeUsers, topSearches, hourlyActivity] = await Promise.all([
+      getRecentSearches(20),
+      getActiveUsersCount(15),
+      getTopSearches(5),
+      getHourlyActivity(24),
+    ]);
+
     return {
-      totalUsers: report.totalRequests,
-      activeUsers: Math.max(1, Math.floor(report.totalRequests / 10)),
-      topSearch: 'Diabetes',
-      topSearchCount: report.searchRequests,
-      avgSessionDuration: 120,
-      topSearches: [
-        { term: 'Diabetes', count: Math.floor(report.searchRequests * 0.3) },
-        { term: 'Hypertension', count: Math.floor(report.searchRequests * 0.2) },
-        { term: 'Panadol', count: Math.floor(report.searchRequests * 0.15) },
-      ],
-      hourlyActivity: [
-        { hour: '00:00', users: 10 },
-        { hour: '06:00', users: 20 },
-        { hour: '12:00', users: 50 },
-        { hour: '18:00', users: 40 },
-      ],
-      recentSearches: [
-        { term: 'Diabetes', timestamp: new Date() },
-        { term: 'Hypertension', timestamp: new Date(Date.now() - 60000) },
-      ],
+      activeUsers,
+      topSearches: topSearches.map(s => ({
+        term: s.query,
+        count: s.count,
+        avgResponseTime: s.avgResponseTime,
+      })),
+      hourlyActivity: hourlyActivity.map(h => ({
+        hour: h.hour,
+        count: h.count,
+      })),
+      recentSearches: recentSearches.map(s => ({
+        term: s.query,
+        timestamp: s.createdAt,
+        responseTime: s.responseTimeMs,
+        resultsCount: s.resultsCount,
+      })),
     };
   }),
 

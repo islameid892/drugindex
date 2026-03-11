@@ -866,3 +866,163 @@ export async function searchGroupedByScientificName(
     };
   }).filter(Boolean) as GroupedDrugResult[];
 }
+
+
+// ─── Metrics & Analytics ────────────────────────────────────────────────────────
+
+/**
+ * Get recent searches with timestamps
+ * @param limit - number of recent searches to return (default 20)
+ */
+export async function getRecentSearches(limit = 20) {
+  const db = await getDb();
+  
+  const searches = await db
+    .select({
+      id: searchAnalytics.id,
+      query: searchAnalytics.query,
+      resultsCount: searchAnalytics.resultsCount,
+      responseTimeMs: searchAnalytics.responseTimeMs,
+      createdAt: searchAnalytics.createdAt,
+    })
+    .from(searchAnalytics)
+    .orderBy(desc(searchAnalytics.createdAt))
+    .limit(limit);
+
+  return searches;
+}
+
+/**
+ * Get active users count (users with activity in last X minutes)
+ * @param minutesAgo - consider users active if they were seen in last X minutes (default 15)
+ */
+export async function getActiveUsersCount(minutesAgo = 15) {
+  const db = await getDb();
+  
+  // Import userSessions type
+  const { userSessions } = await import("../drizzle/schema");
+  
+  const cutoffTime = new Date(Date.now() - minutesAgo * 60 * 1000);
+  
+  const result = await db
+    .select({ count: count() })
+    .from(userSessions)
+    .where(gte(userSessions.lastSeenAt, cutoffTime));
+
+  return result[0]?.count || 0;
+}
+
+/**
+ * Get top searches by frequency
+ * @param limit - number of top searches to return (default 10)
+ */
+export async function getTopSearches(limit = 10) {
+  const db = await getDb();
+  
+  const topSearches = await db
+    .select({
+      query: searchAnalytics.query,
+      count: count().as("count"),
+      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
+    })
+    .from(searchAnalytics)
+    .groupBy(searchAnalytics.query)
+    .orderBy(desc(count()))
+    .limit(limit);
+
+  return topSearches;
+}
+
+/**
+ * Get search metrics for the last X hours
+ * @param hoursAgo - analyze searches from last X hours (default 24)
+ */
+export async function getSearchMetrics(hoursAgo = 24) {
+  const db = await getDb();
+  
+  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+  
+  const result = await db
+    .select({
+      totalSearches: count().as("totalSearches"),
+      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
+      minResponseTime: sql<number>`MIN(${searchAnalytics.responseTimeMs})`.as("minResponseTime"),
+      maxResponseTime: sql<number>`MAX(${searchAnalytics.responseTimeMs})`.as("maxResponseTime"),
+    })
+    .from(searchAnalytics)
+    .where(gte(searchAnalytics.createdAt, cutoffTime));
+
+  return result[0] || {
+    totalSearches: 0,
+    avgResponseTime: 0,
+    minResponseTime: 0,
+    maxResponseTime: 0,
+  };
+}
+
+/**
+ * Get hourly search activity for the last X hours
+ * @param hoursAgo - analyze activity from last X hours (default 24)
+ */
+export async function getHourlyActivity(hoursAgo = 24) {
+  const db = await getDb();
+  
+  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+  
+  const activity = await db
+    .select({
+      hour: sql<string>`DATE_FORMAT(${searchAnalytics.createdAt}, '%Y-%m-%d %H:00:00')`.as("hour"),
+      count: count().as("count"),
+    })
+    .from(searchAnalytics)
+    .where(gte(searchAnalytics.createdAt, cutoffTime))
+    .groupBy(sql`DATE_FORMAT(${searchAnalytics.createdAt}, '%Y-%m-%d %H:00:00')`)
+    .orderBy(sql`hour DESC`);
+
+  return activity;
+}
+
+/**
+ * Track a search query
+ */
+export async function trackSearch(data: InsertSearchAnalytic) {
+  const db = await getDb();
+  
+  await db.insert(searchAnalytics).values(data);
+}
+
+/**
+ * Update or create user session
+ */
+export async function updateUserSession(
+  sessionId: string,
+  userId: number | null,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  const db = await getDb();
+  const { userSessions } = await import("../drizzle/schema");
+  
+  // Try to update existing session
+  const existing = await db
+    .select()
+    .from(userSessions)
+    .where(eq(userSessions.sessionId, sessionId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    // Update last seen time
+    await db
+      .update(userSessions)
+      .set({ lastSeenAt: new Date() })
+      .where(eq(userSessions.sessionId, sessionId));
+  } else {
+    // Create new session
+    await db.insert(userSessions).values({
+      sessionId,
+      userId,
+      ipAddress,
+      userAgent,
+    });
+  }
+}

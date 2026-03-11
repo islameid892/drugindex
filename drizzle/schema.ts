@@ -139,17 +139,44 @@ export const searchAnalytics = mysqlTable(
     query: varchar("query", { length: 500 }).notNull(),
     resultsCount: int("results_count").notNull().default(0),
     searchType: varchar("search_type", { length: 50 }).notNull().default("general"),
+    responseTimeMs: int("response_time_ms").notNull().default(0),
     userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
+    ipAddress: varchar("ip_address", { length: 45 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => ({
     queryIdx: index("idx_search_analytics_query").on(t.query),
     createdAtIdx: index("idx_search_analytics_created").on(t.createdAt),
+    userIdIdx: index("idx_search_analytics_user").on(t.userId),
   })
 );
 
 export type SearchAnalytic = typeof searchAnalytics.$inferSelect;
 export type InsertSearchAnalytic = typeof searchAnalytics.$inferInsert;
+
+// ─── User Sessions ────────────────────────────────────────────────────────────────
+// Track active user sessions for real-time active users count
+
+export const userSessions = mysqlTable(
+  "user_sessions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    sessionId: varchar("session_id", { length: 128 }).notNull().unique(),
+    userId: int("user_id").references(() => users.id, { onDelete: "cascade" }),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => ({
+    sessionIdIdx: index("idx_user_sessions_session").on(t.sessionId),
+    userIdIdx: index("idx_user_sessions_user").on(t.userId),
+    lastSeenAtIdx: index("idx_user_sessions_last_seen").on(t.lastSeenAt),
+  })
+);
+
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = typeof userSessions.$inferInsert;
 
 // ─── Relations ─────────────────────────────────────────────────────────────────
 
