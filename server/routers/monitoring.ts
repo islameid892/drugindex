@@ -42,18 +42,35 @@ export const monitoringRouter = router({
    */
   getMetrics: publicProcedure.query(async () => {
     const { getSearchMetrics } = await import("../db");
-    const metrics = await getSearchMetrics(24);
+    const searchMetrics = await getSearchMetrics(24);
+    
+    const distribution = {
+      '0-50ms': 0,
+      '50-100ms': 0,
+      '100-500ms': 0,
+      '500ms+': 0,
+    };
+    
+    if (searchMetrics.responseTimeDistribution && Array.isArray(searchMetrics.responseTimeDistribution)) {
+      searchMetrics.responseTimeDistribution.forEach((rt: any) => {
+        const time = rt.responseTimeMs || 0;
+        if (time < 50) distribution['0-50ms']++;
+        else if (time < 100) distribution['50-100ms']++;
+        else if (time < 500) distribution['100-500ms']++;
+        else distribution['500ms+']++;
+      });
+    }
     
     return {
-      totalSearches: metrics.totalSearches,
-      avgResponseTime: metrics.avgResponseTime,
-      minResponseTime: metrics.minResponseTime,
-      maxResponseTime: metrics.maxResponseTime,
+      totalSearches: searchMetrics.totalSearches || 0,
+      avgResponseTime: searchMetrics.avgResponseTime || 0,
+      minResponseTime: searchMetrics.minResponseTime || 0,
+      maxResponseTime: searchMetrics.maxResponseTime || 0,
       responseTimeDistribution: [
-        { range: '0-50ms', count: 0 },
-        { range: '50-100ms', count: 0 },
-        { range: '100-500ms', count: 0 },
-        { range: '500ms+', count: 0 },
+        { range: '0-50ms', count: distribution['0-50ms'] },
+        { range: '50-100ms', count: distribution['50-100ms'] },
+        { range: '100-500ms', count: distribution['100-500ms'] },
+        { range: '500ms+', count: distribution['500ms+'] },
       ],
     };
   }),
@@ -72,21 +89,22 @@ export const monitoringRouter = router({
     ]);
 
     return {
-      activeUsers,
-      topSearches: topSearches.map((s: any) => ({
-        term: s.query,
-        count: s.count,
-        avgResponseTime: s.avgResponseTime,
+      activeUsers: activeUsers || 0,
+      topSearches: (topSearches || []).map((s: any) => ({
+        term: s.query || 'Unknown',
+        count: s.count || 0,
+        avgResponseTime: s.avgResponseTime || 0,
       })),
-      hourlyActivity: hourlyActivity.map((h: any) => ({
-        hour: h.hour,
-        count: h.count,
+      hourlyActivity: (hourlyActivity || []).map((h: any) => ({
+        hour: h.hour || 0,
+        count: h.count || 0,
+        users: h.count || 0,
       })),
-      recentSearches: recentSearches.map((s: any) => ({
-        term: s.query,
-        timestamp: s.createdAt,
-        responseTime: s.responseTimeMs,
-        resultsCount: s.resultsCount,
+      recentSearches: (recentSearches || []).map((s: any) => ({
+        term: s.query || 'Unknown',
+        timestamp: s.createdAt || new Date(),
+        responseTime: s.responseTimeMs || 0,
+        resultsCount: s.resultsCount || 0,
       })),
     };
   }),

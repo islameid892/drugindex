@@ -29,7 +29,8 @@ const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
-const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
+
+const Metrics = lazy(() => import("./pages/Metrics"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -63,7 +64,7 @@ function Router() {
       <Route path={"/?"} component={Home} />
       <Route path={"metrics"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <AnalyticsDashboard />
+          <Metrics />
         </Suspense>
       )} />
       <Route path={"/about"} component={() => (        <Suspense fallback={<PageLoader />}>
@@ -90,11 +91,7 @@ function Router() {
           <FAQ />
         </Suspense>
       )} />
-       <Route path={"analytics"} component={() => (
-        <Suspense fallback={<PageLoader />}>
-          <AnalyticsDashboard />
-        </Suspense>
-      )} />
+ 
       <Route path={"/tools"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Tools />
