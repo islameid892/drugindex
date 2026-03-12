@@ -201,9 +201,7 @@ async function startServer() {
   app.use('/api/', apiLimiter);
 
   // Apply stricter rate limiting to search endpoints
-  app.use('/api/trpc/data.searchByScientificName', searchLimiter);
-  app.use('/api/trpc/data.searchByTradeNames', searchLimiter);
-  app.use('/api/trpc/data.searchByIcdCodes', searchLimiter);
+  app.use('/api/trpc/data.searchGrouped', searchLimiter);
 
   // tRPC API with response optimization
   app.use(

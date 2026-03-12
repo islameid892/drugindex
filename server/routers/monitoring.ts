@@ -73,16 +73,16 @@ export const monitoringRouter = router({
 
     return {
       activeUsers,
-      topSearches: topSearches.map(s => ({
+      topSearches: topSearches.map((s: any) => ({
         term: s.query,
         count: s.count,
         avgResponseTime: s.avgResponseTime,
       })),
-      hourlyActivity: hourlyActivity.map(h => ({
+      hourlyActivity: hourlyActivity.map((h: any) => ({
         hour: h.hour,
         count: h.count,
       })),
-      recentSearches: recentSearches.map(s => ({
+      recentSearches: recentSearches.map((s: any) => ({
         term: s.query,
         timestamp: s.createdAt,
         responseTime: s.responseTimeMs,

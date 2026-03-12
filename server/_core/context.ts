@@ -23,7 +23,20 @@ export async function createContext(
   // Track user session for active users monitoring
   try {
     const { updateUserSession } = await import("../db");
-    const sessionId = opts.req.cookies?.session_id || (opts.req.headers['x-session-id'] as string) || `session_${Date.now()}_${Math.random()}`;
+    let sessionId = opts.req.cookies?.session_id;
+    
+    // If no session cookie exists, create a new one and set it
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      opts.res.cookie('session_id', sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: '/',
+      });
+    }
+    
     const ipAddress = opts.req.ip || ((opts.req.headers['x-forwarded-for'] as string)?.split(',')[0]) || 'unknown';
     const userAgent = opts.req.headers['user-agent'] as string;
     

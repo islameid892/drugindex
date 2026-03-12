@@ -139,7 +139,7 @@ export const dataRouter = router({
       
       // Check cache first
       const cached = searchCache.get(cacheKey);
-      if (cached) {
+      if (cached && Array.isArray(cached)) {
         // Log even cache hits
         const responseTimeMs = Date.now() - startTime;
         const { trackSearch } = await import("../db");

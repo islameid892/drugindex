@@ -988,7 +988,18 @@ export async function getHourlyActivity(hoursAgo = 24) {
 export async function trackSearch(data: InsertSearchAnalytic) {
   const db = await getDb();
   
-  await db.insert(searchAnalytics).values(data);
+  try {
+    await db.insert(searchAnalytics).values({
+      query: data.query,
+      resultsCount: data.resultsCount || 0,
+      searchType: data.searchType || 'general',
+      responseTimeMs: data.responseTimeMs || 0,
+      userId: data.userId || null,
+      ipAddress: data.ipAddress || null,
+    });
+  } catch (err) {
+    console.error('Error tracking search:', err);
+  }
 }
 
 /**
