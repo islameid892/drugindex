@@ -172,6 +172,7 @@ export const userSessions = mysqlTable(
     sessionIdIdx: index("idx_user_sessions_session").on(t.sessionId),
     userIdIdx: index("idx_user_sessions_user").on(t.userId),
     lastSeenAtIdx: index("idx_user_sessions_last_seen").on(t.lastSeenAt),
+    createdAtIdx: index("idx_user_sessions_created").on(t.createdAt),
   })
 );
 

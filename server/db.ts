@@ -969,17 +969,16 @@ export async function getHourlyActivity(hoursAgo = 24) {
   
   const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
   
-  const activity = await db
-    .select({
-      hour: sql<string>`DATE_FORMAT(${searchAnalytics.createdAt}, '%Y-%m-%d %H:00:00')`.as("hour"),
-      count: count().as("count"),
-    })
-    .from(searchAnalytics)
-    .where(gte(searchAnalytics.createdAt, cutoffTime))
-    .groupBy(sql`DATE_FORMAT(${searchAnalytics.createdAt}, '%Y-%m-%d %H:00:00')`)
-    .orderBy(sql`hour DESC`);
+  // Use raw SQL for complex DATE_FORMAT queries
+  const activity = await db.execute(
+    sql`SELECT DATE_FORMAT(createdAt, '%Y-%m-%d %H:00:00') as hour, COUNT(*) as count
+        FROM search_analytics
+        WHERE createdAt >= ${cutoffTime}
+        GROUP BY DATE_FORMAT(createdAt, '%Y-%m-%d %H:00:00')
+        ORDER BY hour DESC`
+  );
 
-  return activity;
+  return (activity as any)[0] || [];
 }
 
 /**
