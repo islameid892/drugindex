@@ -56,7 +56,7 @@ const globalLimiter: RateLimitRequestHandler = rateLimit({
 
 const apiLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 60,
+  max: 300, // Increased from 60 to 300 for metrics and analytics
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.path === '/health',
@@ -73,7 +73,7 @@ const apiLimiter: RateLimitRequestHandler = rateLimit({
 
 const searchLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 30,
+  max: 100, // Increased from 30 to 100 for search requests
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
