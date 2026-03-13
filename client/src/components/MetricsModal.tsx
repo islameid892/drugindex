@@ -17,14 +17,16 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
 
   // Fetch metrics data with auto-refresh every 5 seconds
   const { data: metricsData, isLoading: metricsLoading } = trpc.monitoring.getMetrics.useQuery(undefined, {
-    refetchInterval: 5000,
-    staleTime: 2000,
+    refetchInterval: open ? 30000 : false,
+    staleTime: 10000,
+    enabled: open,
   });
 
   // Fetch analytics data with auto-refresh every 5 seconds
   const { data: analyticsData, isLoading: analyticsLoading } = trpc.monitoring.getAnalytics.useQuery(undefined, {
-    refetchInterval: 5000,
-    staleTime: 2000,
+    refetchInterval: open ? 30000 : false,
+    staleTime: 10000,
+    enabled: open,
   });
 
   const isLoading = metricsLoading || analyticsLoading;

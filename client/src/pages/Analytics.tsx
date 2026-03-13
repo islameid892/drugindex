@@ -134,7 +134,7 @@ const [lastUpdated, setLastUpdated]   = useState<Date | null>(null);
 const [countdown, setCountdown]       = useState(REFRESH_INTERVAL);
 const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-const query = trpc.analytics.getAnalytics.useQuery(undefined, {
+const query = trpc.monitoring.getAnalytics.useQuery(undefined, {
 refetchInterval: REFRESH_INTERVAL * 1000,
 refetchIntervalInBackground: true,
 onSuccess: () => { setLastUpdated(new Date()); setCountdown(REFRESH_INTERVAL); },
