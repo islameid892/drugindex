@@ -45,20 +45,14 @@ export function HourlyActivityChart({ data }: HourlyActivityChartProps) {
         {
           label: "Search Requests",
           data: data.map(d => d.count),
-          backgroundColor: [
-            "rgba(59, 130, 246, 0.8)",
-            "rgba(34, 197, 94, 0.8)",
-            "rgba(168, 85, 247, 0.8)",
-            "rgba(236, 72, 153, 0.8)",
-            "rgba(249, 115, 22, 0.8)",
-          ],
-          borderColor: [
-            "rgb(59, 130, 246)",
-            "rgb(34, 197, 94)",
-            "rgb(168, 85, 247)",
-            "rgb(236, 72, 153)",
-            "rgb(249, 115, 22)",
-          ],
+          backgroundColor: data.map((_, idx) => {
+            const colors = ["rgba(59, 130, 246, 0.8)", "rgba(34, 197, 94, 0.8)", "rgba(168, 85, 247, 0.8)", "rgba(236, 72, 153, 0.8)", "rgba(249, 115, 22, 0.8)"];
+            return colors[idx % colors.length];
+          }),
+          borderColor: data.map((_, idx) => {
+            const colors = ["rgb(59, 130, 246)", "rgb(34, 197, 94)", "rgb(168, 85, 247)", "rgb(236, 72, 153)", "rgb(249, 115, 22)"];
+            return colors[idx % colors.length];
+          }),
           borderWidth: 2,
           borderRadius: 6,
           borderSkipped: false,
