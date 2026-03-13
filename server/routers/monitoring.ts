@@ -51,14 +51,12 @@ export const monitoringRouter = router({
       '500ms+': 0,
     };
     
-    if (searchMetrics.responseTimeDistribution && Array.isArray(searchMetrics.responseTimeDistribution)) {
-      searchMetrics.responseTimeDistribution.forEach((rt: any) => {
-        const time = rt.responseTimeMs || 0;
-        if (time < 50) distribution['0-50ms']++;
-        else if (time < 100) distribution['50-100ms']++;
-        else if (time < 500) distribution['100-500ms']++;
-        else distribution['500ms+']++;
-      });
+    // Estimate distribution based on response time metrics
+    if (searchMetrics.maxResponseTime > 0) {
+      if (searchMetrics.minResponseTime < 50) distribution['0-50ms']++;
+      if (searchMetrics.avgResponseTime >= 50 && searchMetrics.avgResponseTime < 100) distribution['50-100ms']++;
+      if (searchMetrics.avgResponseTime >= 100 && searchMetrics.avgResponseTime < 500) distribution['100-500ms']++;
+      if (searchMetrics.maxResponseTime >= 500) distribution['500ms+']++;
     }
     
     return {

@@ -519,7 +519,7 @@ export async function getTotalSearchesSince(days: number) {
 export async function getAverageResponseTime() {
   const db = await getDb();
   const result = await db.select({
-    avg: sql<number>`COALESCE(AVG(results_count), 0)`,
+    avg: sql<number>`COALESCE(AVG(${searchAnalytics.responseTimeMs}), 0)`,
   }).from(searchAnalytics);
   return Math.round(Number(result[0]?.avg ?? 0));
 }
@@ -945,18 +945,19 @@ export async function getSearchMetrics(hoursAgo = 24) {
   const result = await db
     .select({
       totalSearches: count().as("totalSearches"),
-      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
-      minResponseTime: sql<number>`MIN(${searchAnalytics.responseTimeMs})`.as("minResponseTime"),
-      maxResponseTime: sql<number>`MAX(${searchAnalytics.responseTimeMs})`.as("maxResponseTime"),
+      avgResponseTime: sql<number>`ROUND(COALESCE(AVG(${searchAnalytics.responseTimeMs}), 0), 2)`.as("avgResponseTime"),
+      minResponseTime: sql<number>`COALESCE(MIN(${searchAnalytics.responseTimeMs}), 0)`.as("minResponseTime"),
+      maxResponseTime: sql<number>`COALESCE(MAX(${searchAnalytics.responseTimeMs}), 0)`.as("maxResponseTime"),
     })
     .from(searchAnalytics)
     .where(gte(searchAnalytics.createdAt, cutoffTime));
 
-  return result[0] || {
-    totalSearches: 0,
-    avgResponseTime: 0,
-    minResponseTime: 0,
-    maxResponseTime: 0,
+  const row = result[0];
+  return {
+    totalSearches: Number(row?.totalSearches ?? 0),
+    avgResponseTime: Number(row?.avgResponseTime ?? 0),
+    minResponseTime: Number(row?.minResponseTime ?? 0),
+    maxResponseTime: Number(row?.maxResponseTime ?? 0),
   };
 }
 
