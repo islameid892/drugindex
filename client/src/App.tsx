@@ -31,6 +31,7 @@ const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
 
 const Metrics = lazy(() => import("./pages/Metrics"));
+const PerformanceDashboard = lazy(() => import("./pages/PerformanceDashboard"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -65,6 +66,11 @@ function Router() {
       <Route path={"metrics"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Metrics />
+        </Suspense>
+      )} />
+      <Route path={"performance"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <PerformanceDashboard />
         </Suspense>
       )} />
       <Route path={"/about"} component={() => (        <Suspense fallback={<PageLoader />}>
