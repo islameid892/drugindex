@@ -207,21 +207,21 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {analyticsData.recentSearches && analyticsData.recentSearches.length > 0 ? (
-                        analyticsData.recentSearches.map((search, idx) => (
+                      {analyticsData?.recentSearches && Array.isArray(analyticsData.recentSearches) && analyticsData.recentSearches.length > 0 ? (
+                        analyticsData.recentSearches.map((search: any, idx: number) => (
                           <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
                             <div className="flex-1">
-                              <p className="text-sm font-medium truncate">{search.term}</p>
+                              <p className="text-sm font-medium truncate">{search?.term || 'Unknown'}</p>
                               <p className="text-xs text-muted-foreground">
-                                {new Date(search.timestamp).toLocaleString()}
+                                {search?.timestamp ? new Date(search.timestamp).toLocaleString() : 'N/A'}
                               </p>
                             </div>
                             <div className="text-right">
                               <p className="text-xs text-muted-foreground">
-                                {search.responseTime}ms
+                                {search?.responseTime ?? 0}ms
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {search.resultsCount} results
+                                {search?.resultsCount ?? 0} results
                               </p>
                             </div>
                           </div>
