@@ -205,8 +205,6 @@ const maxTrend = Math.max(...(data.weeklyTrends?.map((t) => t.count) ?? [1]), 1)
 
 return (
 <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-
-```
   {/* Header */}
   <div className="border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur sticky top-0 z-40">
     <div className="container py-4">
