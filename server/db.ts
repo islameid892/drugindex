@@ -31,6 +31,7 @@ import {
   nonCoveredCodes,
   searchAnalytics,
   users,
+  userSessions,
   type InsertSearchAnalytic,
 } from "../drizzle/schema";
 
@@ -898,9 +899,6 @@ export async function getRecentSearches(limit = 20) {
  */
 export async function getActiveUsersCount(minutesAgo = 15) {
   const db = await getDb();
-  
-  // Import userSessions type
-  const { userSessions } = await import("../drizzle/schema");
   
   const cutoffTime = new Date(Date.now() - minutesAgo * 60 * 1000);
   
