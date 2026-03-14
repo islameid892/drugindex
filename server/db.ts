@@ -557,14 +557,15 @@ export async function getSearchTrend(days = 7) {
   const db = await getDb();
   const since = new Date();
   since.setDate(since.getDate() - days);
+  // Use raw SQL with explicit table.column to satisfy MySQL only_full_group_by mode
   return db.select({
-    date: sql<string>`DATE(createdAt)`,
+    date: sql<string>`DATE(search_analytics.createdAt)`,
     count: count(),
   })
     .from(searchAnalytics)
     .where(gte(searchAnalytics.createdAt, since))
-    .groupBy(sql`DATE(createdAt)`)
-    .orderBy(sql`DATE(createdAt)`);
+    .groupBy(sql`DATE(search_analytics.createdAt)`)
+    .orderBy(sql`DATE(search_analytics.createdAt)`);
 }
 
 // ─── User Management ───────────────────────────────────────────────────────────
@@ -927,8 +928,13 @@ export async function getTopSearches(limit = 10) {
     .groupBy(searchAnalytics.query)
     .orderBy(desc(count()))
     .limit(limit);
-
-  return topSearches;
+  
+  // Convert avgResponseTime from string (returned by SQL ROUND) to number
+  return (topSearches as Array<{ query: string; count: number | bigint; avgResponseTime: string | number | null }>).map((row) => ({
+    query: row.query,
+    count: Number(row.count),
+    avgResponseTime: Number(row.avgResponseTime ?? 0),
+  }));
 }
 
 /**

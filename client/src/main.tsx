@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
       },
       refetchOnWindowFocus: false,
       refetchOnReconnect: true, // Refetch when connection restored
-      refetchOnMount: 'stale', // Refetch if data is stale on mount
+      refetchOnMount: true, // Refetch if data is stale on mount
     },
     mutations: {
       retry: (failureCount, error: any) => {

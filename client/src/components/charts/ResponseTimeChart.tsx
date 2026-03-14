@@ -126,7 +126,7 @@ export function ResponseTimeChart({
                 padding: 15,
                 font: {
                   size: 12,
-                  weight: "500",
+                  weight: 500,
                 },
               },
             },
@@ -142,7 +142,7 @@ export function ResponseTimeChart({
               },
               callbacks: {
                 label: function (context) {
-                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}ms`;
+                  return `${context.dataset.label}: ${(context.parsed.y ?? 0).toFixed(2)}ms`;
                 },
               },
             },

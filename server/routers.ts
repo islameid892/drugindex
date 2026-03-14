@@ -39,6 +39,7 @@ async function getRawConnection() {
   return pool.getConnection();
 }
 
+export type AppRouter = typeof appRouter;
 export const appRouter = router({
   system: systemRouter,
   data: dataRouter,
@@ -103,44 +104,47 @@ export const appRouter = router({
         const coverageRate = totalSearches > 0 ? Math.round((coveredCount / totalSearches) * 100) : 0;
         const totalCount = totalSearches;
 
-        // 5. Weekly Trends
+        // 5. Weekly Trends - using Drizzle ORM instead of raw connection
         let weeklyTrends: any[] = [];
         try {
-          const conn = await database.connection();
-          const [rows] = await conn.query(`
-            SELECT DATE(createdAt) as date, COUNT(*) as count
-            FROM search_analytics
-            WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-            GROUP BY DATE(createdAt)
-            ORDER BY DATE(createdAt)`);
-          weeklyTrends = (rows as any[])
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const trendsResult = await database
+            .select({
+              date: sql<string>`DATE(search_analytics.createdAt)`,
+              count: sql<number>`COUNT(*)`,
+            })
+            .from(searchAnalytics)
+            .where(gte(searchAnalytics.createdAt, sevenDaysAgo))
+            .groupBy(sql`DATE(search_analytics.createdAt)`)
+            .orderBy(sql`DATE(search_analytics.createdAt)`);
+          weeklyTrends = trendsResult
             .filter((row: any) => row?.date !== null && row?.count !== null)
             .map((row: any) => ({
-              date:  row.date instanceof Date ? row.date.toISOString() : String(row.date),
+              date:  String(row.date),
               count: Number(row.count || 0),
             }));
-          conn.release();
         } catch (e) {
           console.error("Weekly trends query error:", e);
         }
 
-        // 6. Top Searches
+        // 6. Top Searches - using Drizzle ORM instead of raw connection
         let topSearches: any[] = [];
         try {
-          const conn = await database.connection();
-          const [rows] = await conn.query(`
-            SELECT query, COUNT(*) as count
-            FROM search_analytics
-            GROUP BY query
-            ORDER BY count DESC
-            LIMIT 10`);
-          topSearches = (rows as any[])
-            .filter((row: any) => row?.query !== null)
-            .map((row: any) => ({
-              term:  row.query,
-              count: Number(row.count || 0),
-            }));
-          conn.release();
+          const topSearchesResult = await database
+            .select({
+              term: searchAnalytics.query,
+              count: sql<number>`COUNT(*)`,
+            })
+            .from(searchAnalytics)
+            .where(isNotNull(searchAnalytics.query))
+            .groupBy(searchAnalytics.query)
+            .orderBy(sql`COUNT(*) DESC`)
+            .limit(10);
+          topSearches = topSearchesResult.map((row: any) => ({
+            term:  row.term,
+            count: Number(row.count || 0),
+          }));
         } catch (e) {
           console.error("Top searches query error:", e);
         }

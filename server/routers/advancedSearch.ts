@@ -6,7 +6,10 @@ import {
   getTradeNameSuggestions,
   getIndicationSuggestions,
   getAllNonCoveredCodes,
+  getDb,
 } from "../db";
+import { drugEntries } from "../../drizzle/schema";
+import { asc } from "drizzle-orm";
 
 export const advancedSearchRouter = router({
   /**
@@ -62,7 +65,7 @@ export const advancedSearchRouter = router({
     .input(z.object({
       scientificName: z.string().default(""),
       tradeNames: z.array(z.string()).default([]),
-      indications: z.array(z.string()).min(1),
+      indications: z.array(z.string()).default([]),
     }))
     .mutation(async ({ input }) => {
       try {
@@ -121,10 +124,32 @@ export const advancedSearchRouter = router({
 
         const codes = Array.from(codeMap.values()).sort((a, b) => a.code.localeCompare(b.code));
 
-        return { drugs, codes, total };
+        // Build filters summary for the response
+        const filters = {
+          scientificName: input.scientificName || null,
+          tradeNames: input.tradeNames,
+          indications: input.indications,
+        };
+
+        return { drugs, codes, total, filters };
       } catch (error) {
         console.error("Error in advanced search:", error);
-        return { drugs: [], codes: [], total: 0 };
+        return { drugs: [], codes: [], total: 0, filters: { scientificName: null, tradeNames: [], indications: [] } };
       }
+    }),
+
+  /**
+   * Get all unique scientific names (for browsing/autocomplete)
+   */
+  getAllScientificNames: publicProcedure
+    .query(async () => {
+      const db = await getDb();
+      const rows = await db
+        .selectDistinct({ name: drugEntries.scientificName })
+        .from(drugEntries);
+      // Sort in JS using localeCompare for consistent locale-aware ordering
+      return rows
+        .map((r: { name: string }) => r.name)
+        .sort((a: string, b: string) => a.localeCompare(b));
     }),
 });

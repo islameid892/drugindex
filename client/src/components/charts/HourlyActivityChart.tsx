@@ -77,7 +77,7 @@ export function HourlyActivityChart({ data }: HourlyActivityChartProps) {
                 padding: 15,
                 font: {
                   size: 12,
-                  weight: "500",
+                  weight: 500,
                 },
               },
             },

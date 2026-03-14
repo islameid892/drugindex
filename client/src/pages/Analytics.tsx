@@ -137,10 +137,16 @@ const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 const query = trpc.monitoring.getAnalytics.useQuery(undefined, {
 refetchInterval: REFRESH_INTERVAL * 1000,
 refetchIntervalInBackground: true,
-onSuccess: () => { setLastUpdated(new Date()); setCountdown(REFRESH_INTERVAL); },
 });
 
-const data = query.data as AnalyticsData | undefined;
+// Track when data changes to update lastUpdated (replaces deprecated onSuccess)
+const prevDataTimestampRef = useRef<string | undefined>(undefined);
+const queryDataTimestamp = (query.data as any)?.recentSearches?.[0]?.timestamp;
+if (queryDataTimestamp && queryDataTimestamp !== prevDataTimestampRef.current) {
+  prevDataTimestampRef.current = queryDataTimestamp;
+}
+
+const data = query.data as unknown as AnalyticsData | undefined;
 
 // ✅ مفيش auth guard - الصفحة عامة للكل
 
