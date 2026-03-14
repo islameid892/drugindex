@@ -69,7 +69,7 @@ function DrugBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by trade name (e.g. Panadol, Augmentin...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           />
         </div>
         {data && (
@@ -245,7 +245,7 @@ function ConditionBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search condition (e.g. Diabetes, Hypertension...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           />
         </div>
         {data && (
@@ -456,7 +456,7 @@ function NonCoveredBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search non-covered codes..."
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
         {displayCodes && (
@@ -553,7 +553,7 @@ function CodesBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search ICD-10 codes (e.g. E11, Diabetes...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         {displayCodes && (

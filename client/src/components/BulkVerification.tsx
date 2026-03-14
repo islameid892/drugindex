@@ -279,24 +279,24 @@ export function BulkVerification() {
                 onChange={(e) => handleCodeSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={() => codeSearch.length > 0 && setShowSuggestions(true)}
-                className="h-10 text-base"
+                className="h-10 text-base bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500"
               />
               
               {/* Autocomplete Dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-white border border-slate-200 dark:border-slate-300 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={suggestion.code}
                       onClick={() => handleSelectSuggestion(suggestion)}
                       className={`px-4 py-2 cursor-pointer transition-colors ${
                         index === selectedSuggestionIndex
-                          ? 'bg-sky-100 text-sky-900'
-                          : 'hover:bg-slate-50'
+                          ? 'bg-sky-100 dark:bg-sky-100 text-sky-900 dark:text-sky-900'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-100'
                       }`}
                     >
-                      <div className="font-semibold text-slate-900">{suggestion.code}</div>
-                      <div className="text-sm text-slate-600">{suggestion.description}</div>
+                      <div className="font-semibold text-slate-900 dark:text-slate-900">{suggestion.code}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-700">{suggestion.description}</div>
                     </div>
                   ))}
                 </div>
@@ -314,17 +314,45 @@ export function BulkVerification() {
             </Button>
 
             <Button
-              onClick={handleCameraCapture}
+              onClick={() => {
+                const input = fileInputRef.current;
+                if (input) {
+                  input.capture = 'environment';
+                  input.click();
+                }
+              }}
               disabled={isProcessingImage}
               variant="outline"
               size="sm"
-              title="Upload image to extract codes via OCR (supports camera or gallery)"
+              title="Take a photo to extract codes"
             >
               {isProcessingImage ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Camera className="h-4 w-4" />
               )}
+              <span className="ml-1 text-xs">Take Photo</span>
+            </Button>
+
+            <Button
+              onClick={() => {
+                const input = fileInputRef.current;
+                if (input) {
+                  delete (input as any).capture;
+                  input.click();
+                }
+              }}
+              disabled={isProcessingImage}
+              variant="outline"
+              size="sm"
+              title="Browse and select an image from your device"
+            >
+              {isProcessingImage ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-1 text-xs">Browse Photo</span>
             </Button>
           </div>
         </div>
@@ -392,7 +420,7 @@ export function BulkVerification() {
       {results.length > 0 && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900">Results ({results.length})</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Results ({results.length})</h3>
             <Button
               onClick={handleExportCSV}
               variant="outline"
@@ -406,18 +434,18 @@ export function BulkVerification() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-100">
+              <thead className="bg-slate-100 dark:bg-slate-800">
                 <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Code</th>
-                  <th className="px-4 py-2 text-left font-semibold">Found</th>
-                  <th className="px-4 py-2 text-left font-semibold">Coverage</th>
-                  <th className="px-4 py-2 text-left font-semibold">Details</th>
+                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-100">Code</th>
+                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-100">Found</th>
+                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-100">Coverage</th>
+                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-100">Details</th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((result, index) => (
-                  <tr key={index} className="border-b border-slate-200 hover:bg-slate-50">
-                    <td className="px-4 py-2 font-mono font-semibold text-slate-900">{result.input}</td>
+                  <tr key={index} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-4 py-2 font-mono font-semibold text-slate-900 dark:text-slate-100">{result.input}</td>
                     <td className="px-4 py-2">
                       {result.found ? (
                         <CheckCircle2 className="h-5 w-5 text-emerald-600" />
