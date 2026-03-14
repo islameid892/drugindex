@@ -38,7 +38,16 @@ export function useHomeSearch() {
   );
 
   const searchLoading = searchQuery.isFetching;
-  const groupedResults = searchQuery.data ?? [];
+  const searchResponse = searchQuery.data;
+  
+  // Flatten the response into a single array for backward compatibility
+  const groupedResults = useMemo(() => {
+    if (!searchResponse) return [];
+    
+    // For now, just return medications from the new response
+    // The SearchResultsSection will handle categorization
+    return searchResponse.medications || [];
+  }, [searchResponse]);
 
   // Paginate results
   const paginatedResults = useMemo(() => {
@@ -115,5 +124,6 @@ export function useHomeSearch() {
     paginatedResults,
     totalPages,
     handleSuggestionSelect,
+    searchResponse, // Expose the full response with medications, conditions, codes
   };
 }

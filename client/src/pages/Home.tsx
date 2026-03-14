@@ -121,6 +121,7 @@ export default function Home() {
             currentPage={search.currentPage}
             totalPages={search.totalPages}
             onPageChange={search.setCurrentPage}
+            searchResponse={search.searchResponse}
           />
         )}
       </main>

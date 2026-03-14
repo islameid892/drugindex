@@ -758,6 +758,189 @@ export interface GroupedDrugResult {
   totalTradeNames: number;
 }
 
+export interface SearchGroupedResponse {
+  medications: GroupedDrugResult[];
+  conditions: Array<{
+    indication: string;
+    scientificNames: string[];
+    tradeNames: string[];
+    codes: CodeInfo[];
+  }>;
+  codes: Array<{
+    code: string;
+    description: string;
+    branchCount: number;
+    isNonCovered: boolean;
+    branches: BranchInfo[];
+    medications: string[]; // scientific names that use this code
+  }>;
+}
+
+export async function searchGroupedComprehensive(
+  query: string,
+  limit = 30
+): Promise<SearchGroupedResponse> {
+  const db = await getDb();
+  
+  // Split query by spaces to handle multi-word searches
+  const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+  
+  // Build search conditions for each word
+  const searchConditions = words.map(word => {
+    const q = `%${word}%`;
+    return or(
+      ciLike(drugEntries.scientificName, q),
+      ciLike(drugEntries.tradeName, q),
+      ciLike(drugEntries.indication, q),
+      ciLike(drugEntries.icdCodesRaw, q)
+    );
+  });
+  
+  // Combine all conditions with AND (all words must match)
+  const combinedCondition = searchConditions.length > 0 
+    ? and(...searchConditions) 
+    : undefined;
+
+  // Step 1: Find all matching entries
+  const allMatches = await db
+    .select()
+    .from(drugEntries)
+    .where(combinedCondition)
+    .limit(limit * 5); // Get more to have enough for all tabs
+
+  if (allMatches.length === 0) return { medications: [], conditions: [], codes: [] };
+
+  // Enrich with codes
+  const enriched = await enrichDrugEntriesWithCodes(
+    allMatches as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>
+  );
+
+  // ===== MEDICATIONS TAB: Group by scientific name =====
+  const medicationsByScientificName = new Map<string, {
+    tradeNames: Set<string>;
+    indicationMap: Map<string, { codes: Map<string, CodeInfo> }>;
+  }>();
+
+  for (const entry of enriched) {
+    if (!medicationsByScientificName.has(entry.scientificName)) {
+      medicationsByScientificName.set(entry.scientificName, {
+        tradeNames: new Set(),
+        indicationMap: new Map(),
+      });
+    }
+    const g = medicationsByScientificName.get(entry.scientificName)!;
+    g.tradeNames.add(entry.tradeName);
+
+    if (!g.indicationMap.has(entry.indication)) {
+      g.indicationMap.set(entry.indication, { codes: new Map() });
+    }
+    const indGroup = g.indicationMap.get(entry.indication)!;
+    for (const code of entry.icdCodes) {
+      if (!indGroup.codes.has(code.code)) {
+        indGroup.codes.set(code.code, code);
+      }
+    }
+  }
+
+  const medications: GroupedDrugResult[] = Array.from(medicationsByScientificName.entries())
+    .slice(0, limit)
+    .map(([sciName, g]) => {
+      const tradeNames = Array.from(g.tradeNames).sort();
+      const indications = Array.from(g.indicationMap.entries()).map(([indication, { codes }]) => {
+        const codeList = Array.from(codes.values());
+        const hasNonCovered = codeList.some(c => c.isNonCovered);
+        const hasCovered = codeList.some(c => !c.isNonCovered);
+        const coverageStatus: "COVERED" | "NON-COVERED" | "PARTIAL" =
+          codeList.length === 0 ? "COVERED" :
+          hasNonCovered && hasCovered ? "PARTIAL" :
+          hasNonCovered ? "NON-COVERED" : "COVERED";
+        return { indication, codes: codeList, coverageStatus };
+      });
+
+      const allCodes = indications.flatMap(i => i.codes);
+      const hasNonCovered = allCodes.some(c => c.isNonCovered);
+      const hasCovered = allCodes.some(c => !c.isNonCovered);
+      const overallCoverage: "COVERED" | "NON-COVERED" | "PARTIAL" =
+        allCodes.length === 0 ? "COVERED" :
+        hasNonCovered && hasCovered ? "PARTIAL" :
+        hasNonCovered ? "NON-COVERED" : "COVERED";
+
+      return {
+        scientificName: sciName,
+        tradeNames,
+        indications,
+        overallCoverage,
+        totalTradeNames: tradeNames.length,
+      };
+    });
+
+  // ===== CONDITIONS TAB: Group by indication =====
+  const conditionsByIndication = new Map<string, {
+    scientificNames: Set<string>;
+    tradeNames: Set<string>;
+    codes: Map<string, CodeInfo>;
+  }>();
+
+  for (const entry of enriched) {
+    if (!conditionsByIndication.has(entry.indication)) {
+      conditionsByIndication.set(entry.indication, {
+        scientificNames: new Set(),
+        tradeNames: new Set(),
+        codes: new Map(),
+      });
+    }
+    const g = conditionsByIndication.get(entry.indication)!;
+    g.scientificNames.add(entry.scientificName);
+    g.tradeNames.add(entry.tradeName);
+    for (const code of entry.icdCodes) {
+      if (!g.codes.has(code.code)) {
+        g.codes.set(code.code, code);
+      }
+    }
+  }
+
+  const conditions = Array.from(conditionsByIndication.entries())
+    .slice(0, limit)
+    .map(([indication, g]) => ({
+      indication,
+      scientificNames: Array.from(g.scientificNames).sort(),
+      tradeNames: Array.from(g.tradeNames).sort(),
+      codes: Array.from(g.codes.values()),
+    }));
+
+  // ===== CODES TAB: Group by ICD-10 code =====
+  const codesByCode = new Map<string, {
+    code: CodeInfo;
+    medications: Set<string>;
+  }>();
+
+  for (const entry of enriched) {
+    for (const code of entry.icdCodes) {
+      if (!codesByCode.has(code.code)) {
+        codesByCode.set(code.code, {
+          code,
+          medications: new Set(),
+        });
+      }
+      const g = codesByCode.get(code.code)!;
+      g.medications.add(entry.scientificName);
+    }
+  }
+
+  const codesResult = Array.from(codesByCode.values())
+    .slice(0, limit)
+    .map(({ code, medications }) => ({
+      code: code.code,
+      description: code.description,
+      branchCount: code.branchCount,
+      isNonCovered: code.isNonCovered,
+      branches: code.branches,
+      medications: Array.from(medications).sort(),
+    }));
+
+  return { medications, conditions, codes: codesResult };
+}
+
 export async function searchGroupedByScientificName(
   query: string,
   limit = 30

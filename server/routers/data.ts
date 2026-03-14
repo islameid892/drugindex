@@ -15,6 +15,7 @@ import {
   browseConditions,
   browseConditionsCount,
   searchGroupedByScientificName,
+  searchGroupedComprehensive,
 } from "../db";
 import { searchCache, analyticsCache } from "../cache";
 import { drugEntries } from "../../drizzle/schema";
@@ -138,14 +139,15 @@ export const dataRouter = router({
       const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
       
       // Check cache first
-      const cached = searchCache.get(cacheKey);
-      if (cached && Array.isArray(cached)) {
+      const cached = searchCache.get(cacheKey) as any;
+      if (cached && typeof cached === 'object' && 'medications' in cached) {
         // Log even cache hits
         const responseTimeMs = Date.now() - startTime;
         const { trackSearch } = await import("../db");
+        const totalResults = (cached.medications?.length ?? 0) + (cached.conditions?.length ?? 0) + (cached.codes?.length ?? 0);
         trackSearch({
           query: input.query,
-          resultsCount: cached.length,
+          resultsCount: totalResults,
           responseTimeMs,
           userId: ctx.user?.id || null,
           ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',
@@ -154,7 +156,7 @@ export const dataRouter = router({
       }
       
       // If not in cache, fetch from database
-      const results = await searchGroupedByScientificName(input.query, input.limit ?? 30);
+      const results = await searchGroupedComprehensive(input.query, input.limit ?? 30);
       const responseTimeMs = Date.now() - startTime;
       
       // Store in cache for future requests
@@ -162,9 +164,10 @@ export const dataRouter = router({
       
       // Track search in analytics
       const { trackSearch } = await import("../db");
+      const totalResults = (results.medications?.length ?? 0) + (results.conditions?.length ?? 0) + (results.codes?.length ?? 0);
       trackSearch({
         query: input.query,
-        resultsCount: results.length,
+        resultsCount: totalResults,
         responseTimeMs,
         userId: ctx.user?.id || null,
         ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',

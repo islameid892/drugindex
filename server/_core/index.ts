@@ -174,8 +174,10 @@ async function startServer() {
     });
   });
 
-  // Apply global rate limiting
-  app.use(globalLimiter);
+  // Apply global rate limiting (disabled in development)
+  if (process.env.NODE_ENV === 'production') {
+    app.use(globalLimiter);
+  }
 
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
@@ -197,11 +199,15 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Apply stricter rate limiting to API endpoints
-  app.use('/api/', apiLimiter);
+  // Apply stricter rate limiting to API endpoints (disabled in development)
+  if (process.env.NODE_ENV === 'production') {
+    app.use('/api/', apiLimiter);
+  }
 
-  // Apply stricter rate limiting to search endpoints
-  app.use('/api/trpc/data.searchGrouped', searchLimiter);
+  // Apply stricter rate limiting to search endpoints (disabled in development)
+  if (process.env.NODE_ENV === 'production') {
+    app.use('/api/trpc/data.searchGrouped', searchLimiter);
+  }
 
   // tRPC API with response optimization
   app.use(
