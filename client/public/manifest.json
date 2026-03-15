@@ -1,13 +1,13 @@
 {
-  "name": "ICD-10 Search Engine",
-  "short_name": "DRUGINDEX",
+  "name": "Drugindex.click",
+  "short_name": "Drugindex.click",
   "description": "Comprehensive ICD-10 medical coding and drug reference search engine. Search by scientific name, trade name, indication, or ICD-10 code.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0EA5E9",
-  "theme_color": "#0EA5E9",
+  "background_color": "#0078DB",
+  "theme_color": "#0078DB",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -29,39 +29,12 @@
     }
   ],
   "categories": ["medical", "productivity", "reference"],
-  "screenshots": [
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Search Drugs",
       "short_name": "Drugs",
       "description": "Search medications by scientific or trade name",
-      "url": "/?tab=drugs",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Search Codes",
-      "short_name": "Codes",
-      "description": "Search ICD-10 codes and diagnoses",
-      "url": "/?tab=codes",
+      "url": "/",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -70,15 +43,5 @@
         }
       ]
     }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  ]
 }
