@@ -8,7 +8,7 @@ import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { Suspense, lazy, useEffect } from "react";
 import Home from "./pages/Home";
 import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
-import { AdvancedSearchFAB } from "./components/AdvancedSearchFAB";
+// AdvancedSearchFAB is now in HeroSection
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
 
@@ -171,7 +171,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <AdvancedSearchFAB />
+            {/* AdvancedSearchFAB is now in HeroSection below search bar */}
             <PWAInstallPrompt />
             <PWAUpdateNotification />
           </TooltipProvider>

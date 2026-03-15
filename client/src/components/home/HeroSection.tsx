@@ -1,5 +1,6 @@
 import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
+import { AdvancedSearchFAB } from "@/components/AdvancedSearchFAB";
 import { Stethoscope } from "lucide-react";
 
 interface HeroSectionProps {
@@ -110,6 +111,11 @@ export function HeroSection({
             recentSearches={recentSearches}
             trendingSearches={trendingSearches}
           />
+        </div>
+
+        {/* Advanced Search Button */}
+        <div className="mt-4 flex justify-center">
+          <AdvancedSearchFAB variant="inline" />
         </div>
       </div>
 
