@@ -1,7 +1,7 @@
 {
   "name": "Drugindex.click",
   "short_name": "Drugindex.click",
-  "description": "Comprehensive ICD-10 medical coding and drug reference search engine. Search by scientific name, trade name, indication, or ICD-10 code.",
+  "description": "Comprehensive ICD-10 medical coding and drug reference search engine. Search medications by scientific name, trade name, indication, or ICD-10 code instantly.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
