@@ -164,9 +164,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               </div>
               <h1 className="text-3xl font-bold text-foreground">Advanced Search</h1>
             </div>
-            <button onClick={handleClose} className="text-muted-foreground hover:text-foreground transition-colors p-2">
-              <X className="h-6 w-6" />
-            </button>
+
           </div>
         </div>
 

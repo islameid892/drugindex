@@ -17,9 +17,9 @@ export function AdvancedSearchFAB({ variant = "fab" }: AdvancedSearchFABProps) {
         <Button
           onClick={() => setIsModalOpen(true)}
           variant="outline"
-          className="gap-2 border-sky-200 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950 text-foreground"
+          className="gap-2 border-sky-200 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950 text-foreground px-6 py-3 text-base font-semibold h-auto"
         >
-          <Sliders className="h-4 w-4" />
+          <Sliders className="h-5 w-5" />
           <span>Go to Advanced Search</span>
         </Button>
 
