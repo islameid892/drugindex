@@ -336,3 +336,13 @@
 - [ ] Display branches under each ICD-10 code in Advanced Search results
 - [ ] Highlight non-covered branches in red color
 - [ ] Test with various codes that have branches
+
+## Phase 28: Project Size Optimization (Migrate to API)
+- [x] Remove JSON data files from client/public (main_data.json, tree_data.json, code_map.json)
+- [x] Update Database.tsx to use API instead of JSON files
+- [x] Update DrugDetail.tsx to use API instead of JSON files
+- [x] Update CodeDetail.tsx to use API instead of JSON files
+- [x] Update ConditionDetail.tsx to use API instead of JSON files
+- [x] Test all search functionality with API (all 196 tests passing)
+- [x] Verify project size reduction (achieved 92.7% reduction in client/public: 37MB → 2.7MB)
+- [x] Verify all tests pass after optimization

@@ -2,51 +2,49 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { updatePageSchema } from "@/lib/jsonLdSchemas";
+import { trpc } from "@/lib/trpc";
 
 export default function ConditionDetail() {
   const { condition } = useParams<{ condition: string }>();
   const [, navigate] = useLocation();
   const decodedCondition = decodeURIComponent(condition || "");
-  const [drugs, setDrugs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
+  // Fetch medications from API
+  const { data: allMedications = [], isLoading } = trpc.data.medications.getAll.useQuery(
+    { limit: 50000, offset: 0 },
+    {
+      staleTime: 30 * 60 * 1000,
+      gcTime: 60 * 60 * 1000,
+      retry: 2,
+    }
+  );
+
+  // Filter drugs by condition
+  const drugs = allMedications.filter((item: any) =>
+    item.indication?.toLowerCase().includes(decodedCondition.toLowerCase())
+  );
+
+  // Update page schema when data is loaded
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const res = await fetch("/data/main_data.json");
-        const main = await res.json();
-        
-        const filtered = main.filter((item: any) =>
-          item.indication.toLowerCase().includes(decodedCondition.toLowerCase())
-        );
-        setDrugs(filtered);
-        
-        // Add JSON-LD schema for medical condition
-        updatePageSchema('condition', {
-          name: decodedCondition,
-          description: `Medical condition: ${decodedCondition} with ${filtered.length} treatment option(s)`,
-          url: `https://drugindex.click/condition/${encodeURIComponent(decodedCondition)}`,
-        });
-        
-        // Update page title
-        document.title = `${decodedCondition} - ICD-10 Search Engine`;
-        const metaDescription = document.querySelector('meta[name="description"]');
-        if (metaDescription) {
-          metaDescription.setAttribute('content', `Medical condition: ${decodedCondition} with ${filtered.length} treatment option(s)`);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
+    if (!isLoading) {
+      updatePageSchema('condition', {
+        name: decodedCondition,
+        description: `Medical condition: ${decodedCondition} with ${drugs.length} treatment option(s)`,
+        url: `https://drugindex.click/condition/${encodeURIComponent(decodedCondition)}`,
+      });
+
+      // Update page title
+      document.title = `${decodedCondition} - ICD-10 Search Engine`;
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', `Medical condition: ${decodedCondition} with ${drugs.length} treatment option(s)`);
       }
-    };
+    }
+  }, [decodedCondition, drugs.length, isLoading]);
 
-    loadData();
-  }, [decodedCondition]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
