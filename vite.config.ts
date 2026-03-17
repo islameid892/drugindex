@@ -28,6 +28,11 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        passes: 2, // Multiple compression passes for better optimization
+      },
+      mangle: true,
+      format: {
+        comments: false, // Remove all comments
       },
     },
     rollupOptions: {
@@ -45,11 +50,13 @@ export default defineConfig({
     // Core Web Vitals Optimizations
     target: 'esnext',
     reportCompressedSize: false,
+    // Additional size optimizations
+    assetsInlineLimit: 4096, // Inline small assets
   },
   // Performance optimizations
   optimizeDeps: {
     include: ['react', 'react-dom', 'wouter', 'lucide-react', 'pdf-lib'],
-
+    exclude: ['@vite/preload-helper'], // Exclude unnecessary preload helpers
   },
   server: {
     host: true,
