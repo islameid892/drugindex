@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useSearchTracking } from './useSearchTracking';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -29,8 +30,6 @@ export function useHomeSearch() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'Ibuprofen']);
   const [trendingSearches] = useState<string[]>(['Panadol', 'Diabetes', 'Hypertension', 'Aspirin', 'E11', 'Metformin', 'Lisinopril']);
-  const lastTrackedQuery = useRef('');
-
   // Debounce query
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 350);
@@ -70,8 +69,8 @@ export function useHomeSearch() {
 
   const totalPages = Math.ceil(groupedResults.length / ITEMS_PER_PAGE);
 
-  // Track search mutation
-  const trackSearchMutation = trpc.analytics.trackSearch.useMutation();
+  // Use the custom search tracking hook with debounce
+  useSearchTracking(debouncedQuery, groupedResults.length, 500);
 
   // Auto-scroll to results
   useEffect(() => {
@@ -83,24 +82,6 @@ export function useHomeSearch() {
       return () => clearTimeout(timer);
     }
   }, [query]);
-
-  // Track search analytics
-  useEffect(() => {
-    if (!query || query.trim().length < 2) return;
-    const trimmedQuery = query.trim();
-    if (trimmedQuery === lastTrackedQuery.current) return;
-
-    const timer = setTimeout(() => {
-      lastTrackedQuery.current = trimmedQuery;
-      trackSearchMutation.mutate({
-        query: trimmedQuery,
-        resultCount: groupedResults.length,
-        responseTime: 0,
-      });
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [query, groupedResults.length]);
 
   const handleQueryChange = (val: string) => {
     setQuery(val);
