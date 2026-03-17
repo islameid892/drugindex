@@ -246,12 +246,59 @@ async function startServer() {
 
 
 
+  // 404 Error handler - return proper HTTP 404 status
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Check if request is for API or static files that don't exist
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'API endpoint not found',
+        path: req.path,
+      });
+    }
+    // For SPA routes, let Vite/static handler deal with it
+    next();
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
+
+  // Final 404 handler for unmatched routes (after static files)
+  app.use((req: Request, res: Response) => {
+    // Return 404 status with JSON response for API requests
+    if (req.accepts('json')) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'The requested resource was not found',
+        path: req.path,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    // For HTML requests, serve index.html (SPA routing)
+    res.status(404).sendFile(require('path').join(__dirname, '../../dist/public/index.html'));
+  });
+
+  // Error handler middleware (must be last)
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('Server error:', err);
+    
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    const statusCode = err.statusCode || err.status || 500;
+    const message = err.message || 'Internal Server Error';
+
+    res.status(statusCode).json({
+      error: 'Server Error',
+      message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+  });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);

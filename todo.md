@@ -355,3 +355,13 @@
 - [x] Update vite.config.ts for production optimization (passes: 2, mangle: true, comments: false)
 - [x] Verify project size reduction (849 MB total, 2.7 MB client/public)
 - [x] Test all functionality after optimization (196 tests passing)
+
+## Phase 30: Google Search Console Fixes
+- [x] Add canonical tags to all pages (seoHelpers.ts already implemented)
+- [x] Fix soft 404 errors with proper 404 page handling (added 404 middleware with HTTP 404 status)
+- [x] Configure www redirect (www.drugindex.click → drugindex.click) - .htaccess configured
+- [x] Update robots.txt with proper directives (already optimized)
+- [x] Verify sitemap.xml is complete and valid (updated with all pages)
+- [x] Add Open Graph and Twitter meta tags (updateOpenGraphTags and updateTwitterCardTags in seoHelpers)
+- [x] Test canonical tag implementation (all 196 tests passing)
+- [x] Update NotFound page with noindex tag (prevents 404 pages from being indexed)

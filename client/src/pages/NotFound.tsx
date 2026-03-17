@@ -2,9 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Home } from "lucide-react";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
+import { updatePageSEO } from "@/lib/seoHelpers";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
+
+  // Add noindex tag and update SEO for 404 page
+  useEffect(() => {
+    updatePageSEO({
+      title: '404 - Page Not Found | ICD-10 Search Engine',
+      description: 'The page you are looking for does not exist. Please return to the homepage.',
+      pathname: '/404',
+      noindex: true, // Prevent this page from being indexed
+    });
+  }, []);
 
   const handleGoHome = () => {
     setLocation("/");
