@@ -76,6 +76,39 @@ export const searchRateLimitMiddleware = t.middleware(async opts => {
 });
 
 /**
+ * Search tracking middleware - logs all searches with metadata
+ */
+export const searchTrackingMiddleware = t.middleware(async opts => {
+  const { ctx, next, input } = opts;
+  const startTime = Date.now();
+  
+  // Call the next handler and capture the result
+  const result = await next({ ctx });
+  
+  // Record search analytics asynchronously (don't block the response)
+  const responseTime = Date.now() - startTime;
+  const searchQuery = (input as any)?.query || (input as any)?.term || 'unknown';
+  const resultsCount = (result as any)?.length || (result as any)?.results?.length || 0;
+  
+  // Fire and forget - don't await
+  (async () => {
+    try {
+      const { recordSearch } = await import("../db");
+      await recordSearch({
+        query: searchQuery,
+        resultsCount,
+        responseTimeMs: responseTime,
+        source: ctx.req?.headers['x-search-source'] as string || 'main',
+      });
+    } catch (error) {
+      console.error('[Search Tracking] Failed to record search:', error);
+    }
+  })();
+  
+  return result;
+});
+
+/**
  * Rate limiting middleware for analytics endpoints
  */
 export const analyticsRateLimitMiddleware = t.middleware(async opts => {
@@ -130,7 +163,9 @@ export const apiRateLimitMiddleware = t.middleware(async opts => {
 });
 
 // Create rate-limited procedure variants
-export const searchProcedure = publicProcedure.use(searchRateLimitMiddleware);
+export const searchProcedure = publicProcedure
+  .use(searchRateLimitMiddleware)
+  .use(searchTrackingMiddleware);
 export const analyticsProcedure = publicProcedure.use(analyticsRateLimitMiddleware);
 export const bulkOperationProcedure = publicProcedure.use(bulkOperationRateLimitMiddleware);
 export const apiProcedure = publicProcedure.use(apiRateLimitMiddleware);

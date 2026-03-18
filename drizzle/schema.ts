@@ -139,6 +139,7 @@ export const searchAnalytics = mysqlTable(
     query: varchar("query", { length: 500 }).notNull(),
     resultsCount: int("results_count").notNull().default(0),
     searchType: varchar("search_type", { length: 50 }).notNull().default("general"),
+    source: varchar("source", { length: 50 }).notNull().default("main"),
     responseTimeMs: int("response_time_ms").notNull().default(0),
     userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
     ipAddress: varchar("ip_address", { length: 45 }),

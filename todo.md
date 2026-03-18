@@ -365,3 +365,19 @@
 - [x] Add Open Graph and Twitter meta tags (updateOpenGraphTags and updateTwitterCardTags in seoHelpers)
 - [x] Test canonical tag implementation (all 196 tests passing)
 - [x] Update NotFound page with noindex tag (prevents 404 pages from being indexed)
+
+## Phase 31: Metrics Page Improvements
+- [ ] Fix Recent Searches to aggregate duplicate searches (group by search term)
+- [ ] Add unified search tracking from all sources (main search, browse modal, advanced search)
+- [ ] Simplify analytics chart visualization (make it clearer and easier to understand)
+- [ ] Test search tracking from all entry points
+- [ ] Verify Recent Searches aggregation works correctly
+
+
+## Phase 32: PWA Auto-Update Implementation
+- [x] Analyze current Service Worker and manifest.json setup
+- [x] Implement service worker versioning with cache busting (BUILD_TIMESTAMP in sw.js)
+- [x] Add automatic update detection and notification (improved usePWAUpdate hook)
+- [x] Update manifest.json with version and icon versioning (v2.0.0 with timestamp)
+- [x] Implement auto-reload on new version (2 second delay)
+- [x] Test PWA updates - all 196 tests passing

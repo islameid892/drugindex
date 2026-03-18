@@ -1078,6 +1078,39 @@ export async function getRecentSearches(limit = 20) {
 }
 
 /**
+ * Get aggregated recent searches (groups same searches together)
+ * @param limit - number of unique searches to return (default 10)
+ */
+export async function getAggregatedRecentSearches(limit = 10) {
+  const db = await getDb();
+  
+  // Get unique searches with their latest occurrence and total count
+  const searches = await db
+    .select({
+      query: searchAnalytics.query,
+      count: count().as("count"),
+      lastSearchedAt: sql<Date>`MAX(${searchAnalytics.createdAt})`.as("lastSearchedAt"),
+      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
+    })
+    .from(searchAnalytics)
+    .groupBy(searchAnalytics.query)
+    .orderBy(sql`MAX(${searchAnalytics.createdAt}) DESC`)
+    .limit(limit);
+  
+  return (searches as Array<{
+    query: string;
+    count: number | bigint;
+    lastSearchedAt: Date | null;
+    avgResponseTime: string | number | null;
+  }>).map((row) => ({
+    query: row.query,
+    count: Number(row.count),
+    lastSearchedAt: row.lastSearchedAt,
+    avgResponseTime: Number(row.avgResponseTime ?? 0),
+  }));
+}
+
+/**
  * Get active users count (users with activity in last X minutes)
  * @param minutesAgo - consider users active if they were seen in last X minutes (default 15)
  */
