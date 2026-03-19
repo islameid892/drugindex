@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Mail } from "lucide-react";
+import PWAInstallButton from "./PWAInstallButton";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -45,9 +46,12 @@ export default function Footer() {
           </div>
 
           {/* Right Section */}
-          <p className="text-slate-600">
-            By <span className="font-semibold">Islam Mostafa Eid</span>
-          </p>
+          <div className="flex items-center gap-3">
+            <PWAInstallButton />
+            <p className="text-slate-600">
+              By <span className="font-semibold">Islam Mostafa Eid</span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>
