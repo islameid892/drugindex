@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
 
 interface Message {
   id: string;
@@ -22,6 +23,9 @@ export default function SilaChatbot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use tRPC mutation
+  const aiChatMutation = trpc.aiChat.sendMessage.useMutation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,66 +52,51 @@ export default function SilaChatbot() {
     setIsLoading(true);
 
     try {
-      // Call mse_ai_api
-      const response = await fetch("http://localhost:7777/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer change-secret-key-2026",
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: `أنت سيلا، مساعدة افتراضية ودية متخصصة في موقع ICD-10 Search Engine. 
-              الموقع يوفر:
-              - البحث عن الأدوية والعقاقير الطبية
-              - البحث عن أكواز ICD-10 الطبية
-              - البحث عن الحالات الطبية والتشخيصات
-              - التحقق من الأكواز غير المغطاة بالتأمين السعودي
-              - أدوات مساعدة مثل تحويل الصور إلى PDF ودمج ملفات PDF
-              
-              أجب على أسئلة المستخدمين بشكل ودي ومفيد. إذا كان السؤال عن الموقع، ساعد المستخدم.
-              إذا كان السؤال عن معلومات طبية عامة، يمكنك الإجابة بشكل عام.
-              رد باللغة العربية دائماً.`,
-            },
-            ...messages.map((msg) => ({
-              role: msg.role,
-              content: msg.content,
-            })),
-            {
-              role: "user",
-              content: input,
-            },
-          ],
-          model: "gpt-4o-mini",
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
+      const result = await aiChatMutation.mutateAsync({
+        messages: [
+          {
+            role: "system",
+            content: `أنت سيلا، مساعدة افتراضية ودية متخصصة في موقع ICD-10 Search Engine. 
+            الموقع يوفر:
+            - البحث عن الأدوية والعقاقير الطبية
+            - البحث عن أكواز ICD-10 الطبية
+            - البحث عن الحالات الطبية والتشخيصات
+            - التحقق من الأكواز غير المغطاة بالتأمين السعودي
+            - أدوات مساعدة مثل تحويل الصور إلى PDF ودمج ملفات PDF
+            
+            أجب على أسئلة المستخدمين بشكل ودي ومفيد. إذا كان السؤال عن الموقع، ساعد المستخدم.
+            إذا كان السؤال عن معلومات طبية عامة، يمكنك الإجابة بشكل عام.
+            رد باللغة العربية دائماً.`,
+          },
+          ...messages.map((msg) => ({
+            role: msg.role as "user" | "assistant" | "system",
+            content: msg.content,
+          })),
+          {
+            role: "user",
+            content: input,
+          },
+        ],
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+        max_tokens: 500,
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content:
-          data.choices?.[0]?.message?.content ||
-          "عذراً، حدث خطأ في الحصول على الرد. يرجى المحاولة لاحقاً.",
+        content: result.content || "عذراً، حدث خطأ في الحصول على الرد. يرجى المحاولة لاحقاً.",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error("Error calling mse_ai_api:", error);
+      console.error("Error calling AI Chat:", error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
-          "عذراً، حدث خطأ في الاتصال بخدمة الذكاء الاصطناعي. يرجى التأكد من أن الخادم يعمل بشكل صحيح.",
+          "عذراً، حدث خطأ في الاتصال بخدمة الذكاء الاصطناعي. يرجى المحاولة لاحقاً.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
