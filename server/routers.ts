@@ -10,7 +10,6 @@ import { toolsRouter } from "./routers/tools";
 import { advancedSearchRouter } from "./routers/advancedSearch";
 import { monitoringRouter } from "./routers/monitoring";
 import { advancedCachingRouter } from "./routers/advancedCaching";
-import { aiChatRouter } from "./routers/aiChat";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -51,7 +50,6 @@ export const appRouter = router({
   advancedSearch: advancedSearchRouter,
   monitoring: monitoringRouter,
   advancedCaching: advancedCachingRouter,
-  aiChat: aiChatRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
