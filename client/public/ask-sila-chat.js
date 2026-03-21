@@ -33,21 +33,38 @@
         position: fixed;
         bottom: 24px;
         right: 24px;
-        width: 58px;
-        height: 58px;
-        background: linear-gradient(135deg, #1a6fc4 0%, #0d4f9e 100%);
+        width: 68px;
+        height: 68px;
+        background: transparent;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(26,111,196,0.45);
+        box-shadow: 0 6px 28px rgba(26,111,196,0.5), 0 0 0 3px rgba(26,111,196,0.15);
         z-index: 9998;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 2px solid rgba(255,255,255,0.2);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        border: none;
+        overflow: hidden;
       }
-      #sila-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,111,196,0.55); }
-      #sila-fab svg { width: 26px; height: 26px; fill: white; }
+      #sila-fab:hover { transform: scale(1.1); box-shadow: 0 8px 36px rgba(26,111,196,0.65), 0 0 0 5px rgba(26,111,196,0.2); }
+      #sila-fab img { width: 68px; height: 68px; object-fit: cover; border-radius: 50%; display: block; }
+      /* AI badge on FAB */
+      #sila-fab::after {
+        content: 'AI';
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 2px 5px;
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.5px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      }
 
       #sila-window {
         position: fixed;
@@ -80,14 +97,14 @@
       }
       .sila-header-left { display: flex; align-items: center; gap: 10px; }
       .sila-avatar {
-        width: 38px; height: 38px;
-        background: rgba(255,255,255,0.2);
+        width: 42px; height: 42px;
         border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 18px;
-        border: 2px solid rgba(255,255,255,0.35);
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.5);
         flex-shrink: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
       }
+      .sila-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .sila-title { color: #fff; font-weight: 700; font-size: 15px; font-family: 'Cairo', sans-serif; line-height: 1.2; }
       .sila-subtitle { color: rgba(255,255,255,0.8); font-size: 11px; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 4px; }
       .sila-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; display: inline-block; }
@@ -130,12 +147,14 @@
       .sila-msg-row.user { flex-direction: row-reverse; }
 
       .sila-msg-avatar {
-        width: 28px; height: 28px; border-radius: 50%;
+        width: 32px; height: 32px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-size: 13px; flex-shrink: 0;
+        overflow: hidden;
       }
-      .sila-msg-avatar.bot { background: linear-gradient(135deg, #1a6fc4, #0d4f9e); color: white; }
-      .sila-msg-avatar.user { background: #e2e8f0; color: #475569; }
+      .sila-msg-avatar.bot { background: transparent; }
+      .sila-msg-avatar.bot img { width: 32px; height: 32px; object-fit: cover; border-radius: 50%; display: block; }
+      .sila-msg-avatar.user { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #475569; font-size: 14px; }
 
       .sila-bubble {
         max-width: 78%;
@@ -309,7 +328,7 @@
     fab.id = "sila-fab";
     fab.setAttribute("role", "button");
     fab.setAttribute("aria-label", "Ask Sila - Medical Assistant");
-    fab.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>`;
+    fab.innerHTML = `<img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-chat-icon-AjkUSY8zQ7qvLAFgx2zD95.png" alt="Ask Sila AI" loading="lazy" />`;
 
     // Chat window
     const win = document.createElement("div");
@@ -319,10 +338,12 @@
     win.innerHTML = `
       <div id="sila-header">
         <div class="sila-header-left">
-          <div class="sila-avatar">🩺</div>
+          <div class="sila-avatar">
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />
+          </div>
           <div>
-            <div class="sila-title">سيلا / Sila</div>
-            <div class="sila-subtitle"><span class="sila-dot"></span> مساعد drugindex.click</div>
+            <div class="sila-title">سيلا / Sila <span style="font-size:10px;background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;font-weight:600;letter-spacing:0.5px;">AI</span></div>
+            <div class="sila-subtitle"><span class="sila-dot"></span> مساعد ICD-10-AM الذكي · drugindex.click</div>
           </div>
         </div>
         <button id="sila-close" aria-label="Close chat">✕</button>
@@ -330,10 +351,13 @@
 
       <div id="sila-messages">
         <div class="sila-welcome">
-          <div class="sila-welcome-title">👋 مرحباً! أنا سيلا</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" style="width:52px;height:52px;border-radius:50%;border:2px solid #bfdbfe;object-fit:cover;" />
+          </div>
+          <div class="sila-welcome-title">مرحباً! أنا سيلا 👋</div>
           <div class="sila-welcome-sub">
-            مساعدك الطبي الذكي على drugindex.click<br>
-            أبحث في قاعدة بيانات الموقع لأجيبك بدقة عن أكواد ICD-10 والأدوية وقواعد الفوترة
+            مساعدك الطبي الذكي المتخصص في <strong>ICD-10-AM</strong> على drugindex.click<br>
+            أبحث في قاعدة بيانات الموقع لأجيبك بدقة عن الأكواد والأدوية وقواعد الفوترة السعودية
           </div>
         </div>
       </div>
@@ -471,7 +495,11 @@
 
     const avatar = document.createElement("div");
     avatar.className = `sila-msg-avatar ${role === "user" ? "user" : "bot"}`;
-    avatar.textContent = role === "user" ? "👤" : "🩺";
+    if (role === "user") {
+      avatar.textContent = "👤";
+    } else {
+      avatar.innerHTML = `<img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />`;
+    }
 
     const bubble = document.createElement("div");
     bubble.className = `sila-bubble ${role === "error" ? "error" : role === "user" ? "user" : "bot"}`;
@@ -502,7 +530,7 @@
     row.className = "sila-msg-row assistant";
     row.id = "sila-loading-row";
     row.innerHTML = `
-      <div class="sila-msg-avatar bot">🩺</div>
+      <div class="sila-msg-avatar bot"><img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" /></div>
       <div class="sila-bubble bot" dir="rtl">
         <div class="sila-typing"><span></span><span></span><span></span></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:'Cairo',sans-serif;">سيلا تفكر...</div>
