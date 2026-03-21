@@ -407,3 +407,11 @@
 - [x] Add RTL/LTR auto-detection per message
 - [x] Test Arabic query (السكري) - 8 DB hits confirmed
 - [x] Test English query - working with uppercase matching
+
+## Phase 35: Ask Sila - ICD-10-AM Exclusive Reference
+- [x] Update system prompt to enforce ICD-10-AM as the ONLY coding standard
+- [x] Add ICD-10-AM context and rules to every response
+- [x] Instruct Sila to correct users if they reference other ICD versions (tested with ICD-10-CM query)
+- [x] Add ICD-10-AM specific notes (5th/6th digit extensions, Australian/Saudi modifications)
+- [x] Verified: Arabic query returns 8 DB hits with ICD-10-AM labels
+- [x] Verified: English ICD-10-CM query correctly redirected to ICD-10-AM with 15 DB hits
