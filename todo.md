@@ -389,3 +389,10 @@
 - [x] Disable button while updating (disabled state + opacity)
 - [x] Add smooth transition animation before reload (animate-in fade-in slide-in)
 - [x] Test update flow with visual feedback (all 196 tests passing)
+
+## Phase 33: Markdown Rendering for Ask Sila
+- [x] Add markdown-it library to parse markdown in chat responses (installed markdown-it and dompurify)
+- [x] Update ask-sila-chat.js to render markdown (bold, bullets, headers, code)
+- [x] Style markdown elements to match medical theme (blue color scheme #007bff)
+- [ ] Test with Arabic and English responses
+- [ ] Save checkpoint for publishing

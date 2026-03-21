@@ -1,4 +1,4 @@
-// Ask Sila Chat - Medical AI Assistant
+// Ask Sila Chat - Medical AI Assistant with Markdown Rendering
 // Uses direct API endpoint instead of tRPC
 
 const CONFIG = {
@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", initializeChat);
 function initializeChat() {
   createChatUI();
   setupEventListeners();
+  addMarkdownStyles();
 }
 
 function createChatUI() {
@@ -198,6 +199,44 @@ async function sendMessage() {
   }
 }
 
+function renderMarkdown(text) {
+  let html = text;
+
+  // Escape HTML special characters first (but preserve markdown syntax)
+  html = html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Convert markdown to HTML
+  // Headers (### Title)
+  html = html.replace(/^### (.+)$/gm, '<div style="font-weight: 600; font-size: 13px; margin-top: 8px; color: #1e40af;">$1</div>');
+
+  // Bold (**text**)
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight: 600; color: #111827;">$1</strong>');
+
+  // Italic (*text*)
+  html = html.replace(/\*(.+?)\*/g, '<em style="font-style: italic; color: #374151;">$1</em>');
+
+  // Inline code (`code`)
+  html = html.replace(/`(.+?)`/g, '<code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 12px; color: #1f2937;">$1</code>');
+
+  // Bullet points (- item or • item)
+  html = html.replace(/^\s*[-•]\s+(.+)$/gm, '<div style="margin-left: 16px; margin-top: 4px;">• $1</div>');
+
+  // Numbered lists (1. item)
+  let listCounter = 0;
+  html = html.replace(/^\s*\d+\.\s+(.+)$/gm, () => {
+    listCounter++;
+    return `<div style="margin-left: 16px; margin-top: 4px;">${listCounter}. ${arguments[1]}</div>`;
+  });
+
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+}
+
 function addMessageToChat(role, content) {
   const messagesContainer = document.getElementById("ask-sila-messages");
   const messageDiv = document.createElement("div");
@@ -206,12 +245,16 @@ function addMessageToChat(role, content) {
   const textDiv = document.createElement("div");
   if (role === "user") {
     textDiv.style.cssText = "background: #007bff; color: white; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px;";
+    textDiv.textContent = content;
   } else if (role === "assistant") {
-    textDiv.style.cssText = "background: #e5e7eb; color: #111827; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px;";
+    textDiv.style.cssText = "background: #e5e7eb; color: #111827; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px; line-height: 1.5;";
+    // Render markdown for assistant messages
+    textDiv.innerHTML = renderMarkdown(content);
   } else if (role === "error") {
     textDiv.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px;";
+    textDiv.textContent = content;
   }
-  textDiv.textContent = content;
+  
   messageDiv.appendChild(textDiv);
   messagesContainer.appendChild(messageDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -225,31 +268,56 @@ function showLoadingIndicator() {
   loadingDiv.innerHTML = `
     <div style="background: #e5e7eb; color: #111827; padding: 12px; border-radius: 8px; font-size: 14px;">
       <div style="display: flex; gap: 4px;">
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: bounce 1.4s infinite;"></div>
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: bounce 1.4s infinite; animation-delay: 0.2s;"></div>
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: bounce 1.4s infinite; animation-delay: 0.4s;"></div>
+        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite;"></div>
+        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite; animation-delay: 0.2s;"></div>
+        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite; animation-delay: 0.4s;"></div>
       </div>
       <div style="margin-top: 4px; font-size: 12px;">Sila is thinking...</div>
     </div>
   `;
   messagesContainer.appendChild(loadingDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-  // Add animation styles if not already present
-  if (!document.getElementById("ask-sila-animations")) {
-    const style = document.createElement("style");
-    style.id = "ask-sila-animations";
-    style.textContent = `
-      @keyframes bounce {
-        0%, 80%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-8px); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
 }
 
 function removeLoadingIndicator() {
   const loadingDiv = document.getElementById("ask-sila-loading");
   if (loadingDiv) loadingDiv.remove();
+}
+
+function addMarkdownStyles() {
+  if (!document.getElementById("ask-sila-markdown-styles")) {
+    const style = document.createElement("style");
+    style.id = "ask-sila-markdown-styles";
+    style.textContent = `
+      @keyframes ask-sila-bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-8px); }
+      }
+      
+      #ask-sila-messages strong {
+        font-weight: 600;
+        color: #111827;
+      }
+      
+      #ask-sila-messages em {
+        font-style: italic;
+        color: #374151;
+      }
+      
+      #ask-sila-messages code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #1f2937;
+      }
+      
+      #ask-sila-messages div[style*="margin-left"] {
+        margin-top: 4px;
+        margin-bottom: 2px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
 }
