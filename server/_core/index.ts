@@ -15,6 +15,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import superjson from "superjson";
+import askSilaRouter from "../api/askSila";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -198,6 +199,9 @@ async function startServer() {
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Ask Sila API routes
+  app.use("/api/askSila", askSilaRouter);
 
   // Apply stricter rate limiting to API endpoints (disabled in development)
   if (process.env.NODE_ENV === 'production') {
