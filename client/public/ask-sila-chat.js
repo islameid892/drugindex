@@ -1,323 +1,576 @@
-// Ask Sila Chat - Medical AI Assistant with Markdown Rendering
-// Uses direct API endpoint instead of tRPC
+// ============================================================
+// Ask Sila - Medical AI Assistant for drugindex.click
+// Version 2.0 - Professional Bilingual Design
+// ============================================================
 
-const CONFIG = {
-  apiUrl: "/api/askSila",
-};
+(function () {
+  "use strict";
 
-const chatState = {
-  isOpen: false,
-  isLoading: false,
-  conversationHistory: [],
-};
+  const CONFIG = { apiUrl: "/api/askSila" };
 
-document.addEventListener("DOMContentLoaded", initializeChat);
-
-function initializeChat() {
-  createChatUI();
-  setupEventListeners();
-  addMarkdownStyles();
-}
-
-function createChatUI() {
-  const fab = document.createElement("div");
-  fab.id = "ask-sila-fab";
-  fab.setAttribute("role", "button");
-  fab.setAttribute("hint", "Ask Sila / اسأل سيلا");
-  fab.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
-    color: white;
-    z-index: 999;
-    transition: all 0.3s ease;
-    font-size: 24px;
-  `;
-  fab.innerHTML = "💬";
-
-  const chatWindow = document.createElement("div");
-  chatWindow.id = "ask-sila-window";
-  chatWindow.style.cssText = `
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 380px;
-    height: 600px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    display: none;
-    flex-direction: column;
-    z-index: 1000;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  `;
-  
-  chatWindow.innerHTML = `
-    <div style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 16px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">●</div>
-        <div>
-          <div style="font-weight: 600;">Ask Sila</div>
-          <div style="font-size: 12px; color: #dbeafe;">● Online</div>
-        </div>
-      </div>
-      <button id="ask-sila-close" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 0;">✕</button>
-    </div>
-
-    <div id="ask-sila-messages" style="flex: 1; overflow-y: auto; padding: 16px; background: #f9fafb; display: flex; flex-direction: column; gap: 12px;">
-      <div style="background: #eff6ff; padding: 12px; border-radius: 8px;">
-        <div style="font-size: 14px; font-weight: 600; color: #1e40af;">👋 مرحباً أنا سيلا</div>
-        <div style="font-size: 12px; color: #1e3a8a; margin-top: 4px;">I'm your medical AI assistant. How can I help?</div>
-      </div>
-    </div>
-
-    <div style="padding: 12px 16px; border-top: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
-      <div style="font-size: 12px; font-weight: 600; color: #4b5563;">Quick Actions:</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-        <button class="quick-action-btn" data-action="icd10" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">❓ ICD-10?</button>
-        <button class="quick-action-btn" data-action="billing" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">💰 Billing</button>
-        <button class="quick-action-btn" data-action="code" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;">🔍 Code</button>
-      </div>
-    </div>
-
-    <div style="border-top: 1px solid #e5e7eb; padding: 12px 16px; display: flex; gap: 8px;">
-      <input id="ask-sila-input" type="text" placeholder="Ask Sila... / اسأل سيلا..." style="flex: 1; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 14px; outline: none;" />
-      <button id="ask-sila-send" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">➤</button>
-    </div>
-  `;
-
-  document.body.appendChild(fab);
-  document.body.appendChild(chatWindow);
-}
-
-function setupEventListeners() {
-  const fab = document.getElementById("ask-sila-fab");
-  const closeBtn = document.getElementById("ask-sila-close");
-  const sendBtn = document.getElementById("ask-sila-send");
-  const inputField = document.getElementById("ask-sila-input");
-  const quickBtns = document.querySelectorAll(".quick-action-btn");
-
-  fab.addEventListener("click", toggleChat);
-  fab.addEventListener("mouseover", () => fab.style.transform = "scale(1.1)");
-  fab.addEventListener("mouseout", () => fab.style.transform = "scale(1)");
-
-  closeBtn.addEventListener("click", closeChat);
-  sendBtn.addEventListener("click", sendMessage);
-  inputField.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-
-  quickBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const action = btn.getAttribute("data-action");
-      handleQuickAction(action);
-    });
-    btn.addEventListener("mouseover", () => btn.style.background = "#dbeafe");
-    btn.addEventListener("mouseout", () => btn.style.background = "#eff6ff");
-  });
-}
-
-function toggleChat() {
-  chatState.isOpen = !chatState.isOpen;
-  const chatWindow = document.getElementById("ask-sila-window");
-  chatWindow.style.display = chatState.isOpen ? "flex" : "none";
-  if (chatState.isOpen) {
-    setTimeout(() => document.getElementById("ask-sila-input").focus(), 100);
-  }
-}
-
-function closeChat() {
-  chatState.isOpen = false;
-  document.getElementById("ask-sila-window").style.display = "none";
-}
-
-function handleQuickAction(action) {
-  const messages = {
-    icd10: "What is ICD-10 and why is it important in medical billing?",
-    billing: "Explain the Saudi Billing System (SBS v3.0) and how it works",
-    code: "Help me find the ICD-10 code for diabetes",
+  const state = {
+    isOpen: false,
+    isLoading: false,
+    history: [],
   };
-  document.getElementById("ask-sila-input").value = messages[action];
-  sendMessage();
-}
 
-async function sendMessage() {
-  const inputField = document.getElementById("ask-sila-input");
-  const userMessage = inputField.value.trim();
-
-  if (!userMessage || chatState.isLoading) return;
-
-  addMessageToChat("user", userMessage);
-  inputField.value = "";
-
-  chatState.isLoading = true;
-  showLoadingIndicator();
-
-  try {
-    const payload = {
-      message: userMessage,
-      conversationHistory: chatState.conversationHistory.slice(-10),
-    };
-
-    const response = await fetch(CONFIG.apiUrl + "/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    addMessageToChat("assistant", data.message);
-
-    if (data.conversationHistory) {
-      chatState.conversationHistory = data.conversationHistory;
-    }
-  } catch (error) {
-    console.error("Chat error:", error);
-    addMessageToChat("error", `❌ Error: ${error.message}`);
-  } finally {
-    chatState.isLoading = false;
-    removeLoadingIndicator();
+  // ── Inject Google Fonts (Cairo for Arabic, Inter for English) ──
+  function injectFonts() {
+    if (document.getElementById("sila-fonts")) return;
+    const link = document.createElement("link");
+    link.id = "sila-fonts";
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap";
+    document.head.appendChild(link);
   }
-}
 
-function renderMarkdown(text) {
-  let html = text;
-
-  // Escape HTML special characters first (but preserve markdown syntax)
-  html = html
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  // Convert markdown to HTML
-  // Headers (### Title)
-  html = html.replace(/^### (.+)$/gm, '<div style="font-weight: 600; font-size: 13px; margin-top: 8px; color: #1e40af;">$1</div>');
-
-  // Bold (**text**)
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight: 600; color: #111827;">$1</strong>');
-
-  // Italic (*text*)
-  html = html.replace(/\*(.+?)\*/g, '<em style="font-style: italic; color: #374151;">$1</em>');
-
-  // Inline code (`code`)
-  html = html.replace(/`(.+?)`/g, '<code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 12px; color: #1f2937;">$1</code>');
-
-  // Bullet points (- item or • item)
-  html = html.replace(/^\s*[-•]\s+(.+)$/gm, '<div style="margin-left: 16px; margin-top: 4px;">• $1</div>');
-
-  // Numbered lists (1. item)
-  let listCounter = 0;
-  html = html.replace(/^\s*\d+\.\s+(.+)$/gm, () => {
-    listCounter++;
-    return `<div style="margin-left: 16px; margin-top: 4px;">${listCounter}. ${arguments[1]}</div>`;
-  });
-
-  // Line breaks
-  html = html.replace(/\n/g, '<br>');
-
-  return html;
-}
-
-function addMessageToChat(role, content) {
-  const messagesContainer = document.getElementById("ask-sila-messages");
-  const messageDiv = document.createElement("div");
-  messageDiv.style.cssText = `display: flex; ${role === "user" ? "justify-end" : "justify-start"};`;
-
-  const textDiv = document.createElement("div");
-  if (role === "user") {
-    textDiv.style.cssText = "background: #007bff; color: white; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px;";
-    textDiv.textContent = content;
-  } else if (role === "assistant") {
-    textDiv.style.cssText = "background: #e5e7eb; color: #111827; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px; line-height: 1.5;";
-    // Render markdown for assistant messages
-    textDiv.innerHTML = renderMarkdown(content);
-  } else if (role === "error") {
-    textDiv.style.cssText = "background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 14px;";
-    textDiv.textContent = content;
-  }
-  
-  messageDiv.appendChild(textDiv);
-  messagesContainer.appendChild(messageDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function showLoadingIndicator() {
-  const messagesContainer = document.getElementById("ask-sila-messages");
-  const loadingDiv = document.createElement("div");
-  loadingDiv.id = "ask-sila-loading";
-  loadingDiv.style.cssText = "display: flex; justify-start;";
-  loadingDiv.innerHTML = `
-    <div style="background: #e5e7eb; color: #111827; padding: 12px; border-radius: 8px; font-size: 14px;">
-      <div style="display: flex; gap: 4px;">
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite;"></div>
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite; animation-delay: 0.2s;"></div>
-        <div style="width: 8px; height: 8px; background: #4b5563; border-radius: 50%; animation: ask-sila-bounce 1.4s infinite; animation-delay: 0.4s;"></div>
-      </div>
-      <div style="margin-top: 4px; font-size: 12px;">Sila is thinking...</div>
-    </div>
-  `;
-  messagesContainer.appendChild(loadingDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function removeLoadingIndicator() {
-  const loadingDiv = document.getElementById("ask-sila-loading");
-  if (loadingDiv) loadingDiv.remove();
-}
-
-function addMarkdownStyles() {
-  if (!document.getElementById("ask-sila-markdown-styles")) {
-    const style = document.createElement("style");
-    style.id = "ask-sila-markdown-styles";
-    style.textContent = `
-      @keyframes ask-sila-bounce {
-        0%, 80%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-8px); }
+  // ── Inject CSS ──
+  function injectStyles() {
+    if (document.getElementById("sila-styles")) return;
+    const css = `
+      #sila-fab {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 58px;
+        height: 58px;
+        background: linear-gradient(135deg, #1a6fc4 0%, #0d4f9e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(26,111,196,0.45);
+        z-index: 9998;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 2px solid rgba(255,255,255,0.2);
       }
-      
-      #ask-sila-messages strong {
-        font-weight: 600;
-        color: #111827;
+      #sila-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,111,196,0.55); }
+      #sila-fab svg { width: 26px; height: 26px; fill: white; }
+
+      #sila-window {
+        position: fixed;
+        bottom: 96px;
+        right: 24px;
+        width: 400px;
+        max-height: 620px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+        display: none;
+        flex-direction: column;
+        z-index: 9999;
+        font-family: 'Cairo', 'Inter', -apple-system, sans-serif;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
       }
-      
-      #ask-sila-messages em {
-        font-style: italic;
-        color: #374151;
+      @media (max-width: 480px) {
+        #sila-window { width: calc(100vw - 24px); right: 12px; bottom: 88px; }
       }
-      
-      #ask-sila-messages code {
-        background: #f3f4f6;
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-family: monospace;
+
+      /* ── Header ── */
+      #sila-header {
+        background: linear-gradient(135deg, #1a6fc4 0%, #0d4f9e 100%);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .sila-header-left { display: flex; align-items: center; gap: 10px; }
+      .sila-avatar {
+        width: 38px; height: 38px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        border: 2px solid rgba(255,255,255,0.35);
+        flex-shrink: 0;
+      }
+      .sila-title { color: #fff; font-weight: 700; font-size: 15px; font-family: 'Cairo', sans-serif; line-height: 1.2; }
+      .sila-subtitle { color: rgba(255,255,255,0.8); font-size: 11px; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 4px; }
+      .sila-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; display: inline-block; }
+      #sila-close {
+        background: rgba(255,255,255,0.15);
+        border: none; color: white; cursor: pointer;
+        width: 28px; height: 28px; border-radius: 50%;
+        font-size: 14px; display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s;
+      }
+      #sila-close:hover { background: rgba(255,255,255,0.3); }
+
+      /* ── Messages area ── */
+      #sila-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        scroll-behavior: smooth;
+      }
+      #sila-messages::-webkit-scrollbar { width: 4px; }
+      #sila-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+      /* ── Welcome card ── */
+      .sila-welcome {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+      }
+      .sila-welcome-title { font-size: 15px; font-weight: 700; color: #1e40af; font-family: 'Cairo', sans-serif; margin-bottom: 4px; }
+      .sila-welcome-sub { font-size: 12px; color: #3b82f6; font-family: 'Cairo', sans-serif; line-height: 1.5; }
+
+      /* ── Message bubbles ── */
+      .sila-msg-row { display: flex; align-items: flex-end; gap: 8px; }
+      .sila-msg-row.user { flex-direction: row-reverse; }
+
+      .sila-msg-avatar {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; flex-shrink: 0;
+      }
+      .sila-msg-avatar.bot { background: linear-gradient(135deg, #1a6fc4, #0d4f9e); color: white; }
+      .sila-msg-avatar.user { background: #e2e8f0; color: #475569; }
+
+      .sila-bubble {
+        max-width: 78%;
+        padding: 11px 14px;
+        border-radius: 14px;
+        font-size: 13.5px;
+        line-height: 1.7;
+        word-break: break-word;
+      }
+      .sila-bubble.bot {
+        background: #ffffff;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .sila-bubble.user {
+        background: linear-gradient(135deg, #1a6fc4, #0d4f9e);
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+      }
+      .sila-bubble.error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+        border-bottom-left-radius: 4px;
+      }
+
+      /* ── RTL/LTR detection ── */
+      .sila-bubble[dir="rtl"] { text-align: right; font-family: 'Cairo', sans-serif; }
+      .sila-bubble[dir="ltr"] { text-align: left; font-family: 'Inter', sans-serif; }
+
+      /* ── Markdown inside bubbles ── */
+      .sila-bubble strong { font-weight: 700; }
+      .sila-bubble.bot strong { color: #1a6fc4; }
+      .sila-bubble em { font-style: italic; opacity: 0.85; }
+      .sila-bubble code {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
         font-size: 12px;
-        color: #1f2937;
       }
-      
-      #ask-sila-messages div[style*="margin-left"] {
-        margin-top: 4px;
-        margin-bottom: 2px;
+      .sila-bubble .md-h3 {
+        font-weight: 700;
+        font-size: 13px;
+        color: #1a6fc4;
+        margin: 10px 0 4px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #dbeafe;
+        display: block;
       }
+      .sila-bubble .md-li {
+        display: flex;
+        gap: 6px;
+        margin: 3px 0;
+        padding-inline-start: 4px;
+      }
+      .sila-bubble .md-li-marker { color: #1a6fc4; font-weight: 700; flex-shrink: 0; }
+      .sila-bubble .md-para { margin: 6px 0; display: block; }
+      .sila-bubble .md-warn {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin: 6px 0;
+        color: #9a3412;
+        font-size: 12.5px;
+      }
+      .sila-bubble .md-db-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 11px;
+        color: #1d4ed8;
+        margin-bottom: 6px;
+      }
+
+      /* ── Loading dots ── */
+      .sila-typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+      .sila-typing span {
+        width: 7px; height: 7px;
+        background: #94a3b8;
+        border-radius: 50%;
+        animation: sila-bounce 1.3s infinite ease-in-out;
+      }
+      .sila-typing span:nth-child(2) { animation-delay: 0.18s; }
+      .sila-typing span:nth-child(3) { animation-delay: 0.36s; }
+      @keyframes sila-bounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40% { transform: translateY(-6px); opacity: 1; }
+      }
+
+      /* ── Quick actions ── */
+      #sila-quick {
+        padding: 10px 14px 6px;
+        border-top: 1px solid #f1f5f9;
+        background: #fff;
+        flex-shrink: 0;
+      }
+      .sila-quick-label { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 7px; font-family: 'Cairo', sans-serif; }
+      .sila-quick-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+      .sila-qa-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        cursor: pointer;
+        font-family: 'Cairo', sans-serif;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .sila-qa-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+      /* ── Input area ── */
+      #sila-input-area {
+        border-top: 1px solid #e2e8f0;
+        padding: 10px 12px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: #fff;
+        flex-shrink: 0;
+      }
+      #sila-input {
+        flex: 1;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        font-family: 'Cairo', 'Inter', sans-serif;
+        outline: none;
+        color: #1e293b;
+        background: #f8fafc;
+        transition: border-color 0.2s;
+        direction: auto;
+      }
+      #sila-input:focus { border-color: #1a6fc4; background: #fff; }
+      #sila-input::placeholder { color: #94a3b8; }
+      #sila-send {
+        width: 38px; height: 38px;
+        background: linear-gradient(135deg, #1a6fc4, #0d4f9e);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: opacity 0.2s, transform 0.15s;
+      }
+      #sila-send:hover { opacity: 0.88; transform: scale(1.05); }
+      #sila-send:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+      #sila-send svg { width: 16px; height: 16px; fill: white; }
     `;
+    const style = document.createElement("style");
+    style.id = "sila-styles";
+    style.textContent = css;
     document.head.appendChild(style);
   }
-}
+
+  // ── Build UI ──
+  function buildUI() {
+    // FAB button
+    const fab = document.createElement("div");
+    fab.id = "sila-fab";
+    fab.setAttribute("role", "button");
+    fab.setAttribute("aria-label", "Ask Sila - Medical Assistant");
+    fab.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>`;
+
+    // Chat window
+    const win = document.createElement("div");
+    win.id = "sila-window";
+    win.setAttribute("role", "dialog");
+    win.setAttribute("aria-label", "Ask Sila Chat");
+    win.innerHTML = `
+      <div id="sila-header">
+        <div class="sila-header-left">
+          <div class="sila-avatar">🩺</div>
+          <div>
+            <div class="sila-title">سيلا / Sila</div>
+            <div class="sila-subtitle"><span class="sila-dot"></span> مساعد drugindex.click</div>
+          </div>
+        </div>
+        <button id="sila-close" aria-label="Close chat">✕</button>
+      </div>
+
+      <div id="sila-messages">
+        <div class="sila-welcome">
+          <div class="sila-welcome-title">👋 مرحباً! أنا سيلا</div>
+          <div class="sila-welcome-sub">
+            مساعدك الطبي الذكي على drugindex.click<br>
+            أبحث في قاعدة بيانات الموقع لأجيبك بدقة عن أكواد ICD-10 والأدوية وقواعد الفوترة
+          </div>
+        </div>
+      </div>
+
+      <div id="sila-quick">
+        <div class="sila-quick-label">أسئلة سريعة / Quick Actions</div>
+        <div class="sila-quick-grid">
+          <button class="sila-qa-btn" data-q="ما هو كود ICD-10 للسكري؟">🩸 كود السكري</button>
+          <button class="sila-qa-btn" data-q="ما هي أدوية ضغط الدم؟">💊 أدوية الضغط</button>
+          <button class="sila-qa-btn" data-q="What is ICD-10 coding?">❓ ICD-10 Info</button>
+          <button class="sila-qa-btn" data-q="ما هي الأكواد غير المغطاة بالتأمين؟">⚠️ غير مغطى</button>
+        </div>
+      </div>
+
+      <div id="sila-input-area">
+        <input id="sila-input" type="text" placeholder="اسأل سيلا... / Ask Sila..." autocomplete="off" />
+        <button id="sila-send" aria-label="Send">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(fab);
+    document.body.appendChild(win);
+  }
+
+  // ── Events ──
+  function bindEvents() {
+    document.getElementById("sila-fab").addEventListener("click", toggleChat);
+    document.getElementById("sila-close").addEventListener("click", closeChat);
+    document.getElementById("sila-send").addEventListener("click", sendMessage);
+    document.getElementById("sila-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    document.querySelectorAll(".sila-qa-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const q = btn.getAttribute("data-q");
+        document.getElementById("sila-input").value = q;
+        sendMessage();
+      });
+    });
+  }
+
+  function toggleChat() {
+    state.isOpen = !state.isOpen;
+    const win = document.getElementById("sila-window");
+    win.style.display = state.isOpen ? "flex" : "none";
+    if (state.isOpen) setTimeout(() => document.getElementById("sila-input").focus(), 120);
+  }
+
+  function closeChat() {
+    state.isOpen = false;
+    document.getElementById("sila-window").style.display = "none";
+  }
+
+  // ── Detect text direction ──
+  function detectDir(text) {
+    const arabicChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
+    const latinChars = (text.match(/[a-zA-Z]/g) || []).length;
+    return arabicChars > latinChars ? "rtl" : "ltr";
+  }
+
+  // ── Markdown renderer ──
+  function renderMarkdown(raw) {
+    // Escape HTML
+    let t = raw
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Database badge
+    t = t.replace(
+      /Found in drugindex\.click database|وجدت في قاعدة بيانات الموقع/g,
+      '<span class="md-db-badge">🗄️ قاعدة بيانات الموقع</span>'
+    );
+
+    // Warning lines (⚠️ or NOT covered)
+    t = t.replace(
+      /^(⚠️.+|.*NOT covered.*)$/gm,
+      '<span class="md-warn">$1</span>'
+    );
+
+    // H3 headers (### or ##)
+    t = t.replace(/^#{2,3}\s+(.+)$/gm, '<span class="md-h3">$1</span>');
+
+    // Bold
+    t = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    // Italic
+    t = t.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    // Inline code
+    t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // Numbered list items
+    t = t.replace(
+      /^(\d+)\.\s+(.+)$/gm,
+      '<span class="md-li"><span class="md-li-marker">$1.</span><span>$2</span></span>'
+    );
+
+    // Bullet list items (- or •)
+    t = t.replace(
+      /^[-•]\s+(.+)$/gm,
+      '<span class="md-li"><span class="md-li-marker">•</span><span>$1</span></span>'
+    );
+
+    // Paragraphs: split on double newline
+    const blocks = t.split(/\n{2,}/);
+    t = blocks
+      .map((block) => {
+        // If already wrapped in a block element, don't wrap again
+        if (
+          block.startsWith('<span class="md-h3') ||
+          block.startsWith('<span class="md-li') ||
+          block.startsWith('<span class="md-warn') ||
+          block.startsWith('<span class="md-db')
+        ) {
+          return block;
+        }
+        // Single newlines within a paragraph → <br>
+        const inner = block.replace(/\n/g, "<br>");
+        return `<span class="md-para">${inner}</span>`;
+      })
+      .join("\n");
+
+    return t;
+  }
+
+  // ── Add message to chat ──
+  function addMessage(role, content) {
+    const container = document.getElementById("sila-messages");
+
+    const row = document.createElement("div");
+    row.className = `sila-msg-row ${role}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = `sila-msg-avatar ${role === "user" ? "user" : "bot"}`;
+    avatar.textContent = role === "user" ? "👤" : "🩺";
+
+    const bubble = document.createElement("div");
+    bubble.className = `sila-bubble ${role === "error" ? "error" : role === "user" ? "user" : "bot"}`;
+
+    if (role === "user") {
+      const dir = detectDir(content);
+      bubble.setAttribute("dir", dir);
+      bubble.textContent = content;
+    } else if (role === "assistant") {
+      const dir = detectDir(content);
+      bubble.setAttribute("dir", dir);
+      bubble.innerHTML = renderMarkdown(content);
+    } else {
+      bubble.setAttribute("dir", "rtl");
+      bubble.textContent = content;
+    }
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // ── Loading indicator ──
+  function showLoading() {
+    const container = document.getElementById("sila-messages");
+    const row = document.createElement("div");
+    row.className = "sila-msg-row assistant";
+    row.id = "sila-loading-row";
+    row.innerHTML = `
+      <div class="sila-msg-avatar bot">🩺</div>
+      <div class="sila-bubble bot" dir="rtl">
+        <div class="sila-typing"><span></span><span></span><span></span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:'Cairo',sans-serif;">سيلا تفكر...</div>
+      </div>`;
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function hideLoading() {
+    const el = document.getElementById("sila-loading-row");
+    if (el) el.remove();
+  }
+
+  // ── Send message ──
+  async function sendMessage() {
+    const input = document.getElementById("sila-input");
+    const sendBtn = document.getElementById("sila-send");
+    const text = input.value.trim();
+    if (!text || state.isLoading) return;
+
+    addMessage("user", text);
+    input.value = "";
+    state.isLoading = true;
+    sendBtn.disabled = true;
+    showLoading();
+
+    try {
+      const res = await fetch(CONFIG.apiUrl + "/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          message: text,
+          conversationHistory: state.history.slice(-8),
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      hideLoading();
+      addMessage("assistant", data.message);
+
+      if (data.conversationHistory) {
+        state.history = data.conversationHistory;
+      }
+    } catch (err) {
+      hideLoading();
+      addMessage("error", "❌ حدث خطأ. يرجى المحاولة مرة أخرى.\n" + err.message);
+    } finally {
+      state.isLoading = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  // ── Init ──
+  function init() {
+    injectFonts();
+    injectStyles();
+    buildUI();
+    bindEvents();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

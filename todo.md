@@ -396,3 +396,14 @@
 - [x] Style markdown elements to match medical theme (blue color scheme #007bff)
 - [ ] Test with Arabic and English responses
 - [ ] Save checkpoint for publishing
+
+## Phase 34: Ask Sila - Complete Redesign & Database Integration
+- [x] Fix backend to deeply search medications + ICD-10 codes + conditions database
+- [x] Add Arabic-to-English medical term dictionary (80+ terms) for DB search
+- [x] Improve system prompt to make Sila aware she is part of drugindex.click
+- [x] Fix bilingual text rendering (Arabic + English alignment with dir attribute)
+- [x] Redesign chat UI with proper fonts (Cairo for Arabic, Inter for English)
+- [x] Fix message formatting: paragraphs, numbered lists, bullet points with markdown renderer
+- [x] Add RTL/LTR auto-detection per message
+- [x] Test Arabic query (السكري) - 8 DB hits confirmed
+- [x] Test English query - working with uppercase matching
