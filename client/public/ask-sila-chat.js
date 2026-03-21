@@ -33,37 +33,62 @@
         position: fixed;
         bottom: 24px;
         right: 24px;
-        width: 68px;
-        height: 68px;
-        background: transparent;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(145deg, #1a6fc4, #0d4f9e);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 6px 28px rgba(26,111,196,0.5), 0 0 0 3px rgba(26,111,196,0.15);
+        box-shadow: 0 6px 24px rgba(26,111,196,0.55), 0 0 0 4px rgba(26,111,196,0.18);
         z-index: 9998;
         transition: transform 0.25s ease, box-shadow 0.25s ease;
-        border: none;
-        overflow: hidden;
+        border: 3px solid #ffffff;
+        overflow: visible;
+        padding: 0;
       }
-      #sila-fab:hover { transform: scale(1.1); box-shadow: 0 8px 36px rgba(26,111,196,0.65), 0 0 0 5px rgba(26,111,196,0.2); }
-      #sila-fab img { width: 68px; height: 68px; object-fit: cover; border-radius: 50%; display: block; }
-      /* AI badge on FAB */
-      #sila-fab::after {
-        content: 'AI';
+      #sila-fab:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(26,111,196,0.7), 0 0 0 6px rgba(26,111,196,0.25); }
+      /* Sila avatar inside circle */
+      #sila-fab .sila-fab-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+      }
+      /* Chat bubble indicator at bottom-right */
+      #sila-fab .sila-fab-badge {
         position: absolute;
-        top: 2px;
-        right: 2px;
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-        font-size: 9px;
-        font-weight: 800;
-        padding: 2px 5px;
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        letter-spacing: 0.5px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        bottom: -4px;
+        right: -4px;
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #1a6fc4, #0d4f9e);
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      }
+      #sila-fab .sila-fab-badge svg {
+        width: 12px;
+        height: 12px;
+        fill: white;
+      }
+      /* Online pulse ring */
+      #sila-fab::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px solid rgba(26,111,196,0.35);
+        animation: sila-pulse 2.5s ease-in-out infinite;
+      }
+      @keyframes sila-pulse {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 0; transform: scale(1.18); }
       }
 
       #sila-window {
@@ -328,7 +353,12 @@
     fab.id = "sila-fab";
     fab.setAttribute("role", "button");
     fab.setAttribute("aria-label", "Ask Sila - Medical Assistant");
-    fab.innerHTML = `<img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-chat-icon-AjkUSY8zQ7qvLAFgx2zD95.png" alt="Ask Sila AI" loading="lazy" />`;
+    fab.innerHTML = `
+      <img class="sila-fab-avatar" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />
+      <div class="sila-fab-badge">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      </div>
+    `;
 
     // Chat window
     const win = document.createElement("div");
