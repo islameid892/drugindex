@@ -219,3 +219,39 @@ export const searchAnalyticsRelations = relations(searchAnalytics, ({ one }) => 
     references: [users.id],
   }),
 }));
+
+
+// ─── Drug Lens Database (Separate from drug_entries) ──────────────────────────
+// Comprehensive drug reference with detailed pharmaceutical information
+// 8000+ drugs with dosages, interactions, pregnancy categories, etc.
+
+export const drugLens = mysqlTable(
+  "drug_lens",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    scientificName: varchar("scientific_name", { length: 500 }).notNull(),
+    tradeName: varchar("trade_name", { length: 500 }).notNull(),
+    price: varchar("price", { length: 100 }),
+    pharmacologicalAction: text("pharmacological_action"),
+    blackBoxWarning: text("black_box_warning"),
+    uses: text("uses"),
+    pregnancyCategory: varchar("pregnancy_category", { length: 50 }),
+    standardDose: text("standard_dose"),
+    adjustedDose: text("adjusted_dose"),
+    neonatalDose: text("neonatal_dose"),
+    doseSource: text("dose_source"),
+    contraindicatedInteractions: text("contraindicated_interactions"),
+    majorInteractions: text("major_interactions"),
+    moderateInteractions: text("moderate_interactions"),
+    minorInteractions: text("minor_interactions"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    sciNameIdx: index("idx_drug_lens_sci_name").on(t.scientificName),
+    tradeNameIdx: index("idx_drug_lens_trade_name").on(t.tradeName),
+  })
+);
+
+export type DrugLens = typeof drugLens.$inferSelect;
+export type InsertDrugLens = typeof drugLens.$inferInsert;

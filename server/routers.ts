@@ -11,6 +11,7 @@ import { advancedSearchRouter } from "./routers/advancedSearch";
 import { monitoringRouter } from "./routers/monitoring";
 import { advancedCachingRouter } from "./routers/advancedCaching";
 import { askSilaRouter } from "./routers/askSila";
+import { drugLensRouter } from "./routers/drugLens";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -52,6 +53,7 @@ export const appRouter = router({
   monitoring: monitoringRouter,
   advancedCaching: advancedCachingRouter,
   askSila: askSilaRouter,
+  drugLens: drugLensRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

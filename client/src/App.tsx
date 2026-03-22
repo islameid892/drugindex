@@ -30,6 +30,7 @@ const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
+const DrugLens = lazy(() => import("./pages/DrugLens"));
 
 const Metrics = lazy(() => import("./pages/Metrics"));
 const PerformanceDashboard = lazy(() => import("./pages/PerformanceDashboard"));
@@ -117,6 +118,11 @@ function Router() {
       <Route path={"/browse/scientific-name/:scientificName"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <BrowseByScientificName />
+        </Suspense>
+      )} />
+      <Route path={"/drug-lens"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <DrugLens />
         </Suspense>
       )} />
       <Route path={"/favorites"} component={() => (

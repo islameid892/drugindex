@@ -430,3 +430,16 @@
 - [x] Enforce inline code formatting instead of lists
 - [x] Tested: Arabic query now 40 words (was verbose)
 - [x] Groq API configured for fast focused responses
+
+## Phase 38: Drug Lens Feature
+- [x] Create drug_lens table in database (separate from ICD-10 tables)
+- [x] Import 8164 drugs from Excel into drug_lens table
+- [x] Create drugLens tRPC router (search, getById, autocomplete, getAlternatives, getStats)
+- [x] Register drugLens router in AppRouter
+- [x] Build DrugLens.tsx page with Card View + List View
+- [x] Add Google-style autocomplete with filter dropdown (Trade Name / Scientific Name / Both)
+- [x] Add Drug Detail modal with all 15 fields
+- [x] Add alternatives button (by scientific name/active ingredient)
+- [x] Add Drug Lens route /drug-lens in App.tsx
+- [x] Add Drug Lens button in HeroSection below Advanced Search button
+- [x] Verify API returns 8164 drugs correctly
