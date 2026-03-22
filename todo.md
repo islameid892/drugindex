@@ -463,3 +463,11 @@
 - [ ] Stack filter dropdown below search on mobile
 - [ ] Add stats bar (total drugs count) in hero
 - [ ] Save checkpoint
+
+## Phase 41: Drug Lens - Luxury Nano Banana Redesign
+- [ ] Generate Saudi Drug Lens logo (luxury, gold/blue, medical lens motif)
+- [ ] Redesign full page: no auto-results, hero-only until search
+- [ ] Full-screen cinematic hero with Saudi Drug Lens branding
+- [ ] Search bar centered, filter button below it
+- [ ] Nano banana luxury aesthetic throughout
+- [ ] Save checkpoint
