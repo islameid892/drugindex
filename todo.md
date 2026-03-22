@@ -455,3 +455,11 @@
 - [x] Add view toggle buttons (Card / List)
 - [x] API tested: panadol returns 10 results correctly
 - [x] TypeScript clean (0 errors)
+
+## Phase 40: Drug Lens - Cinematic Header & Responsive Search
+- [ ] Design cinematic hero header with animated gradient/particle background
+- [ ] Add Drug Lens logo + tagline in hero section
+- [ ] Make search bar fully responsive (mobile, tablet, desktop)
+- [ ] Stack filter dropdown below search on mobile
+- [ ] Add stats bar (total drugs count) in hero
+- [ ] Save checkpoint

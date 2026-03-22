@@ -343,66 +343,104 @@ export default function DrugLens() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* ── Top Navigation ─────────────────────────────────────────────────── */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+
+      {/* ── Sticky Top Nav Bar ──────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-white/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#0066cc] rounded-lg flex items-center justify-center">
-                <Search className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#0066cc] to-[#0044aa] rounded-xl flex items-center justify-center shadow-md">
+                <Search className="h-4.5 w-4.5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-gray-900 text-lg">Drug Lens</span>
+                <span className="font-extrabold text-gray-900 text-lg tracking-tight">Drug Lens</span>
                 <span className="text-xs text-gray-400 block leading-none">Comprehensive Drug Reference</span>
               </div>
             </div>
-
             {/* Nav Links */}
             <div className="hidden md:flex items-center gap-6">
-              <Link href="/" className="text-sm text-gray-600 hover:text-[#0066cc] transition-colors font-medium">Home</Link>
-              <span className="text-sm text-[#0066cc] font-semibold border-b-2 border-[#0066cc] pb-0.5">Drug Database</span>
-              <Link href="/" className="text-sm text-gray-600 hover:text-[#0066cc] transition-colors font-medium">ICD-10 Search</Link>
+              <Link href="/" className="text-sm text-gray-500 hover:text-[#0066cc] transition-colors font-medium">← Home</Link>
+              <span className="text-sm text-[#0066cc] font-bold border-b-2 border-[#0066cc] pb-0.5">Drug Database</span>
             </div>
-
-            {/* Stats */}
+            {/* Stats pill */}
             {stats && (
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 bg-blue-50 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full">
                 <Pill className="h-3.5 w-3.5 text-[#0066cc]" />
-                <span className="font-semibold text-[#0066cc]">{stats.total.toLocaleString()}</span>
-                <span>drugs</span>
+                <span className="font-bold text-[#0066cc]">{stats.total.toLocaleString()}</span>
+                <span className="text-gray-500 hidden sm:inline">drugs</span>
               </div>
             )}
           </div>
         </div>
       </nav>
 
-      {/* ── Search Bar ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
-            {/* Search Input with Autocomplete */}
-            <div className="flex-1 relative" ref={searchRef}>
-              <div className="flex items-center bg-white border-2 border-gray-300 focus-within:border-[#0066cc] rounded-xl px-4 py-2.5 gap-2 transition-colors">
+      {/* ── Cinematic Hero Header ───────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #001a3d 0%, #003380 30%, #0055cc 60%, #0077ff 80%, #00aaff 100%)",
+          minHeight: "280px",
+        }}
+      >
+        {/* Animated grid overlay */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+        {/* Glowing orbs */}
+        <div className="absolute top-[-60px] left-[-60px] w-64 h-64 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #00ccff 0%, transparent 70%)" }} />
+        <div className="absolute bottom-[-40px] right-[-40px] w-80 h-80 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #0044ff 0%, transparent 70%)" }} />
+        <div className="absolute top-[30%] right-[20%] w-40 h-40 rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }} />
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          {/* Badge */}
+          <div className="flex justify-center mb-5">
+            <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white text-xs font-semibold px-4 py-1.5 rounded-full">
+              <Activity className="h-3.5 w-3.5" />
+              {stats ? `${stats.total.toLocaleString()} Drugs in Database` : "Comprehensive Drug Reference"}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-center text-white font-extrabold text-3xl sm:text-4xl md:text-5xl mb-2 tracking-tight">
+            Drug <span className="text-[#66ccff]">Lens</span>
+          </h1>
+          <p className="text-center text-blue-200 text-sm sm:text-base mb-8 max-w-xl mx-auto">
+            Search trade names, scientific names, doses, interactions & more
+          </p>
+
+          {/* ── Search Row ── */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3" ref={searchRef}>
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <div className="flex items-center bg-white rounded-2xl px-4 py-3 gap-2 shadow-xl shadow-black/20">
                 <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
                   value={query}
                   onChange={e => { setQuery(e.target.value); setShowAutocomplete(true); }}
                   onFocus={() => query.length >= 2 && setShowAutocomplete(true)}
-                  placeholder="Search for drugs..."
-                  className="flex-1 outline-none text-sm text-gray-800 placeholder-gray-400 bg-transparent"
+                  placeholder="Search for drugs by trade or scientific name..."
+                  className="flex-1 outline-none text-sm text-gray-800 placeholder-gray-400 bg-transparent min-w-0"
                 />
                 {query && (
-                  <button onClick={() => { setQuery(""); setShowAutocomplete(false); }} className="text-gray-400 hover:text-gray-600">
+                  <button onClick={() => { setQuery(""); setShowAutocomplete(false); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-
               {/* Autocomplete Dropdown */}
               {showAutocomplete && suggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
                   {suggestions.map((s: { id: number; tradeName: string; scientificName: string }) => (
                     <button
                       key={s.id}
@@ -410,8 +448,8 @@ export default function DrugLens() {
                       onMouseDown={e => { e.preventDefault(); handleSelectSuggestion(s); }}
                     >
                       <Search className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                      <div>
-                        <span className="text-sm font-semibold text-gray-800">{s.tradeName}</span>
+                      <div className="min-w-0">
+                        <span className="text-sm font-bold text-gray-800">{s.tradeName}</span>
                         <span className="text-xs text-gray-400 ml-2">{s.scientificName}</span>
                       </div>
                     </button>
@@ -420,51 +458,68 @@ export default function DrugLens() {
               )}
             </div>
 
-            {/* Filter Dropdown */}
-            <div className="relative flex-shrink-0" ref={filterRef}>
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-[#0066cc] rounded-xl text-sm font-medium text-gray-700 transition-colors whitespace-nowrap"
-              >
-                <span>Filter: {filterLabel}</span>
-                <svg className={`h-4 w-4 transition-transform ${showFilterDropdown ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {showFilterDropdown && (
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 min-w-[180px]">
-                  {(["both", "trade", "scientific"] as FilterType[]).map(ft => (
-                    <button
-                      key={ft}
-                      onClick={() => { setFilterType(ft); setShowFilterDropdown(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors ${filterType === ft ? "text-[#0066cc] font-semibold" : "text-gray-700"}`}
-                    >
-                      {filterType === ft && <span className="text-[#0066cc]">✓</span>}
-                      {ft === "both" ? "All Names" : ft === "trade" ? "Trade Name" : "Scientific Name"}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Filter + View Toggle Row on mobile, inline on desktop */}
+            <div className="flex gap-2 sm:gap-3 flex-shrink-0">
+              {/* Filter Dropdown */}
+              <div className="relative flex-1 sm:flex-none" ref={filterRef}>
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 bg-white/15 backdrop-blur border border-white/30 hover:bg-white/25 rounded-2xl text-sm font-semibold text-white transition-colors whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Filter:</span>
+                  <span>{filterLabel}</span>
+                  <svg className={`h-4 w-4 transition-transform flex-shrink-0 ${showFilterDropdown ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showFilterDropdown && (
+                  <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 min-w-[180px]">
+                    {(["both", "trade", "scientific"] as FilterType[]).map(ft => (
+                      <button
+                        key={ft}
+                        onClick={() => { setFilterType(ft); setShowFilterDropdown(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors ${filterType === ft ? "text-[#0066cc] font-bold bg-blue-50" : "text-gray-700"}`}
+                      >
+                        {filterType === ft && <span className="text-[#0066cc]">✓</span>}
+                        {ft === "both" ? "All Names" : ft === "trade" ? "Trade Name" : "Scientific Name"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* View Toggle */}
-            <div className="flex items-center border-2 border-gray-300 rounded-xl overflow-hidden flex-shrink-0">
-              <button
-                onClick={() => setViewMode("card")}
-                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${viewMode === "card" ? "bg-[#0066cc] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                <span className="hidden sm:inline">Card View</span>
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${viewMode === "list" ? "bg-[#0066cc] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
-              >
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">List View</span>
-              </button>
+              {/* View Toggle */}
+              <div className="flex items-center bg-white/15 backdrop-blur border border-white/30 rounded-2xl overflow-hidden flex-shrink-0">
+                <button
+                  onClick={() => setViewMode("card")}
+                  className={`flex items-center gap-1.5 px-3 py-3 text-sm font-semibold transition-colors ${
+                    viewMode === "card" ? "bg-white text-[#0066cc]" : "text-white hover:bg-white/10"
+                  }`}
+                  title="Card View"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="hidden lg:inline">Cards</span>
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`flex items-center gap-1.5 px-3 py-3 text-sm font-semibold transition-colors ${
+                    viewMode === "list" ? "bg-white text-[#0066cc]" : "text-white hover:bg-white/10"
+                  }`}
+                  title="List View"
+                >
+                  <List className="h-4 w-4" />
+                  <span className="hidden lg:inline">List</span>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Bottom wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 40 C360 0 1080 0 1440 40 L1440 40 L0 40 Z" fill="#f9fafb" />
+          </svg>
         </div>
       </div>
 
