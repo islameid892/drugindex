@@ -403,33 +403,25 @@ export default function DrugLens() {
   return (
     <div className="min-h-screen font-sans" style={{ background: "#f0f4f8" }}>
 
-      {/* ── Sticky Top Nav Bar ──────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 shadow-lg"
-        style={{ background: "rgba(10,22,40,0.97)", backdropFilter: "blur(12px)" }}>
+      {/* ── Sticky Top Nav Bar (minimal, transparent overlay) ─────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50"
+        style={{ background: "transparent" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16 pt-2">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
+                <ChevronLeft className="h-3.5 w-3.5 text-white/60 group-hover:text-white transition-colors" />
+                <span className="text-xs text-white/60 group-hover:text-white transition-colors font-medium">Home</span>
+              </div>
+            </Link>
             <div className="flex items-center gap-3">
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/saudi-drug-lens-logo-9UC9jAWg9dSvnP8WFQhAFr.png"
-                alt="Saudi Drug Lens"
-                className="h-9 w-9 rounded-xl object-contain"
-              />
-              <div>
-                <span className="font-extrabold text-white text-base tracking-tight">Saudi Drug Lens</span>
-                <span className="text-[#c9a227] text-xs block leading-none font-medium">مرجع الأدوية السعودي</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-5">
-                <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors font-medium">← Home</Link>
-                <span className="text-sm text-[#c9a227] font-bold">Drug Database</span>
-              </div>
               {stats && (
-                <div className="flex items-center gap-1.5 text-xs border border-[#c9a227]/30 px-3 py-1.5 rounded-full"
-                  style={{ background: "rgba(201,162,39,0.1)" }}>
+                <div className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(201,162,39,0.12)", border: "1px solid rgba(201,162,39,0.25)", backdropFilter: "blur(8px)" }}>
                   <Pill className="h-3.5 w-3.5 text-[#c9a227]" />
                   <span className="font-bold text-[#c9a227]">{stats.total.toLocaleString()}</span>
-                  <span className="text-gray-400 hidden sm:inline">drugs</span>
+                  <span className="text-[#c9a227]/60 hidden sm:inline">drugs</span>
                 </div>
               )}
             </div>
@@ -442,7 +434,7 @@ export default function DrugLens() {
         className="relative overflow-hidden"
         style={{
           background: "linear-gradient(160deg, #020d1f 0%, #041530 20%, #071e45 40%, #0a2d6e 60%, #0d3d8f 80%, #0a2d6e 100%)",
-          minHeight: hasSearched ? "260px" : "100vh",
+          minHeight: hasSearched ? "300px" : "100vh",
           transition: "min-height 0.6s cubic-bezier(0.4,0,0.2,1)",
           display: "flex",
           flexDirection: "column",
@@ -497,49 +489,36 @@ export default function DrugLens() {
         {/* Hero Content */}
         <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 flex flex-col items-center">
 
-          {/* Logo */}
+          {/* Logo + Brand - seamlessly integrated into the dark hero */}
           <div className="mb-8 flex flex-col items-center">
             <div
-              className="relative mb-5"
+              className="relative mb-2"
               style={{
-                filter: "drop-shadow(0 0 40px rgba(201,162,39,0.4)) drop-shadow(0 0 80px rgba(13,61,143,0.6))",
+                filter: "drop-shadow(0 0 60px rgba(201,162,39,0.6)) drop-shadow(0 0 120px rgba(26,107,255,0.5))",
               }}
             >
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/saudi-drug-lens-logo-9UC9jAWg9dSvnP8WFQhAFr.png"
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/drug-lens-logo-final_89c54456.png"
                 alt="Saudi Drug Lens"
-                className="w-36 h-36 sm:w-44 sm:h-44 object-contain"
+                className="w-44 h-44 sm:w-56 sm:h-56 object-contain"
+                style={{ mixBlendMode: "normal" }}
               />
             </div>
 
-            {/* Brand Name */}
-            <div className="text-center">
-              <h1 className="font-black tracking-widest uppercase leading-none"
-                style={{
-                  fontSize: "clamp(2rem, 6vw, 3.5rem)",
-                  background: "linear-gradient(135deg, #ffffff 0%, #e8f4ff 30%, #c9a227 60%, #f0d060 80%, #c9a227 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  textShadow: "none",
-                  letterSpacing: "0.15em",
-                }}>
-                Saudi Drug Lens
-              </h1>
-              <p className="text-[#c9a227]/70 text-base sm:text-lg mt-1 font-medium tracking-[0.2em]"
-                style={{ fontFamily: "'Cairo', sans-serif" }}>
-                مرجع الأدوية السعودي الشامل
-              </p>
-              {stats && (
-                <div className="mt-3 flex items-center justify-center gap-2">
-                  <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#c9a227]/50" />
-                  <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">
-                    {stats.total.toLocaleString()} Drugs Available
-                  </span>
-                  <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#c9a227]/50" />
-                </div>
-              )}
-            </div>
+            {/* Brand Name - only show when not searched */}
+            {!hasSearched && (
+              <div className="text-center">
+                {stats && (
+                  <div className="mt-2 flex items-center justify-center gap-2">
+                    <div className="h-px w-16 bg-gradient-to-r from-transparent to-[#c9a227]/50" />
+                    <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">
+                      {stats.total.toLocaleString()} Drugs Available
+                    </span>
+                    <div className="h-px w-16 bg-gradient-to-l from-transparent to-[#c9a227]/50" />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── Search Bar ── */}

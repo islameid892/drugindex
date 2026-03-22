@@ -471,3 +471,9 @@
 - [ ] Search bar centered, filter button below it
 - [ ] Nano banana luxury aesthetic throughout
 - [ ] Save checkpoint
+
+## Phase 42: Drug Lens - Fix Nav Bar & Logo Background
+- [ ] Remove/redesign top nav bar to be seamless with the dark hero
+- [ ] Fix logo background - remove white box, transparent/dark background
+- [ ] Make the hero section fully cohesive from top to bottom
+- [ ] Ensure the logo glows naturally on the dark background
