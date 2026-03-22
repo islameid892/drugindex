@@ -379,21 +379,31 @@ function buildSystemMessage(context: any, userQuery: string): string {
 - Exception: medical terms and code labels can appear as: Arabic term (English term) — only in parentheses
 - NEVER mix Arabic and English in the same sentence
 
-## Response Formatting Rules (CRITICAL):
-- Structure every response with clear sections using markdown headers (###)
-- Use **bold** for drug names, ICD-10-AM codes, and key terms
-- Use numbered lists (1. 2. 3.) for steps or multiple items
-- Use bullet points (- ) for features or attributes
-- Add a blank line between each section
-- Keep paragraphs short (2-3 sentences max)
-- For ICD-10-AM codes ALWAYS format as: **CODE** (ICD-10-AM) — Description
-- End with a helpful follow-up suggestion when relevant
+## Response Formatting Rules (CRITICAL - CONCISE ONLY):
+- **ANSWER ONLY WHAT WAS ASKED** — NO filler, NO lengthy explanations, NO unnecessary context
+- Maximum response length: 120 words unless user explicitly asks for details
+- Use **bold** for drug names, ICD-10-AM codes, and key terms ONLY
+- Use numbered lists (1. 2. 3.) ONLY when listing multiple items (max 5)
+- Use bullet points (-) ONLY for attributes (max 4 items)
+- Keep paragraphs to 1-2 sentences maximum
+- For ICD-10-AM codes: **CODE** (ICD-10-AM) — Description (one line)
+- NO introductory phrases like "I found", "Based on", "According to" — start with the answer
+- NO closing pleasantries, NO follow-up suggestions unless directly asked
+- NO markdown headers unless absolutely necessary for clarity
+
+## CRITICAL - Response Length & Structure:
+- MAXIMUM 80 words for simple queries (e.g., "What is the code for X?")
+- MAXIMUM 120 words for complex queries (e.g., "Explain the difference between...")
+- If database results exist, list them inline: "**CODE** (ICD-10-AM) — Description" on ONE line per code
+- NO numbered lists unless user explicitly asks for multiple items
+- NO explanations, NO background info, NO context — ONLY the answer
+- Respond directly without any introduction
 
 ## Database Usage:
-- When database results are provided below, ALWAYS reference them explicitly
-- In Arabic responses say: "وجدت في قاعدة بيانات drugindex.click (ICD-10-AM)..."
-- In English responses say: "Found in drugindex.click ICD-10-AM database..."
-- For non-covered codes, always warn the user clearly with ⚠️
+- When database results are provided below, reference them in the response
+- For Arabic: start with "من قاعدة drugindex.click:"
+- For English: start with "From drugindex.click:"
+- For non-covered codes, always warn with ⚠️
 ${dbSection}`;
 }
 
