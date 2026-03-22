@@ -443,3 +443,15 @@
 - [x] Add Drug Lens route /drug-lens in App.tsx
 - [x] Add Drug Lens button in HeroSection below Advanced Search button
 - [x] Verify API returns 8164 drugs correctly
+
+## Phase 39: Drug Lens - Complete Redesign to Match Approved Mockup
+- [x] Review approved mockup images (drug-lens-mockup-v2.png + drug-lens-list-view.png)
+- [x] Rebuild header with Drug Lens logo + top navigation
+- [x] Rebuild search bar with filter dropdown (Trade Name / Scientific Name / Both) on the right
+- [x] Rebuild Card Grid: Trade Name big/bold, Scientific Name smaller, price badge, pharmacological action, standard dose, alternatives button, view details button
+- [x] Rebuild List/Table View: sortable columns, alternating row colors, pagination
+- [x] Add Google-style autocomplete dropdown
+- [x] Match exact color scheme: medical blue #0066cc, white cards, soft shadows
+- [x] Add view toggle buttons (Card / List)
+- [x] API tested: panadol returns 10 results correctly
+- [x] TypeScript clean (0 errors)

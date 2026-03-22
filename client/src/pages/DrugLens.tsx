@@ -1,65 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Search,
-  LayoutGrid,
-  List,
-  ChevronDown,
-  AlertTriangle,
-  ExternalLink,
-  ArrowLeft,
-  Pill,
-  RefreshCw,
-  X,
-  Info,
-  Zap,
-  Baby,
-  Syringe,
-  Shuffle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
 import { Link } from "wouter";
+import { LayoutGrid, List, Search, X, ChevronLeft, ChevronRight, ExternalLink, Shuffle, AlertTriangle, Baby, Pill, Activity, Zap } from "lucide-react";
 
-type FilterBy = "both" | "trade" | "scientific";
-type ViewMode = "card" | "list";
-
+// ─── Types ───────────────────────────────────────────────────────────────────
 interface Drug {
   id: number;
-  tradeName: string;
   scientificName: string;
+  tradeName: string;
   price: string | null;
   pharmacologicalAction: string | null;
+  blackBoxWarning: string | null;
   uses: string | null;
   pregnancyCategory: string | null;
   standardDose: string | null;
-  blackBoxWarning: string | null;
-}
-
-interface DrugDetail extends Drug {
   adjustedDose: string | null;
   neonatalDose: string | null;
   doseSource: string | null;
@@ -69,714 +23,650 @@ interface DrugDetail extends Drug {
   minorInteractions: string | null;
 }
 
-// Pregnancy category color
-function pregnancyCategoryBadge(cat: string | null) {
-  if (!cat) return null;
+type FilterType = "both" | "trade" | "scientific";
+type ViewMode = "card" | "list";
+
+// ─── Pregnancy Category Badge ─────────────────────────────────────────────────
+function PregnancyBadge({ category }: { category: string | null }) {
+  if (!category) return null;
+  const cat = category.trim().toUpperCase();
   const colors: Record<string, string> = {
-    A: "bg-green-100 text-green-800 border-green-200",
-    B: "bg-blue-100 text-blue-800 border-blue-200",
-    C: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    D: "bg-orange-100 text-orange-800 border-orange-200",
-    X: "bg-red-100 text-red-800 border-red-200",
+    A: "bg-green-100 text-green-700 border-green-300",
+    B: "bg-blue-100 text-blue-700 border-blue-300",
+    C: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    D: "bg-orange-100 text-orange-700 border-orange-300",
+    X: "bg-red-100 text-red-700 border-red-300",
   };
-  const letter = cat.trim().charAt(0).toUpperCase();
-  const colorClass = colors[letter] || "bg-gray-100 text-gray-800 border-gray-200";
+  const letter = cat.charAt(0);
+  const colorClass = colors[letter] || "bg-gray-100 text-gray-700 border-gray-300";
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colorClass}`}>
-      Cat. {cat}
+    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 text-xs font-bold ${colorClass}`}>
+      {letter}
     </span>
   );
 }
 
-// Drug image search link
-function getDrugImageUrl(tradeName: string) {
-  return `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(tradeName + " medication")}`;
-}
+// ─── Drug Card ────────────────────────────────────────────────────────────────
+function DrugCard({ drug, onViewDetails, onViewAlternatives }: {
+  drug: Drug;
+  onViewDetails: (drug: Drug) => void;
+  onViewAlternatives: (drug: Drug) => void;
+}) {
+  const googleImageUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(drug.tradeName + " medication pill")}`;
 
-// Drug Card Component
-function DrugCard({ drug, onViewDetail }: { drug: Drug; onViewDetail: (id: number) => void }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-sky-200 flex flex-col overflow-hidden group">
-      {/* Card Header */}
-      <div className="bg-gradient-to-r from-sky-50 to-slate-50 px-4 pt-4 pb-3 border-b border-slate-100">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 text-base leading-tight truncate group-hover:text-sky-700 transition-colors">
-              {drug.tradeName}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5 truncate font-medium">
-              {drug.scientificName}
-            </p>
-          </div>
-          {/* Drug image link */}
-          <a
-            href={getDrugImageUrl(drug.tradeName)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center hover:bg-sky-200 transition-colors"
-            title="Search drug image"
-          >
-            <Pill className="h-5 w-5 text-sky-600" />
-          </a>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      {/* Card Header - Blue */}
+      <div className="bg-[#0066cc] px-4 py-3 flex items-center justify-between">
+        <div>
+          <h3 className="text-white font-bold text-lg leading-tight tracking-wide">
+            {drug.tradeName.toUpperCase()}
+          </h3>
+          <p className="text-blue-200 text-xs mt-0.5">({drug.scientificName})</p>
         </div>
-        {/* Price & Pregnancy */}
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
-          {drug.price && (
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-              {drug.price}
-            </span>
-          )}
-          {pregnancyCategoryBadge(drug.pregnancyCategory)}
-          {drug.blackBoxWarning && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
-              <AlertTriangle className="h-3 w-3" />
-              BBW
-            </span>
-          )}
-        </div>
+        {drug.price && (
+          <span className="bg-white text-[#0066cc] text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
+            SAR {drug.price}
+          </span>
+        )}
       </div>
 
       {/* Card Body */}
-      <div className="px-4 py-3 flex-1 space-y-2">
-        {drug.pharmacologicalAction && (
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Action</p>
-            <p className="text-xs text-slate-700 line-clamp-2">{drug.pharmacologicalAction}</p>
-          </div>
-        )}
-        {drug.uses && (
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Uses</p>
-            <p className="text-xs text-slate-700 line-clamp-2">{drug.uses}</p>
-          </div>
-        )}
-        {drug.standardDose && (
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Std. Dose</p>
-            <p className="text-xs text-slate-700 line-clamp-1">{drug.standardDose}</p>
-          </div>
-        )}
-      </div>
+      <div className="p-4">
+        {/* Image + Action + Dose Row */}
+        <div className="flex gap-3 mb-3">
+          {/* Drug Image (Google link) */}
+          <a
+            href={googleImageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 w-20 h-20 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors group"
+            title="Search image on Google"
+          >
+            <div className="text-center">
+              <Pill className="h-6 w-6 text-gray-300 group-hover:text-blue-400 mx-auto mb-1" />
+              <span className="text-xs text-gray-400 group-hover:text-blue-400">Image</span>
+            </div>
+          </a>
 
-      {/* Card Footer */}
-      <div className="px-4 pb-4 pt-2 border-t border-slate-100 flex gap-2">
-        <Button
-          size="sm"
-          className="flex-1 text-xs bg-sky-600 hover:bg-sky-700 text-white"
-          onClick={() => onViewDetail(drug.id)}
+          {/* Pharmacological Action + Dose */}
+          <div className="flex-1 min-w-0">
+            {drug.pharmacologicalAction && (
+              <div className="mb-2">
+                <span className="text-xs font-semibold text-gray-600">Pharmacological Action: </span>
+                <span className="text-xs text-gray-700 line-clamp-2">{drug.pharmacologicalAction}</span>
+              </div>
+            )}
+            {drug.standardDose && (
+              <div className="flex items-start gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-[#0066cc] mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-gray-700 line-clamp-2">
+                  <span className="font-semibold">Standard Dose: </span>
+                  {drug.standardDose}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Alternatives Button */}
+        <button
+          onClick={() => onViewAlternatives(drug)}
+          className="w-full text-[#0066cc] border border-[#0066cc] rounded-lg py-1.5 text-xs font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5 mb-3"
+        >
+          <Shuffle className="h-3.5 w-3.5" />
+          Alternatives ↗
+        </button>
+
+        {/* Quick Info */}
+        <div className="border-t border-gray-100 pt-3">
+          <p className="text-xs font-semibold text-gray-600 mb-2">Quick Info:</p>
+          <div className="grid grid-cols-3 gap-2">
+            {/* Uses */}
+            <div className="flex flex-col items-center gap-1">
+              <Pill className="h-4 w-4 text-[#0066cc]" />
+              <span className="text-xs text-gray-500 text-center leading-tight line-clamp-2">
+                {drug.uses ? drug.uses.split(/[,;]/)[0].trim() : "—"}
+              </span>
+            </div>
+            {/* Interactions */}
+            <div className="flex flex-col items-center gap-1">
+              <Zap className="h-4 w-4 text-orange-500" />
+              <span className="text-xs text-gray-500 text-center">
+                {drug.contraindicatedInteractions ? "Contraindicated" :
+                  drug.majorInteractions ? "Major" :
+                  drug.moderateInteractions ? "Moderate" : "Minor"}
+              </span>
+            </div>
+            {/* Pregnancy */}
+            <div className="flex flex-col items-center gap-1">
+              <Baby className="h-4 w-4 text-purple-500" />
+              <PregnancyBadge category={drug.pregnancyCategory} />
+            </div>
+          </div>
+        </div>
+
+        {/* View Details Button */}
+        <button
+          onClick={() => onViewDetails(drug)}
+          className="w-full mt-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg py-2 text-sm font-semibold transition-colors"
         >
           View Details
-        </Button>
-        <a
-          href={getDrugImageUrl(drug.tradeName)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button size="sm" variant="outline" className="text-xs px-2">
-            <ExternalLink className="h-3 w-3" />
-          </Button>
-        </a>
+        </button>
       </div>
     </div>
   );
 }
 
-// Drug Detail Modal
-function DrugDetailModal({
-  drugId,
-  onClose,
-}: {
-  drugId: number | null;
-  onClose: () => void;
-}) {
-  const { data: drug, isLoading } = trpc.drugLens.getById.useQuery(
-    { id: drugId! },
-    { enabled: drugId !== null }
-  );
-
-  const { data: alternatives } = trpc.drugLens.getAlternatives.useQuery(
-    { scientificName: drug?.scientificName ?? "", excludeId: drugId! },
-    { enabled: !!drug?.scientificName && drugId !== null }
-  );
-
-  if (!drugId) return null;
+// ─── Drug Detail Modal ────────────────────────────────────────────────────────
+function DrugDetailModal({ drug, onClose }: { drug: Drug; onClose: () => void }) {
+  const sections = [
+    { label: "Scientific Name", value: drug.scientificName, icon: <Pill className="h-4 w-4" /> },
+    { label: "Price (SAR)", value: drug.price, icon: null },
+    { label: "Pharmacological Action", value: drug.pharmacologicalAction, icon: null },
+    { label: "Black Box Warning", value: drug.blackBoxWarning, icon: <AlertTriangle className="h-4 w-4 text-red-500" /> },
+    { label: "Uses (Approved + Off-label)", value: drug.uses, icon: null },
+    { label: "Pregnancy Category (FDA)", value: drug.pregnancyCategory, icon: <Baby className="h-4 w-4" /> },
+    { label: "Standard Dose", value: drug.standardDose, icon: null },
+    { label: "Adjusted Dose (Renal/Hepatic)", value: drug.adjustedDose, icon: null },
+    { label: "Neonatal Dose (NeoFax/BNF)", value: drug.neonatalDose, icon: null },
+    { label: "Dose Source", value: drug.doseSource, icon: null },
+    { label: "Contraindicated Interactions", value: drug.contraindicatedInteractions, icon: <AlertTriangle className="h-4 w-4 text-red-500" /> },
+    { label: "Major Interactions", value: drug.majorInteractions, icon: <Zap className="h-4 w-4 text-orange-500" /> },
+    { label: "Moderate Interactions", value: drug.moderateInteractions, icon: null },
+    { label: "Minor Interactions", value: drug.minorInteractions, icon: null },
+  ];
 
   return (
-    <Dialog open={drugId !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-sky-600" />
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        {/* Modal Header */}
+        <div className="bg-[#0066cc] px-6 py-4 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 className="text-white font-bold text-xl">{drug.tradeName.toUpperCase()}</h2>
+            <p className="text-blue-200 text-sm">({drug.scientificName})</p>
           </div>
-        ) : drug ? (
-          <>
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900 pr-8">
-                {drug.tradeName}
-              </DialogTitle>
-              <p className="text-sm text-slate-500 font-medium">{drug.scientificName}</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {drug.price && (
-                  <Badge variant="outline" className="text-emerald-700 border-emerald-200 bg-emerald-50">
-                    {drug.price}
-                  </Badge>
-                )}
-                {pregnancyCategoryBadge(drug.pregnancyCategory)}
-                {drug.blackBoxWarning && (
-                  <Badge variant="destructive" className="gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Black Box Warning
-                  </Badge>
-                )}
-              </div>
-            </DialogHeader>
+          <button onClick={onClose} className="text-white hover:text-blue-200 transition-colors">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
 
-            <div className="space-y-4 mt-4">
-              {/* Black Box Warning */}
-              {drug.blackBoxWarning && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <h4 className="font-semibold text-red-800 text-sm">Black Box Warning</h4>
-                  </div>
-                  <p className="text-sm text-red-700">{drug.blackBoxWarning}</p>
+        {/* Modal Body */}
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="space-y-4">
+            {sections.map(({ label, value, icon }) => value ? (
+              <div key={label} className="border-b border-gray-100 pb-3 last:border-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {icon}
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
                 </div>
-              )}
-
-              {/* Pharmacological Action */}
-              {drug.pharmacologicalAction && (
-                <Section icon={<Zap className="h-4 w-4" />} title="Pharmacological Action">
-                  <p className="text-sm text-slate-700">{drug.pharmacologicalAction}</p>
-                </Section>
-              )}
-
-              {/* Uses */}
-              {drug.uses && (
-                <Section icon={<Info className="h-4 w-4" />} title="Uses (Approved + Off-label)">
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{drug.uses}</p>
-                </Section>
-              )}
-
-              {/* Dosing */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {drug.standardDose && (
-                  <Section icon={<Syringe className="h-4 w-4" />} title="Standard Dose">
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{drug.standardDose}</p>
-                  </Section>
-                )}
-                {drug.adjustedDose && (
-                  <Section icon={<Syringe className="h-4 w-4" />} title="Adjusted Dose (Renal/Hepatic)">
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{drug.adjustedDose}</p>
-                  </Section>
-                )}
-                {drug.neonatalDose && (
-                  <Section icon={<Baby className="h-4 w-4" />} title="Neonatal Dose">
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{drug.neonatalDose}</p>
-                  </Section>
-                )}
-                {drug.doseSource && (
-                  <Section icon={<Info className="h-4 w-4" />} title="Dose Source">
-                    <p className="text-sm text-slate-700">{drug.doseSource}</p>
-                  </Section>
-                )}
+                <p className="text-sm text-gray-800 leading-relaxed">{value}</p>
               </div>
+            ) : null)}
+          </div>
+        </div>
 
-              {/* Interactions */}
-              {(drug.contraindicatedInteractions || drug.majorInteractions || drug.moderateInteractions || drug.minorInteractions) && (
-                <div>
-                  <h4 className="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2">
-                    <Shuffle className="h-4 w-4 text-orange-500" />
-                    Drug Interactions
-                  </h4>
-                  <div className="space-y-2">
-                    {drug.contraindicatedInteractions && (
-                      <InteractionRow level="Contraindicated" color="red" text={drug.contraindicatedInteractions} />
-                    )}
-                    {drug.majorInteractions && (
-                      <InteractionRow level="Major" color="orange" text={drug.majorInteractions} />
-                    )}
-                    {drug.moderateInteractions && (
-                      <InteractionRow level="Moderate" color="yellow" text={drug.moderateInteractions} />
-                    )}
-                    {drug.minorInteractions && (
-                      <InteractionRow level="Minor" color="green" text={drug.minorInteractions} />
-                    )}
-                  </div>
-                </div>
-              )}
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+          <a
+            href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(drug.tradeName + " medication")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg py-2 text-sm font-medium transition-colors"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Search Image
+          </a>
+          <button onClick={onClose} className="flex-1 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg py-2 text-sm font-semibold transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-              {/* Alternatives */}
-              {alternatives && alternatives.length > 0 && (
-                <Section icon={<Shuffle className="h-4 w-4" />} title={`Alternatives (${alternatives.length})`}>
-                  <div className="flex flex-wrap gap-2">
-                    {alternatives.slice(0, 10).map((alt: { id: number; tradeName: string; scientificName: string; price: string | null }) => (
-                      <button
-                        key={alt.id}
-                        className="text-xs bg-sky-50 border border-sky-200 text-sky-700 rounded-full px-3 py-1 hover:bg-sky-100 transition-colors font-medium"
-                        onClick={() => {
-                          onClose();
-                          setTimeout(() => {
-                            // Re-open with new drug
-                          }, 100);
-                        }}
-                      >
-                        {alt.tradeName}
-                        {alt.price && <span className="ml-1 text-emerald-600">({alt.price})</span>}
-                      </button>
-                    ))}
-                  </div>
-                </Section>
-              )}
+// ─── Alternatives Modal ───────────────────────────────────────────────────────
+function AlternativesModal({ drug, onClose, onSelectDrug }: {
+  drug: Drug;
+  onClose: () => void;
+  onSelectDrug: (drug: Drug) => void;
+}) {
+  const { data: alternatives, isLoading } = trpc.drugLens.getAlternatives.useQuery({
+    scientificName: drug.scientificName,
+    excludeId: drug.id,
+  });
 
-              {/* Image Search */}
-              <div className="flex justify-end">
-                <a
-                  href={getDrugImageUrl(drug.tradeName)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="outline" size="sm" className="gap-2 text-xs">
-                    <ExternalLink className="h-3 w-3" />
-                    Search Drug Image
-                  </Button>
-                </a>
-              </div>
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="bg-[#0066cc] px-6 py-4 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 className="text-white font-bold text-lg">Alternatives</h2>
+            <p className="text-blue-200 text-sm">Based on: {drug.scientificName}</p>
+          </div>
+          <button onClick={onClose} className="text-white hover:text-blue-200"><X className="h-6 w-6" /></button>
+        </div>
+        <div className="overflow-y-auto flex-1 p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066cc]" />
             </div>
-          </>
-        ) : (
-          <p className="text-center text-slate-500 py-8">Drug not found.</p>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function Section({
-  icon,
-  title,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-      <h4 className="font-semibold text-slate-800 text-sm mb-2 flex items-center gap-2 text-sky-700">
-        {icon}
-        {title}
-      </h4>
-      {children}
+          ) : !alternatives || alternatives.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No alternatives found</p>
+          ) : (
+            <div className="space-y-2">
+              {alternatives.map((alt: { id: number; tradeName: string; scientificName: string; price: string | null }) => (
+                <button
+                  key={alt.id}
+                  onClick={() => { onSelectDrug(alt as Drug); onClose(); }}
+                  className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-[#0066cc] hover:bg-blue-50 transition-colors flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-bold text-[#0066cc] text-sm">{alt.tradeName.toUpperCase()}</p>
+                    <p className="text-xs text-gray-500">{alt.scientificName}</p>
+                  </div>
+                  {alt.price && <span className="text-xs font-semibold text-gray-600">SAR {alt.price}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function InteractionRow({
-  level,
-  color,
-  text,
-}: {
-  level: string;
-  color: "red" | "orange" | "yellow" | "green";
-  text: string;
-}) {
-  const colorMap = {
-    red: "bg-red-50 border-red-200 text-red-800",
-    orange: "bg-orange-50 border-orange-200 text-orange-800",
-    yellow: "bg-yellow-50 border-yellow-200 text-yellow-800",
-    green: "bg-green-50 border-green-200 text-green-800",
-  };
-  return (
-    <div className={`rounded-lg p-3 border ${colorMap[color]}`}>
-      <p className="text-xs font-bold mb-1">{level}</p>
-      <p className="text-xs">{text}</p>
-    </div>
-  );
-}
-
-// Main Drug Lens Page
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function DrugLens() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [filterBy, setFilterBy] = useState<FilterBy>("both");
+  const [filterType, setFilterType] = useState<FilterType>("both");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [page, setPage] = useState(1);
-  const [selectedDrugId, setSelectedDrugId] = useState<number | null>(null);
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
+  const [alternativesDrug, setAlternativesDrug] = useState<Drug | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const ITEMS_PER_PAGE = 12;
 
-  // Debounce search query
+  // Debounce query
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query);
-      setPage(1);
-    }, 300);
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Close autocomplete on outside click
+  // Reset page on query change
+  useEffect(() => { setPage(1); }, [debouncedQuery, filterType]);
+
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowAutocomplete(false);
+      }
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setShowFilterDropdown(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Autocomplete query
+  // Autocomplete
   const { data: suggestions } = trpc.drugLens.autocomplete.useQuery(
-    { query: query.trim(), filterBy, limit: 8 },
-    { enabled: query.trim().length >= 2 && showAutocomplete }
+    { query, filterBy: filterType },
+    { enabled: query.length >= 2 }
   );
 
-  // Main search query
-  const { data, isLoading } = trpc.drugLens.search.useQuery({
-    query: debouncedQuery,
-    filterBy,
-    page,
-    limit: 20,
-  });
+  // Main search
+  const { data: searchResult, isLoading } = trpc.drugLens.search.useQuery(
+    { query: debouncedQuery, filterBy: filterType, page, limit: ITEMS_PER_PAGE },
+    {}
+  );
 
   // Stats
   const { data: stats } = trpc.drugLens.getStats.useQuery();
 
-  const filterLabels: Record<FilterBy, string> = {
-    both: "All Names",
-    trade: "Trade Name",
-    scientific: "Scientific Name",
-  };
+  const drugs: Drug[] = (searchResult?.results as Drug[]) ?? [];
+  const totalCount = searchResult?.total ?? 0;
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const handleSelectSuggestion = (drug: { id: number; tradeName: string; scientificName: string }) => {
-    const name = filterBy === "scientific" ? drug.scientificName : drug.tradeName;
-    setQuery(name);
+  const filterLabel = filterType === "trade" ? "Trade Name" : filterType === "scientific" ? "Scientific Name" : "All Names";
+
+  const handleSelectSuggestion = useCallback((s: { id: number; tradeName: string; scientificName: string }) => {
+    setQuery(filterType === "scientific" ? s.scientificName : s.tradeName);
     setShowAutocomplete(false);
-    inputRef.current?.blur();
-  };
+  }, [filterType]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/30 to-slate-50">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2 text-slate-600 hover:text-sky-700">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back</span>
-                </Button>
-              </Link>
-              <div className="w-px h-6 bg-slate-200" />
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-sky-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <Search className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-slate-900 leading-tight">Drug Lens</h1>
-                  <p className="text-xs text-slate-500 hidden sm:block">Comprehensive Drug Reference</p>
-                </div>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* ── Top Navigation ─────────────────────────────────────────────────── */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#0066cc] rounded-lg flex items-center justify-center">
+                <Search className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <span className="font-bold text-gray-900 text-lg">Drug Lens</span>
+                <span className="text-xs text-gray-400 block leading-none">Comprehensive Drug Reference</span>
               </div>
             </div>
+
+            {/* Nav Links */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/" className="text-sm text-gray-600 hover:text-[#0066cc] transition-colors font-medium">Home</Link>
+              <span className="text-sm text-[#0066cc] font-semibold border-b-2 border-[#0066cc] pb-0.5">Drug Database</span>
+              <Link href="/" className="text-sm text-gray-600 hover:text-[#0066cc] transition-colors font-medium">ICD-10 Search</Link>
+            </div>
+
+            {/* Stats */}
             {stats && (
-              <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 bg-sky-50 border border-sky-100 rounded-full px-3 py-1.5">
-                <Pill className="h-3.5 w-3.5 text-sky-600" />
-                <span className="font-semibold text-sky-700">{stats.total.toLocaleString()}</span>
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 bg-blue-50 px-3 py-1.5 rounded-full">
+                <Pill className="h-3.5 w-3.5 text-[#0066cc]" />
+                <span className="font-semibold text-[#0066cc]">{stats.total.toLocaleString()}</span>
                 <span>drugs</span>
               </div>
             )}
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Hero Search Section */}
-      <div className="bg-gradient-to-r from-sky-600 to-sky-700 py-8 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-white mb-1">Drug Reference Database</h2>
-          <p className="text-sky-200 text-sm mb-6">
-            Search {stats?.total.toLocaleString() ?? "8,000+"} medications — trade names, scientific names, dosages & interactions
-          </p>
-
-          {/* Search Bar with Filter Dropdown */}
-          <div ref={searchRef} className="relative">
-            <div className="flex gap-2">
-              {/* Filter Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-white/90 border-white/50 text-slate-700 hover:bg-white gap-1.5 min-w-[130px] justify-between text-sm font-medium"
-                  >
-                    {filterLabels[filterBy]}
-                    <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-40">
-                  <DropdownMenuItem onClick={() => setFilterBy("both")}>
-                    All Names
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterBy("trade")}>
-                    Trade Name
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterBy("scientific")}>
-                    Scientific Name
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Search Input */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                <Input
-                  ref={inputRef}
+      {/* ── Search Bar ─────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-200 py-4 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            {/* Search Input with Autocomplete */}
+            <div className="flex-1 relative" ref={searchRef}>
+              <div className="flex items-center bg-white border-2 border-gray-300 focus-within:border-[#0066cc] rounded-xl px-4 py-2.5 gap-2 transition-colors">
+                <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
                   value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setShowAutocomplete(true);
-                  }}
-                  onFocus={() => query.trim().length >= 2 && setShowAutocomplete(true)}
-                  placeholder={filterBy === "scientific" ? "Search by scientific name..." : filterBy === "trade" ? "Search by trade name..." : "Search any drug name..."}
-                  className="pl-9 pr-9 bg-white border-white/50 text-slate-900 placeholder:text-slate-400 h-10"
+                  onChange={e => { setQuery(e.target.value); setShowAutocomplete(true); }}
+                  onFocus={() => query.length >= 2 && setShowAutocomplete(true)}
+                  placeholder="Search for drugs..."
+                  className="flex-1 outline-none text-sm text-gray-800 placeholder-gray-400 bg-transparent"
                 />
                 {query && (
-                  <button
-                    onClick={() => { setQuery(""); setShowAutocomplete(false); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
+                  <button onClick={() => { setQuery(""); setShowAutocomplete(false); }} className="text-gray-400 hover:text-gray-600">
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
+
+              {/* Autocomplete Dropdown */}
+              {showAutocomplete && suggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                  {suggestions.map((s: { id: number; tradeName: string; scientificName: string }) => (
+                    <button
+                      key={s.id}
+                      className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0"
+                      onMouseDown={e => { e.preventDefault(); handleSelectSuggestion(s); }}
+                    >
+                      <Search className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                      <div>
+                        <span className="text-sm font-semibold text-gray-800">{s.tradeName}</span>
+                        <span className="text-xs text-gray-400 ml-2">{s.scientificName}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Autocomplete Dropdown */}
-            {showAutocomplete && suggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
-                {suggestions.map((s: { id: number; tradeName: string; scientificName: string }) => (
-                  <button
-                    key={s.id}
-                    className="w-full text-left px-4 py-2.5 hover:bg-sky-50 transition-colors flex items-center justify-between gap-3 border-b border-slate-50 last:border-0"
-                    onMouseDown={(e: React.MouseEvent) => { e.preventDefault(); handleSelectSuggestion(s); }}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{s.tradeName}</p>
-                      <p className="text-xs text-slate-500 truncate">{s.scientificName}</p>
-                    </div>
-                    <Search className="h-3.5 w-3.5 text-slate-300 flex-shrink-0" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Filter Dropdown */}
+            <div className="relative flex-shrink-0" ref={filterRef}>
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-[#0066cc] rounded-xl text-sm font-medium text-gray-700 transition-colors whitespace-nowrap"
+              >
+                <span>Filter: {filterLabel}</span>
+                <svg className={`h-4 w-4 transition-transform ${showFilterDropdown ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showFilterDropdown && (
+                <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 min-w-[180px]">
+                  {(["both", "trade", "scientific"] as FilterType[]).map(ft => (
+                    <button
+                      key={ft}
+                      onClick={() => { setFilterType(ft); setShowFilterDropdown(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors ${filterType === ft ? "text-[#0066cc] font-semibold" : "text-gray-700"}`}
+                    >
+                      {filterType === ft && <span className="text-[#0066cc]">✓</span>}
+                      {ft === "both" ? "All Names" : ft === "trade" ? "Trade Name" : "Scientific Name"}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center border-2 border-gray-300 rounded-xl overflow-hidden flex-shrink-0">
+              <button
+                onClick={() => setViewMode("card")}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${viewMode === "card" ? "bg-[#0066cc] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Card View</span>
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${viewMode === "list" ? "bg-[#0066cc] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+              >
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">List View</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-5 gap-4">
-          <div className="text-sm text-slate-600">
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                Searching...
-              </span>
-            ) : data ? (
-              <span>
-                <span className="font-semibold text-slate-900">{data.total.toLocaleString()}</span>
-                {" "}results
-                {debouncedQuery && (
-                  <span className="text-slate-500"> for "<span className="font-medium text-sky-600">{debouncedQuery}</span>"</span>
-                )}
-              </span>
-            ) : null}
-          </div>
+      {/* ── Main Content ────────────────────────────────────────────────────── */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Results count */}
+        {debouncedQuery && (
+          <p className="text-sm text-gray-500 mb-4">
+            {isLoading ? "Searching..." : `${totalCount.toLocaleString()} results for "${debouncedQuery}"`}
+          </p>
+        )}
 
-          {/* View Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode("card")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === "card"
-                  ? "bg-white text-sky-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Cards
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === "list"
-                  ? "bg-white text-sky-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <List className="h-3.5 w-3.5" />
-              List
-            </button>
-          </div>
-        </div>
-
-        {/* Results */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="text-center">
-              <RefreshCw className="h-10 w-10 animate-spin text-sky-500 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">Loading drugs...</p>
-            </div>
-          </div>
-        ) : !data || data.results.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <Search className="h-8 w-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-700 mb-1">
-              {debouncedQuery ? "No drugs found" : "Start searching"}
-            </h3>
-            <p className="text-slate-500 text-sm max-w-sm">
-              {debouncedQuery
-                ? `No results for "${debouncedQuery}". Try a different name or filter.`
-                : "Type a drug name above to search the database."}
-            </p>
-          </div>
-        ) : viewMode === "card" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {data.results.map((drug: Drug) => (
-              <DrugCard key={drug.id} drug={drug} onViewDetail={setSelectedDrugId} />
-            ))}
-          </div>
-        ) : (
-          // List View
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700 w-8">#</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Trade Name</TableHead>
-                  <TableHead className="font-semibold text-slate-700 hidden md:table-cell">Scientific Name</TableHead>
-                  <TableHead className="font-semibold text-slate-700 hidden lg:table-cell">Price</TableHead>
-                  <TableHead className="font-semibold text-slate-700 hidden xl:table-cell">Action</TableHead>
-                  <TableHead className="font-semibold text-slate-700 hidden lg:table-cell">Preg. Cat.</TableHead>
-                  <TableHead className="font-semibold text-slate-700 text-right">Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.results.map((drug: Drug, idx: number) => (
-                  <TableRow
-                    key={drug.id}
-                    className="hover:bg-sky-50/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedDrugId(drug.id)}
-                  >
-                    <TableCell className="text-xs text-slate-400 font-mono">
-                      {(page - 1) * 20 + idx + 1}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {drug.blackBoxWarning && (
-                          <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
-                        )}
-                        <span className="font-semibold text-slate-900 text-sm">{drug.tradeName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-slate-500">
-                      {drug.scientificName}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {drug.price && (
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
-                          {drug.price}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell text-xs text-slate-500 max-w-[200px]">
-                      <span className="line-clamp-1">{drug.pharmacologicalAction}</span>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {pregnancyCategoryBadge(drug.pregnancyCategory)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-7 px-2 text-sky-600 border-sky-200 hover:bg-sky-50"
-                        onClick={(e) => { e.stopPropagation(); setSelectedDrugId(drug.id); }}
-                      >
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        {/* Loading */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0066cc]" />
           </div>
         )}
 
-        {/* Pagination */}
-        {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="gap-1.5"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Prev
-            </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (data.totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (page <= 3) {
-                  pageNum = i + 1;
-                } else if (page >= data.totalPages - 2) {
-                  pageNum = data.totalPages - 4 + i;
-                } else {
-                  pageNum = page - 2 + i;
-                }
+        {/* Empty state */}
+        {!isLoading && drugs.length === 0 && debouncedQuery && (
+          <div className="text-center py-16">
+            <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium">No drugs found for "{debouncedQuery}"</p>
+            <p className="text-gray-400 text-sm mt-1">Try a different name or filter</p>
+          </div>
+        )}
+
+        {/* Welcome state */}
+        {!isLoading && drugs.length === 0 && !debouncedQuery && (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Search className="h-8 w-8 text-[#0066cc]" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Search Drug Lens</h2>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              Search by trade name or scientific name to find detailed drug information including doses, interactions, and pregnancy categories.
+            </p>
+            {stats && (
+              <p className="text-[#0066cc] font-semibold mt-4">{stats.total.toLocaleString()} drugs available</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Card View ─────────────────────────────────────────────────── */}
+        {!isLoading && drugs.length > 0 && viewMode === "card" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {drugs.map(drug => (
+              <DrugCard
+                key={drug.id}
+                drug={drug}
+                onViewDetails={setSelectedDrug}
+                onViewAlternatives={setAlternativesDrug}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── List View ─────────────────────────────────────────────────── */}
+        {!isLoading && drugs.length > 0 && viewMode === "list" && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Image</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Trade Name</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Scientific Name</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Price (SAR)</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Pharmacological Action</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Standard Dose</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Alternatives</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Quick Info</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drugs.map((drug, idx) => (
+                    <tr key={drug.id} className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${idx % 2 === 1 ? "bg-blue-50/30" : "bg-white"}`}>
+                      {/* Image */}
+                      <td className="px-4 py-3">
+                        <a
+                          href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(drug.tradeName + " medication")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-blue-100 transition-colors"
+                        >
+                          <Pill className="h-5 w-5 text-gray-400" />
+                        </a>
+                      </td>
+                      {/* Trade Name */}
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-[#0066cc] text-sm">{drug.tradeName.toUpperCase()}</span>
+                      </td>
+                      {/* Scientific Name */}
+                      <td className="px-4 py-3 text-gray-600 text-xs max-w-[120px]">
+                        <span className="line-clamp-2">{drug.scientificName}</span>
+                      </td>
+                      {/* Price */}
+                      <td className="px-4 py-3 text-gray-700 text-xs font-medium whitespace-nowrap">
+                        {drug.price ? `SAR ${drug.price}` : "—"}
+                      </td>
+                      {/* Pharmacological Action */}
+                      <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">
+                        <span className="line-clamp-2">{drug.pharmacologicalAction || "—"}</span>
+                      </td>
+                      {/* Standard Dose */}
+                      <td className="px-4 py-3 text-gray-600 text-xs max-w-[160px]">
+                        <span className="line-clamp-2">{drug.standardDose || "—"}</span>
+                      </td>
+                      {/* Alternatives */}
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setAlternativesDrug(drug)}
+                          className="text-[#0066cc] text-xs font-semibold hover:underline"
+                        >
+                          Alternatives
+                        </button>
+                      </td>
+                      {/* Quick Info */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-center">
+                            <Pill className="h-4 w-4 text-[#0066cc]" />
+                            <span className="text-xs text-gray-400">Uses</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <Zap className="h-4 w-4 text-orange-500" />
+                            <span className="text-xs text-gray-400">Inter.</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <PregnancyBadge category={drug.pregnancyCategory} />
+                            <span className="text-xs text-gray-400">Preg.</span>
+                          </div>
+                        </div>
+                      </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setSelectedDrug(drug)}
+                          className="bg-[#0066cc] hover:bg-[#0052a3] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Pagination ────────────────────────────────────────────────── */}
+        {!isLoading && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-sm text-gray-500">
+              Page {page} of {totalPages}, showing {ITEMS_PER_PAGE} per page
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(page - 2 + i, totalPages - 4 + i));
                 return (
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      pageNum === page
-                        ? "bg-sky-600 text-white"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${pageNum === page ? "bg-[#0066cc] text-white" : "border border-gray-300 text-gray-600 hover:bg-gray-50"}`}
                   >
                     {pageNum}
                   </button>
                 );
               })}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-              disabled={page === data.totalPages}
-              className="gap-1.5"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <span className="text-xs text-slate-500">
-              Page {page} of {data.totalPages.toLocaleString()}
-            </span>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Drug Detail Modal */}
-      <DrugDetailModal
-        drugId={selectedDrugId}
-        onClose={() => setSelectedDrugId(null)}
-      />
+      {/* ── Modals ──────────────────────────────────────────────────────────── */}
+      {selectedDrug && (
+        <DrugDetailModal drug={selectedDrug} onClose={() => setSelectedDrug(null)} />
+      )}
+      {alternativesDrug && (
+        <AlternativesModal
+          drug={alternativesDrug}
+          onClose={() => setAlternativesDrug(null)}
+          onSelectDrug={setSelectedDrug}
+        />
+      )}
     </div>
   );
 }
