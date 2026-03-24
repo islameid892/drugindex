@@ -455,3 +455,37 @@
 - [x] Add view toggle buttons (Card / List)
 - [x] API tested: panadol returns 10 results correctly
 - [x] TypeScript clean (0 errors)
+
+
+## Phase 35: Drug Lens Redesign - Modern Medical Clean Design
+- [ ] Create new DrugLens.tsx with modern medical clean design
+- [ ] Implement color palette (Teal #00796B, Mint #E0F2F1, Orange #FF8F00)
+- [ ] Set up Glassmorphism and Neumorphism CSS utilities
+- [ ] Import Inter/Lexend typography
+- [ ] Implement sticky floating search header with search-as-you-type
+- [ ] Add OCR "Scan Medicine" icon functionality
+- [ ] Add Voice Search icon and functionality
+- [ ] Create filter chips (Generic, Brand, Price, Dosage Form, Manufacturer)
+- [ ] Implement horizontal scrolling for filter chips
+- [ ] Design Drug Card architecture with all required fields
+- [ ] Add price tag (pill shape) styling
+- [ ] Add "Check Interaction" button
+- [ ] Add "Find Similar" button
+- [ ] Add "View Leaflet" button
+- [ ] Implement pulsing Sila AI floating button
+- [ ] Add "Ask Sila about this drug" functionality
+- [ ] Implement zero-state UI (Trending Searches / Recently Viewed)
+- [ ] Create shimmer loading effect (replace spinners)
+- [ ] Add card hover/tap elevation micro-interactions
+- [ ] Implement search persistence in search bar
+- [ ] Add recent search feature with timestamps
+- [ ] Test mobile-first responsive design
+- [ ] Ensure WCAG compliance for healthcare professionals
+- [ ] Test on various screen sizes (mobile, tablet, desktop)
+- [ ] Verify keyboard navigation
+- [ ] Add ARIA labels and semantic HTML
+- [ ] Test all search functionality
+- [ ] Test filter chips interaction
+- [ ] Test drug card actions
+- [ ] Test Sila AI integration
+- [ ] Create checkpoint before publishing

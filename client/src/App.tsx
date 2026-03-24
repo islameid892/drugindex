@@ -170,21 +170,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        switchable
-      >
-        <FavoritesProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            {/* AdvancedSearchFAB is now in HeroSection below search bar */}
-            <PWAInstallPrompt />
-            <PWAUpdateNotification />
-            <SilaChatbot />
-          </TooltipProvider>
-        </FavoritesProvider>
-      </ThemeProvider>
+      <Router />
     </ErrorBoundary>
   );
 }
