@@ -169,9 +169,19 @@ function Router() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <Router />
-    </ErrorBoundary>
+    <ThemeProvider>
+      <FavoritesProvider>
+        <TooltipProvider>
+          <ErrorBoundary>
+            <Router />
+            <SilaChatbot />
+            <PWAInstallPrompt />
+            <PWAUpdateNotification />
+            <Toaster />
+          </ErrorBoundary>
+        </TooltipProvider>
+      </FavoritesProvider>
+    </ThemeProvider>
   );
 }
 
