@@ -1,0 +1,35 @@
+{
+  "query": "\n-- First, let's check what prices currently exist\nSELECT id, trade_name, price FROM drug_lens LIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \n-- First, let's check what prices currently exist\nSELECT id, trade_name, price FROM drug_lens LIMIT 5;\n",
+  "rows": [
+    {
+      "id": "1",
+      "trade_name": "ZIAGEN 300 mg Film-Coated Tablet",
+      "price": "SAR 944.75"
+    },
+    {
+      "id": "2",
+      "trade_name": "KIVEXA 600/300 mg Film-Coated Tablet",
+      "price": "SAR 1,676.80"
+    },
+    {
+      "id": "3",
+      "trade_name": "TYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)",
+      "price": "SAR 1,564.15"
+    },
+    {
+      "id": "4",
+      "trade_name": "ORENCIA 125 mg Solution for Injection",
+      "price": "SAR 4,501.50"
+    },
+    {
+      "id": "5",
+      "trade_name": "ORENCIA 250 mg Powder Solution for Infusion",
+      "price": "SAR 1,249.15"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttrade_name\tprice\n1\tZIAGEN 300 mg Film-Coated Tablet\tSAR 944.75\n2\tKIVEXA 600/300 mg Film-Coated Tablet\tSAR 1,676.80\n3\tTYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)\tSAR 1,564.15\n4\tORENCIA 125 mg Solution for Injection\tSAR 4,501.50\n5\tORENCIA 250 mg Powder Solution for Infusion\tSAR 1,249.15\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

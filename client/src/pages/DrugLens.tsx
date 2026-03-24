@@ -60,6 +60,7 @@ const DrugLens = () => {
   };
 
   const handleViewSimilar = (drug: any) => {
+    setSelectedDrug(drug);
     setViewSimilarQuery(drug.scientificName || drug.tradeName || '');
   };
 
