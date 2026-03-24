@@ -249,7 +249,7 @@ export function AIChatBox({
                     {message.role === "assistant" && (
                       <div className="size-8 shrink-0 mt-1 rounded-full overflow-hidden flex items-center justify-center">
                         <img
-                          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png"
+                          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-nanana-EFh6eBEALPfCG4rwpzzKxK.png"
                           alt="Sila Assistant"
                           className="w-full h-full object-cover"
                           loading="lazy"
