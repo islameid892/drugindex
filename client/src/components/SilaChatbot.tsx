@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, MessageCircle, Loader2 } from "lucide-react";
+import { X, Send, MessageCircle, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Message {
@@ -119,15 +119,15 @@ export default function SilaChatbot() {
   return (
     <>
       {/* Floating Action Button */}
-      <button
+        <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
-        title="Ask Sila"
+        title="سيلا - مساعدتك الافتراضية"
       >
         {isOpen ? (
           <X className="h-6 w-6 text-white" />
         ) : (
-          <MessageCircle className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
+          <MessageCircle className="h-7 w-7 text-white group-hover:scale-110 transition-transform" />
         )}
       </button>
 
@@ -136,11 +136,9 @@ export default function SilaChatbot() {
         <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-2rem)] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col border border-sky-100">
           {/* Header */}
           <div className="bg-gradient-to-r from-sky-500 to-sky-600 text-white p-4 rounded-t-2xl flex items-center gap-3">
-            <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar_b174b745.png"
-              alt="Sila"
-              className="w-10 h-10 rounded-full border-2 border-white"
-            />
+            <div className="w-10 h-10 rounded-full border-2 border-white bg-white/20 flex items-center justify-center flex-shrink-0">
+              <Bot className="h-6 w-6 text-white" />
+            </div>
             <div>
               <h3 className="font-bold">سيلا</h3>
               <p className="text-xs text-sky-100">مساعدتك الافتراضية</p>
