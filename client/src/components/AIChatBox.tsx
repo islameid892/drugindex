@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Loader2, Send, User } from "lucide-react";
+import { Loader2, Send, User, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Streamdown } from "streamdown";
 
@@ -247,13 +247,8 @@ export function AIChatBox({
                     }
                   >
                     {message.role === "assistant" && (
-                      <div className="size-8 shrink-0 mt-1 rounded-full overflow-hidden flex items-center justify-center">
-                        <img
-                          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-nanana-EFh6eBEALPfCG4rwpzzKxK.png"
-                          alt="Sila Assistant"
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                      <div className="size-8 shrink-0 mt-1 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="size-4 text-primary" />
                       </div>
                     )}
 
