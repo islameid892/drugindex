@@ -64,8 +64,14 @@ export const drugLensRouter = router({
         .limit(limit)
         .offset(offset);
 
+      // Clean price field - remove "SAR" prefix if present
+      const cleanedResults = results.map((drug: any) => ({
+        ...drug,
+        price: drug.price ? drug.price.replace(/^SAR\s*/, "").trim() : drug.price,
+      }));
+
       return {
-        results,
+        results: cleanedResults,
         total,
         page,
         totalPages: Math.ceil(total / limit),
@@ -83,7 +89,11 @@ export const drugLensRouter = router({
         .from(drugLens)
         .where(eq(drugLens.id, input.id))
         .limit(1);
-      return results[0] ?? null;
+      const drug = (results[0] ?? null) as any;
+      if (drug && drug.price) {
+        drug.price = drug.price.replace(/^SAR\s*/, "").trim();
+      }
+      return drug;
     }),
 
   // Autocomplete suggestions
@@ -98,6 +108,7 @@ export const drugLensRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       const { query, filterBy, limit } = input;
+      // NOTE: Price cleaning will be done here too if autocomplete returns prices
       const searchTerm = `%${query.trim()}%`;
 
       let whereClause: any;
