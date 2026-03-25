@@ -1164,6 +1164,7 @@ export async function getSearchMetrics(hoursAgo = 24) {
   console.log('[Metrics] Fetching search metrics for last', hoursAgo, 'hours');
   console.log('[Metrics] Cutoff time:', cutoffTime.toISOString());
   
+  console.log('[Metrics] Query params - hoursAgo:', hoursAgo, 'cutoffTime:', cutoffTime);
   const result = await db
     .select({
       totalSearches: count().as("totalSearches"),
@@ -1174,14 +1175,17 @@ export async function getSearchMetrics(hoursAgo = 24) {
     .from(searchAnalytics)
     .where(gte(searchAnalytics.createdAt, cutoffTime));
 
+  console.log('[Metrics] Raw query result:', result);
   const row = result[0];
+  console.log('[Metrics] First row:', row);
   const metrics = {
     totalSearches: Number(row?.totalSearches ?? 0),
     avgResponseTime: Number(row?.avgResponseTime ?? 0),
     minResponseTime: Number(row?.minResponseTime ?? 0),
     maxResponseTime: Number(row?.maxResponseTime ?? 0),
   };
-  console.log('[Metrics] Result:', metrics);
+  console.log('[Metrics] Final metrics:', metrics);
+  console.log('[Metrics] totalSearches type:', typeof metrics.totalSearches, 'value:', metrics.totalSearches);
   return metrics;
 }
 
