@@ -1131,8 +1131,9 @@ export async function getActiveUsersCount(minutesAgo = 15) {
  * Get top searches by frequency
  * @param limit - number of top searches to return (default 10)
  */
-export async function getTopSearches(limit = 10) {
+export async function getTopSearches(limit = 10, hoursAgo = 720) {
   const db = await getDb();
+  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
   
   const topSearches = await db
     .select({
@@ -1141,6 +1142,7 @@ export async function getTopSearches(limit = 10) {
       avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
     })
     .from(searchAnalytics)
+    .where(gte(searchAnalytics.createdAt, cutoffTime))
     .groupBy(searchAnalytics.query)
     .orderBy(desc(count()))
     .limit(limit);

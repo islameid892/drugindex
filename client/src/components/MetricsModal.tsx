@@ -7,31 +7,46 @@ import { trpc } from "@/lib/trpc";
 import { ResponseTimeChart } from "@/components/charts/ResponseTimeChart";
 import { HourlyActivityChart } from "@/components/charts/HourlyActivityChart";
 
+type TimeFilter = "day" | "week" | "month" | "all";
+
 interface MetricsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
+  day: "24h",
+  week: "7 Days",
+  month: "30 Days",
+  all: "All Time",
+};
+
 export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
   const [activeTab, setActiveTab] = useState("metrics");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("month");
 
-  const { data: metricsData, isLoading: metricsLoading } = trpc.monitoring.getMetrics.useQuery(undefined, {
-    refetchInterval: open ? 30000 : false,
-    staleTime: 10000,
-    enabled: open,
-  });
+  const { data: metricsData, isLoading: metricsLoading } = trpc.monitoring.getMetrics.useQuery(
+    { timeFilter },
+    {
+      refetchInterval: open ? 30000 : false,
+      staleTime: 10000,
+      enabled: open,
+    }
+  );
 
-  const { data: analyticsData, isLoading: analyticsLoading } = trpc.monitoring.getAnalytics.useQuery(undefined, {
-    refetchInterval: open ? 30000 : false,
-    staleTime: 10000,
-    enabled: open,
-  });
+  const { data: analyticsData, isLoading: analyticsLoading } = trpc.monitoring.getAnalytics.useQuery(
+    { timeFilter },
+    {
+      refetchInterval: open ? 30000 : false,
+      staleTime: 10000,
+      enabled: open,
+    }
+  );
 
   const isLoading = metricsLoading || analyticsLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Full-width on mobile, large on desktop — showCloseButton=false so we render our own */}
       <DialogContent
         showCloseButton={false}
         className="
@@ -53,7 +68,6 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
               Performance Metrics & Analytics
             </DialogTitle>
           </div>
-          {/* Custom close button — always visible, never overlaps title */}
           <button
             onClick={() => onOpenChange(false)}
             className="
@@ -67,6 +81,25 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+
+        {/* ── Time Filter Bar ── */}
+        <div className="flex items-center gap-1.5 px-4 pt-3 sm:px-6 shrink-0">
+          <span className="text-xs text-muted-foreground mr-1">Period:</span>
+          {(["day", "week", "month", "all"] as TimeFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setTimeFilter(f)}
+              className={`
+                px-3 py-1 rounded-full text-xs font-medium transition-colors
+                ${timeFilter === f
+                  ? "bg-sky-600 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"}
+              `}
+            >
+              {TIME_FILTER_LABELS[f]}
+            </button>
+          ))}
         </div>
 
         {/* ── Scrollable Body ── */}
@@ -110,13 +143,13 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                     </CardContent>
                   </Card>
 
-                  {/* Stats Grid — 2 cols on all sizes */}
+                  {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
                     <Card>
                       <CardHeader className="pb-1 px-4 pt-4">
                         <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
                           <Search className="h-3.5 w-3.5 text-sky-600 shrink-0" />
-                          Total Searches (24h)
+                          Total Searches ({TIME_FILTER_LABELS[timeFilter]})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
@@ -207,7 +240,7 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                     <CardHeader className="pb-2 px-4 pt-4">
                       <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
                         <TrendingUp className="h-4 w-4 text-emerald-600 shrink-0" />
-                        Top Searches
+                        Top Searches ({TIME_FILTER_LABELS[timeFilter]})
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
@@ -286,7 +319,7 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                       <CardHeader className="pb-2 px-4 pt-4">
                         <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
                           <BarChart3 className="h-4 w-4 text-red-600 shrink-0" />
-                          Hourly Activity (Last 24h)
+                          Activity ({TIME_FILTER_LABELS[timeFilter]})
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
