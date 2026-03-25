@@ -1,0 +1,18 @@
+{
+  "query": "SELECT COUNT(*) as total, \n       MIN(createdAt) as oldest, \n       MAX(createdAt) as newest,\n       AVG(response_time_ms) as avg_response_time,\n       MIN(response_time_ms) as min_response_time,\n       MAX(response_time_ms) as max_response_time\nFROM search_analytics;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total, \n       MIN(createdAt) as oldest, \n       MAX(createdAt) as newest,\n       AVG(response_time_ms) as avg_response_time,\n       MIN(response_time_ms) as min_response_time,\n       MAX(response_time_ms) as max_response_time\nFROM search_analytics;",
+  "rows": [
+    {
+      "total": "703",
+      "oldest": "2026-02-28 13:47:48",
+      "newest": "2026-03-18 12:35:45",
+      "avg_response_time": "96.6643",
+      "min_response_time": "0",
+      "max_response_time": "3568"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\toldest\tnewest\tavg_response_time\tmin_response_time\tmax_response_time\n703\t2026-02-28 13:47:48\t2026-03-18 12:35:45\t96.6643\t0\t3568\n",
+  "stderr": "",
+  "execution_time_ms": 1659
+}

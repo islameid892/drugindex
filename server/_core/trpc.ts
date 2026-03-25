@@ -94,12 +94,16 @@ export const searchTrackingMiddleware = t.middleware(async opts => {
   (async () => {
     try {
       const { recordSearch } = await import("../db");
-      await recordSearch({
+      const searchData = {
         query: searchQuery,
         resultsCount,
         responseTimeMs: responseTime,
+        searchType: 'general',
         source: ctx.req?.headers['x-search-source'] as string || 'main',
-      });
+      };
+      console.log('[Search Tracking] Recording search:', searchData);
+      await recordSearch(searchData);
+      console.log('[Search Tracking] Search recorded successfully');
     } catch (error) {
       console.error('[Search Tracking] Failed to record search:', error);
     }

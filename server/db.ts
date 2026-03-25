@@ -1161,6 +1161,8 @@ export async function getSearchMetrics(hoursAgo = 24) {
   const db = await getDb();
   
   const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+  console.log('[Metrics] Fetching search metrics for last', hoursAgo, 'hours');
+  console.log('[Metrics] Cutoff time:', cutoffTime.toISOString());
   
   const result = await db
     .select({
@@ -1173,12 +1175,14 @@ export async function getSearchMetrics(hoursAgo = 24) {
     .where(gte(searchAnalytics.createdAt, cutoffTime));
 
   const row = result[0];
-  return {
+  const metrics = {
     totalSearches: Number(row?.totalSearches ?? 0),
     avgResponseTime: Number(row?.avgResponseTime ?? 0),
     minResponseTime: Number(row?.minResponseTime ?? 0),
     maxResponseTime: Number(row?.maxResponseTime ?? 0),
   };
+  console.log('[Metrics] Result:', metrics);
+  return metrics;
 }
 
 /**

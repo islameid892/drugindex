@@ -381,14 +381,19 @@ export const appRouter = router({
       .input(z.object({
         query: z.string(),
         resultCount: z.number(),
-        responseTime: z.number().optional(),
+        responseTime: z.number().default(0),
       }))
       .mutation(async ({ input }) => {
-        return await recordSearch({
+        const searchData = {
           query: input.query,
           resultsCount: input.resultCount,
+          responseTimeMs: input.responseTime || 0,
           searchType: "general",
-        });
+        };
+        console.log('[Analytics] Recording search from mutation:', searchData);
+        await recordSearch(searchData);
+        console.log('[Analytics] Search recorded successfully');
+        return { success: true };
       }),
   }),
 });
