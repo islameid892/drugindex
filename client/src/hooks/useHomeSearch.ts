@@ -70,7 +70,7 @@ export function useHomeSearch() {
   const totalPages = Math.ceil(groupedResults.length / ITEMS_PER_PAGE);
 
   // Use the custom search tracking hook with debounce
-  useSearchTracking(debouncedQuery, groupedResults.length, 500);
+  useSearchTracking(debouncedQuery, groupedResults.length, searchLoading);
 
   // Auto-scroll to results
   useEffect(() => {
