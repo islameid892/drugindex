@@ -169,7 +169,7 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light" switchable={true}>
       <FavoritesProvider>
         <TooltipProvider>
           <ErrorBoundary>
