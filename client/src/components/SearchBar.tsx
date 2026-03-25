@@ -64,6 +64,13 @@ export function SearchBar({
   const handleSuggestionSelect = (suggestion: { name: string; id?: string }) => {
     onChange(suggestion.name);
     setIsDropdownOpen(false);
+    // Track analytics event
+    if (typeof window !== 'undefined' && (window as any).trackEvent) {
+      (window as any).trackEvent('search_suggestion_selected', {
+        query: suggestion.name,
+        type: suggestion.id ? 'drug' : 'general',
+      });
+    }
     if (onSuggestionSelect) {
       onSuggestionSelect(suggestion);
     }
@@ -101,13 +108,25 @@ export function SearchBar({
           type="text"
           value={value}
           onChange={(e) => {
-            onChange(e.target.value);
-            setHasValue(e.target.value.length > 0);
+            const newValue = e.target.value;
+            onChange(newValue);
+            setHasValue(newValue.length > 0);
             setIsDropdownOpen(true);
+            // Track search input
+            if (newValue.length > 2 && typeof window !== 'undefined' && (window as any).trackEvent) {
+              (window as any).trackEvent('search_input', {
+                query: newValue,
+                length: newValue.length,
+              });
+            }
           }}
           onFocus={() => {
             setIsFocused(true);
             value.trim().length > 0 && setIsDropdownOpen(true);
+            // Track search focus
+            if (typeof window !== 'undefined' && (window as any).trackEvent) {
+              (window as any).trackEvent('search_focus', {});
+            }
           }}
           onBlur={() => setIsFocused(false)}
           className="pl-3 sm:pl-4 pr-10 sm:pr-14 h-12 sm:h-14 text-base sm:text-lg text-slate-900 placeholder:text-slate-500 shadow-lg shadow-sky-500/10 border border-slate-200 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:border-sky-500 transition-all rounded-xl bg-white dark:bg-white text-left"

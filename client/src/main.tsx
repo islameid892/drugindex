@@ -8,6 +8,49 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
+// Initialize analytics
+const initializeAnalytics = () => {
+  const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+  const websiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
+  
+  if (!endpoint || !websiteId) {
+    console.warn('[Analytics] Missing configuration');
+    return;
+  }
+
+  // Track page views
+  const trackPageView = () => {
+    fetch(`${endpoint}/api/v1/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        website_id: websiteId,
+        hostname: window.location.hostname,
+        screen: `${window.innerWidth}x${window.innerHeight}`,
+        language: navigator.language,
+        referrer: document.referrer,
+        url: window.location.pathname,
+      }),
+    }).catch(err => console.debug('[Analytics] Send failed:', err));
+  };
+
+  // Track initial page view
+  trackPageView();
+
+  // Track page changes (for SPA)
+  let lastPath = window.location.pathname;
+  const observer = new MutationObserver(() => {
+    if (window.location.pathname !== lastPath) {
+      lastPath = window.location.pathname;
+      trackPageView();
+    }
+  });
+  
+  observer.observe(document.body, { subtree: true, childList: true });
+};
+
+initializeAnalytics();
+
 // Optimized QueryClient configuration for better performance and stability
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,7 +100,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   window.location.href = getLoginUrl();
 };
 
-// Monitor network connectivity
+// Monitor network connectivity (after analytics init)
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     console.log('[Network] Connection restored');
@@ -118,6 +161,27 @@ const trpcClient = trpc.createClient({
     }),
   ],
 });
+
+// Expose analytics tracking function globally for events
+if (typeof window !== 'undefined') {
+  (window as any).trackEvent = (eventName: string, data?: Record<string, unknown>) => {
+    const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+    const websiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
+    if (endpoint && websiteId) {
+      fetch(`${endpoint}/api/v1/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          website_id: websiteId,
+          hostname: window.location.hostname,
+          url: window.location.pathname,
+          event_name: eventName,
+          event_data: data,
+        }),
+      }).catch(() => {});
+    }
+  };
+}
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>

@@ -6,25 +6,11 @@
  * Run with: node migrate-prices.mjs
  */
 
-import * as XLSX from 'xlsx';
-import { drizzle } from 'drizzle-orm/mysql2';
+import XLSX from 'xlsx';
 import mysql from 'mysql2/promise';
-import { eq } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 
-// Import schema dynamically
-const { drugLens } = await import('./drizzle/schema.ts');
-
 dotenv.config();
-
-// Define drugLens schema inline since we can't import TypeScript directly
-const drugLensSchema = {
-  id: { key: 'id' },
-  scientific_name: { key: 'scientificName' },
-  trade_name: { key: 'tradeName' },
-  price: { key: 'price' },
-  updated_at: { key: 'updatedAt' },
-};
 
 // Fuzzy matching function
 function tokenSetRatio(str1, str2) {
@@ -53,8 +39,8 @@ function findBestMatch(sfdaDrug, dbDrugs, threshold = 75) {
   let bestType = null;
 
   for (const dbDrug of dbDrugs) {
-    const dbSci = normalizeName(dbDrug.scientific_name);
-    const dbTrade = normalizeName(dbDrug.trade_name);
+    const dbSci = normalizeName(dbDrug.scientificName);
+    const dbTrade = normalizeName(dbDrug.tradeName);
 
     // Exact match on scientific name
     if (sfdaSci && dbSci && sfdaSci === dbSci) {
@@ -106,17 +92,6 @@ function findBestMatch(sfdaDrug, dbDrugs, threshold = 75) {
   return null;
 }
 
-// Create a mock drugLens object for query building
-const createDrugLensTable = () => {
-  return {
-    id: { key: 'id' },
-    scientificName: { key: 'scientificName' },
-    tradeName: { key: 'tradeName' },
-    price: { key: 'price' },
-    updatedAt: { key: 'updatedAt' },
-  };
-};
-
 async function updatePrices() {
   console.log('='.repeat(80));
   console.log('ICD-10 Drug Lens - Smart Price Update');
@@ -126,19 +101,21 @@ async function updatePrices() {
   console.log('\n📥 Loading SFDA price data...');
   const workbook = XLSX.readFile('/home/ubuntu/upload/sfda_drugs_full.xlsx');
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  const data = XLSX.utils.sheet_to_json(worksheet);
 
   const sfdaDrugs = [];
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const price = parseFloat(row[4]);
+  for (const row of data) {
+    // Handle Arabic column names
+    const price = parseFloat(row['السعر'] || row['Price'] || row['price']);
+    const tradeName = row['الاسم التجاري'] || row['Trade Name'] || row['trade_name'];
+    const scientificName = row['الاسم العلمي'] || row['Scientific Name'] || row['scientific_name'];
 
-    if (!isNaN(price) && row[1]) {
+    if (!isNaN(price) && tradeName && scientificName) {
       sfdaDrugs.push({
-        scientific_name: row[0] || '',
-        trade_name: row[1] || '',
-        strength: row[2] || '',
-        pharmaceutical_form: row[3] || '',
+        scientific_name: String(scientificName).trim(),
+        trade_name: String(tradeName).trim(),
+        strength: row['التركيز'] || row['Strength'] || '',
+        pharmaceutical_form: row['الشكل الصيدلاني'] || row['Form'] || '',
         price,
       });
     }
@@ -147,32 +124,30 @@ async function updatePrices() {
 
   // Connect to database
   console.log('\n🔗 Connecting to database...');
-  const pool = mysql.createPool({
+  const connection = await mysql.createConnection({
     uri: process.env.DATABASE_URL,
-    connectionLimit: 10,
-    waitForConnections: true,
-    queueLimit: 0,
   });
-
-  const db = drizzle(pool);
 
   // Fetch all drugs
   console.log('📊 Fetching database drugs...');
-  const dbDrugs = await db
-    .select({
-      id: drugLens.id,
-      scientific_name: drugLens.scientificName,
-      trade_name: drugLens.tradeName,
-      price: drugLens.price,
-    })
-    .from(drugLens);
+  const [dbDrugs] = await connection.execute(
+    'SELECT id, scientific_name as scientificName, trade_name as tradeName, price FROM drug_lens'
+  );
 
   console.log(`✓ Loaded ${dbDrugs.length} drugs from database`);
+
+  // Convert result rows to objects with proper field names
+  const dbDrugsNormalized = dbDrugs.map(drug => ({
+    id: drug[0],
+    scientificName: drug[1],
+    tradeName: drug[2],
+    price: drug[3],
+  }));
 
   // Statistics
   const stats = {
     total_sfda: sfdaDrugs.length,
-    total_db: dbDrugs.length,
+    total_db: dbDrugsNormalized.length,
     matched: 0,
     updated: 0,
     high_confidence: 0,
@@ -190,7 +165,7 @@ async function updatePrices() {
     }
 
     const sfdaDrug = sfdaDrugs[idx];
-    const matchResult = findBestMatch(sfdaDrug, dbDrugs, 75);
+    const matchResult = findBestMatch(sfdaDrug, dbDrugsNormalized, 75);
 
     if (!matchResult) {
       stats.no_match++;
@@ -209,19 +184,16 @@ async function updatePrices() {
     }
 
     // Get current price from DB
-    const currentDb = dbDrugs.find(d => d.id === matchResult.dbId);
+    const currentDb = dbDrugsNormalized.find(d => d.id === matchResult.dbId);
     const currentPrice = currentDb?.price || null;
     const newPrice = String(sfdaDrug.price);
 
     // Update if price is different
     if (currentPrice !== newPrice) {
-      await db
-        .update(drugLens)
-        .set({
-          price: newPrice,
-          updatedAt: new Date(),
-        })
-        .where(eq(drugLens.id, matchResult.dbId));
+      await connection.execute(
+        'UPDATE drug_lens SET price = ?, updatedAt = NOW() WHERE id = ?',
+        [newPrice, matchResult.dbId]
+      );
 
       stats.updated++;
       stats.price_changes.push({
@@ -241,10 +213,8 @@ async function updatePrices() {
   console.log('📋 UPDATE REPORT');
   console.log('='.repeat(80));
   console.log(`\nTotal SFDA drugs: ${stats.total_sfda}`);
-  console.log(`Total DB drugs: ${stats.total_db}`);
-  console.log(
-    `\n✓ Matched: ${stats.matched} (${((stats.matched / stats.total_sfda) * 100).toFixed(1)}%)`
-  );
+  console.log(`Total DB drugs: ${dbDrugsNormalized.length}`);
+  console.log(`\n✓ Matched: ${stats.matched} (${((stats.matched / stats.total_sfda) * 100).toFixed(1)}%)`);
   console.log(`  - High confidence (≥95%): ${stats.high_confidence}`);
   console.log(`  - Medium confidence (85-95%): ${stats.medium_confidence}`);
   console.log(`  - Low confidence (75-85%): ${stats.low_confidence}`);
@@ -268,7 +238,7 @@ async function updatePrices() {
   console.log('\n✅ Price update completed successfully!');
   console.log(`\n📈 Summary: ${stats.updated} prices updated, ${stats.no_match} drugs not matched`);
 
-  await pool.end();
+  await connection.end();
 }
 
 updatePrices().catch(err => {
