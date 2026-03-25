@@ -445,17 +445,7 @@ const DrugLens = () => {
         )}
       </div>
 
-      {/* Floating Sila Button */}
-      <div className="fixed bottom-8 right-6 group">
-        <div className="absolute bottom-full right-0 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-slate-800 text-white text-[10px] py-1 px-3 rounded-full whitespace-nowrap mb-2 shadow-xl">
-            Sila AI is ready!
-          </div>
-        </div>
-        <button className="w-14 h-14 bg-gradient-to-tr from-teal-600 to-teal-400 text-white rounded-2xl shadow-2xl flex items-center justify-center hover:rotate-12 transition-transform ring-4 ring-white">
-          <MessageCircle className="w-7 h-7" />
-        </button>
-      </div>
+
     </div>
   );
 };

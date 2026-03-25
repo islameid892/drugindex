@@ -11,7 +11,7 @@ import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag
 // AdvancedSearchFAB is now in HeroSection
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
-import SilaChatbot from "./components/SilaChatbot";
+
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -174,7 +174,6 @@ function App() {
         <TooltipProvider>
           <ErrorBoundary>
             <Router />
-            <SilaChatbot />
             <PWAInstallPrompt />
             <PWAUpdateNotification />
             <Toaster />
