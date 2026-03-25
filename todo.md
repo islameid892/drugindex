@@ -489,3 +489,4 @@
 - [ ] Test drug card actions
 - [ ] Test Sila AI integration
 - [ ] Create checkpoint before publishing
+- [x] Fix Recent Search not working - root cause: missing 'source' column in DB causing silent INSERT failures

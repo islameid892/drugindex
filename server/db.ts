@@ -495,10 +495,15 @@ export async function getDashboardStats() {
 
 export async function recordSearch(data: InsertSearchAnalytic) {
   const db = await getDb();
+  console.log('[recordSearch] Attempting to insert:', JSON.stringify(data));
   try {
-    await db.insert(searchAnalytics).values(data);
-  } catch (error) {
-    console.error("[Database] Failed to record search:", error);
+    const result = await db.insert(searchAnalytics).values(data);
+    console.log('[recordSearch] Insert result:', JSON.stringify(result));
+    return result;
+  } catch (error: any) {
+    console.error('[recordSearch] FAILED:', error?.message || error);
+    console.error('[recordSearch] Full error:', JSON.stringify(error, null, 2));
+    throw error;
   }
 }
 
