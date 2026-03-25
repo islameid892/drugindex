@@ -354,7 +354,7 @@
     fab.setAttribute("role", "button");
     fab.setAttribute("aria-label", "Ask Sila - Medical Assistant");
     fab.innerHTML = `
-      <img class="sila-fab-avatar" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />
+      <img class="sila-fab-avatar" src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/txZYZmGUUkDUUsSi.PNG" alt="Sila" loading="lazy" />
       <div class="sila-fab-badge">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
       </div>
@@ -369,7 +369,7 @@
       <div id="sila-header">
         <div class="sila-header-left">
           <div class="sila-avatar">
-            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />
+            <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/txZYZmGUUkDUUsSi.PNG" alt="Sila" loading="lazy" />
           </div>
           <div>
             <div class="sila-title">سيلا / Sila <span style="font-size:10px;background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;font-weight:600;letter-spacing:0.5px;">AI</span></div>
@@ -382,7 +382,7 @@
       <div id="sila-messages">
         <div class="sila-welcome">
           <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
-            <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" style="width:52px;height:52px;border-radius:50%;border:2px solid #bfdbfe;object-fit:cover;" />
+            <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/txZYZmGUUkDUUsSi.PNG" alt="Sila" style="width:52px;height:52px;border-radius:50%;border:2px solid #bfdbfe;object-fit:cover;" />
           </div>
           <div class="sila-welcome-title">مرحباً! أنا سيلا 👋</div>
           <div class="sila-welcome-sub">
@@ -528,7 +528,7 @@
     if (role === "user") {
       avatar.textContent = "👤";
     } else {
-      avatar.innerHTML = `<img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" />`;
+      avatar.innerHTML = `<img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/txZYZmGUUkDUUsSi.PNG" alt="Sila" loading="lazy" />`;
     }
 
     const bubble = document.createElement("div");
@@ -560,7 +560,7 @@
     row.className = "sila-msg-row assistant";
     row.id = "sila-loading-row";
     row.innerHTML = `
-      <div class="sila-msg-avatar bot"><img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/sila-avatar-niGEngp78RqwC8oKJ3Btpf.png" alt="Sila" loading="lazy" /></div>
+      <div class="sila-msg-avatar bot"><img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/txZYZmGUUkDUUsSi.PNG" alt="Sila" loading="lazy" /></div>
       <div class="sila-bubble bot" dir="rtl">
         <div class="sila-typing"><span></span><span></span><span></span></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:'Cairo',sans-serif;">سيلا تفكر...</div>
