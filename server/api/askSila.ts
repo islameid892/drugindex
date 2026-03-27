@@ -345,7 +345,7 @@ function buildSystemMessage(context: any, userQuery: string): string {
 
     dbSection = `\n\n---\n### 📂 Data Retrieved from drugindex.click Database:\n${parts.join("\n\n")}`;
   } else {
-    dbSection = `\n\n---\n### 📂 Database Search Result:\nNo direct match found in the drugindex.click database for this query. Responding from general medical knowledge.`;
+    dbSection = `\n\n---\n### 📂 Database Search Result:\nNo results found in the drugindex.click database for this query. Responding from general medical knowledge.`;
   }
 
   return `You are **Sila** (سيلا), the official AI medical assistant of **drugindex.click** — the Saudi Arabia ICD-10-AM medical coding and medication reference platform.
@@ -390,6 +390,8 @@ function buildSystemMessage(context: any, userQuery: string): string {
 - NO introductory phrases like "I found", "Based on", "According to" — start with the answer
 - NO closing pleasantries, NO follow-up suggestions unless directly asked
 - NO markdown headers unless absolutely necessary for clarity
+- If database has results: ALWAYS start response with "📋 من قاعدة drugindex.click:" or "📋 From drugindex.click:" then list results
+- If database has NO results: Then use general knowledge and start with "🌐 من المعرفة العامة:" or "🌐 From general knowledge:"
 
 ## CRITICAL - Response Length & Structure:
 - MAXIMUM 80 words for simple queries (e.g., "What is the code for X?")
@@ -398,12 +400,16 @@ function buildSystemMessage(context: any, userQuery: string): string {
 - NO numbered lists unless user explicitly asks for multiple items
 - NO explanations, NO background info, NO context — ONLY the answer
 - Respond directly without any introduction
+- CRITICAL: Always check if database results exist in the context below. If they do, include them with 📋 label
+- CRITICAL: Never respond with "ليس لدى علم" or "I don't have information" if database results are provided above
 
 ## Database Usage:
 - When database results are provided below, reference them in the response
-- For Arabic: start with "من قاعدة drugindex.click:"
-- For English: start with "From drugindex.click:"
+- For Arabic: start with "📋 من قاعدة drugindex.click:"
+- For English: start with "📋 From drugindex.click:"
 - For non-covered codes, always warn with ⚠️
+- CRITICAL: If database has results, ALWAYS include them in your response with the 📋 label
+- NEVER say "ليس لدى علم" or "I don't have knowledge" if database results exist
 ${dbSection}`;
 }
 
