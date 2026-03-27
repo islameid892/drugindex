@@ -1,6 +1,5 @@
-// ============================================================
 // Ask Sila - Medical AI Assistant for drugindex.click
-// Version 2.0 - Professional Bilingual Design
+// Version 3.0 - Streaming Support with Expanded Responses
 // ============================================================
 
 (function () {
@@ -99,205 +98,283 @@
         max-height: 620px;
         background: #ffffff;
         border-radius: 16px;
-        box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
         display: none;
         flex-direction: column;
         z-index: 9999;
-        font-family: 'Cairo', 'Inter', -apple-system, sans-serif;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-      }
-      @media (max-width: 480px) {
-        #sila-window { width: calc(100vw - 24px); right: 12px; bottom: 88px; }
+        font-family: 'Cairo', 'Inter', sans-serif;
       }
 
-      /* ── Header ── */
       #sila-header {
-        background: linear-gradient(135deg, #1a6fc4 0%, #0d4f9e 100%);
-        padding: 14px 16px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        flex-shrink: 0;
+        align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid #e2e8f0;
+        background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+        border-radius: 16px 16px 0 0;
       }
-      .sila-header-left { display: flex; align-items: center; gap: 10px; }
+
+      .sila-header-left {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
       .sila-avatar {
-        width: 42px; height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         overflow: hidden;
-        border: 2px solid rgba(255,255,255,0.5);
-        flex-shrink: 0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        border: 2px solid #bfdbfe;
       }
-      .sila-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .sila-title { color: #fff; font-weight: 700; font-size: 15px; font-family: 'Cairo', sans-serif; line-height: 1.2; }
-      .sila-subtitle { color: rgba(255,255,255,0.8); font-size: 11px; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 4px; }
-      .sila-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; display: inline-block; }
-      #sila-close {
-        background: rgba(255,255,255,0.15);
-        border: none; color: white; cursor: pointer;
-        width: 28px; height: 28px; border-radius: 50%;
-        font-size: 14px; display: flex; align-items: center; justify-content: center;
-        transition: background 0.2s;
-      }
-      #sila-close:hover { background: rgba(255,255,255,0.3); }
 
-      /* ── Messages area ── */
+      .sila-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .sila-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: -0.3px;
+      }
+
+      .sila-subtitle {
+        font-size: 11px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+      }
+
+      .sila-dot {
+        width: 6px;
+        height: 6px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        animation: sila-pulse-dot 2s ease-in-out infinite;
+      }
+
+      @keyframes sila-pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      #sila-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #64748b;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+      }
+
+      #sila-close:hover { color: #1e293b; }
+
       #sila-messages {
         flex: 1;
         overflow-y: auto;
-        padding: 16px;
-        background: #f8fafc;
+        padding: 12px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        scroll-behavior: smooth;
+        gap: 12px;
+        background: #ffffff;
       }
-      #sila-messages::-webkit-scrollbar { width: 4px; }
-      #sila-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-      /* ── Welcome card ── */
       .sila-welcome {
-        background: linear-gradient(135deg, #eff6ff, #dbeafe);
-        border: 1px solid #bfdbfe;
-        border-radius: 12px;
-        padding: 14px;
         text-align: center;
+        padding: 20px 12px;
+        color: #64748b;
       }
-      .sila-welcome-title { font-size: 15px; font-weight: 700; color: #1e40af; font-family: 'Cairo', sans-serif; margin-bottom: 4px; }
-      .sila-welcome-sub { font-size: 12px; color: #3b82f6; font-family: 'Cairo', sans-serif; line-height: 1.5; }
 
-      /* ── Message bubbles ── */
-      .sila-msg-row { display: flex; align-items: flex-end; gap: 8px; }
-      .sila-msg-row.user { flex-direction: row-reverse; }
+      .sila-welcome-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 8px 0;
+      }
+
+      .sila-welcome-sub {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #64748b;
+      }
+
+      .sila-msg-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      .sila-msg-row.user {
+        justify-content: flex-end;
+      }
 
       .sila-msg-avatar {
-        width: 32px; height: 32px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 13px; flex-shrink: 0;
-        overflow: hidden;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 16px;
       }
-      .sila-msg-avatar.bot { background: transparent; }
-      .sila-msg-avatar.bot img { width: 32px; height: 32px; object-fit: cover; border-radius: 50%; display: block; }
-      .sila-msg-avatar.user { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #475569; font-size: 14px; }
+
+      .sila-msg-avatar.bot img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #bfdbfe;
+      }
 
       .sila-bubble {
-        max-width: 78%;
-        padding: 11px 14px;
-        border-radius: 14px;
-        font-size: 13.5px;
-        line-height: 1.7;
-        word-break: break-word;
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+        word-wrap: break-word;
       }
-      .sila-bubble.bot {
-        background: #ffffff;
-        color: #1e293b;
-        border: 1px solid #e2e8f0;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      }
+
       .sila-bubble.user {
         background: linear-gradient(135deg, #1a6fc4, #0d4f9e);
-        color: #ffffff;
-        border-bottom-right-radius: 4px;
-      }
-      .sila-bubble.error {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-        border-bottom-left-radius: 4px;
+        color: white;
+        border-radius: 12px 4px 12px 12px;
       }
 
-      /* ── RTL/LTR detection ── */
-      .sila-bubble[dir="rtl"] { text-align: right; font-family: 'Cairo', sans-serif; }
-      .sila-bubble[dir="ltr"] { text-align: left; font-family: 'Inter', sans-serif; }
-
-      /* ── Markdown inside bubbles ── */
-      .sila-bubble strong { font-weight: 700; }
-      .sila-bubble.bot strong { color: #1a6fc4; }
-      .sila-bubble em { font-style: italic; opacity: 0.85; }
-      .sila-bubble code {
+      .sila-bubble.bot {
         background: #f1f5f9;
-        color: #0f172a;
-        padding: 1px 5px;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-      }
-      .sila-bubble .md-h3 {
-        font-weight: 700;
-        font-size: 13px;
-        color: #1a6fc4;
-        margin: 10px 0 4px;
-        padding-bottom: 3px;
-        border-bottom: 1px solid #dbeafe;
-        display: block;
-      }
-      .sila-bubble .md-li {
-        display: flex;
-        gap: 6px;
-        margin: 3px 0;
-        padding-inline-start: 4px;
-      }
-      .sila-bubble .md-li-marker { color: #1a6fc4; font-weight: 700; flex-shrink: 0; }
-      .sila-bubble .md-para { margin: 6px 0; display: block; }
-      .sila-bubble .md-warn {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        border-radius: 6px;
-        padding: 6px 10px;
-        margin: 6px 0;
-        color: #9a3412;
-        font-size: 12.5px;
-      }
-      .sila-bubble .md-db-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 20px;
-        padding: 2px 8px;
-        font-size: 11px;
-        color: #1d4ed8;
-        margin-bottom: 6px;
+        color: #1e293b;
+        border-radius: 4px 12px 12px 12px;
       }
 
-      /* ── Loading dots ── */
-      .sila-typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+      .sila-bubble.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-radius: 4px 12px 12px 12px;
+      }
+
+      .sila-typing {
+        display: flex;
+        gap: 4px;
+        height: 16px;
+        align-items: center;
+      }
+
       .sila-typing span {
-        width: 7px; height: 7px;
+        width: 6px;
+        height: 6px;
         background: #94a3b8;
         border-radius: 50%;
-        animation: sila-bounce 1.3s infinite ease-in-out;
+        animation: sila-bounce 1.4s infinite;
       }
-      .sila-typing span:nth-child(2) { animation-delay: 0.18s; }
-      .sila-typing span:nth-child(3) { animation-delay: 0.36s; }
+
+      .sila-typing span:nth-child(2) { animation-delay: 0.2s; }
+      .sila-typing span:nth-child(3) { animation-delay: 0.4s; }
+
       @keyframes sila-bounce {
-        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-        40% { transform: translateY(-6px); opacity: 1; }
+        0%, 80%, 100% { opacity: 0.4; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-8px); }
+      }
+
+      /* Markdown rendering */
+      .md-db-badge {
+        display: inline-block;
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        margin: 4px 0;
+      }
+
+      .md-warn {
+        display: block;
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        padding: 6px 10px;
+        border-left: 3px solid #dc2626;
+        margin: 4px 0;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .md-h3 {
+        display: block;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 8px 0 4px 0;
+        font-size: 13px;
+      }
+
+      .md-li {
+        display: block;
+        margin: 4px 0;
+        padding-left: 16px;
+      }
+
+      .md-li-marker {
+        display: inline-block;
+        width: 16px;
+        margin-left: -16px;
+        font-weight: 600;
+        color: #1a6fc4;
+      }
+
+      .md-para {
+        display: block;
+        margin: 4px 0;
       }
 
       /* ── Quick actions ── */
       #sila-quick {
-        padding: 10px 14px 6px;
-        border-top: 1px solid #f1f5f9;
-        background: #fff;
+        padding: 10px 12px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
         flex-shrink: 0;
       }
-      .sila-quick-label { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 7px; font-family: 'Cairo', sans-serif; }
-      .sila-quick-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+
+      .sila-quick-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .sila-quick-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
       .sila-qa-btn {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #334155;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 11.5px;
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-family: 'Cairo', 'Inter', sans-serif;
         cursor: pointer;
-        font-family: 'Cairo', sans-serif;
-        transition: all 0.15s;
-        white-space: nowrap;
+        transition: all 0.2s;
+        text-align: center;
+        color: #1e293b;
+        font-weight: 500;
       }
       .sila-qa-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
 
@@ -551,6 +628,7 @@
     row.appendChild(bubble);
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
+    return bubble;
   }
 
   // ── Loading indicator ──
@@ -574,6 +652,43 @@
     if (el) el.remove();
   }
 
+  // ── Stream response character by character ──
+  async function streamResponse(bubble, reader) {
+    const decoder = new TextDecoder();
+    let fullText = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.chunk) {
+                fullText += data.chunk;
+                bubble.innerHTML = renderMarkdown(fullText);
+                bubble.parentElement.parentElement.scrollTop = bubble.parentElement.parentElement.scrollHeight;
+              }
+              if (data.done) {
+                return { success: true, conversationHistory: data.conversationHistory };
+              }
+            } catch (e) {
+              console.error("Parse error:", e);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Stream error:", err);
+      throw err;
+    }
+  }
+
   // ── Send message ──
   async function sendMessage() {
     const input = document.getElementById("sila-input");
@@ -595,18 +710,23 @@
         body: JSON.stringify({
           message: text,
           conversationHistory: state.history.slice(-8),
+          stream: true, // Request streaming
         }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
 
       hideLoading();
-      addMessage("assistant", data.message);
 
-      if (data.conversationHistory) {
-        state.history = data.conversationHistory;
+      // Create bubble for streaming response
+      const bubble = addMessage("assistant", "");
+
+      // Stream the response
+      const reader = res.body.getReader();
+      const result = await streamResponse(bubble, reader);
+
+      if (result && result.conversationHistory) {
+        state.history = result.conversationHistory;
       }
     } catch (err) {
       hideLoading();

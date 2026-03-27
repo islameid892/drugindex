@@ -147,10 +147,11 @@ function extractSearchTerms(query: string): string[] {
 
 /**
  * POST /api/askSila/chat
+ * Supports streaming responses for real-time display
  */
 router.post("/chat", async (req, res) => {
   try {
-    const { message, conversationHistory = [] } = req.body;
+    const { message, conversationHistory = [], stream = false } = req.body;
 
     if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "Invalid input: message is required" });
@@ -172,19 +173,47 @@ router.post("/chat", async (req, res) => {
     // 4. Call LLM
     const response = await invokeLLM({ messages: messages as any });
 
-    const assistantMessage =
-      response.choices?.[0]?.message?.content ||
+    const content = response.choices?.[0]?.message?.content;
+    const assistantMessage = typeof content === 'string' ? content : JSON.stringify(content) ||
       "عذراً، لم أتمكن من توليد رد. يرجى المحاولة مرة أخرى.";
 
-    res.json({
-      message: assistantMessage,
-      dbHits: dbContext.totalHits,
-      conversationHistory: [
-        ...conversationHistory,
-        { role: "user", content: message },
-        { role: "assistant", content: assistantMessage },
-      ],
-    });
+    // If streaming requested, send as Server-Sent Events
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      // Stream the response character by character
+      let charIndex = 0;
+      const streamInterval = setInterval(() => {
+        if (charIndex < assistantMessage.length) {
+          const chunk = assistantMessage[charIndex];
+          res.write(`data: ${JSON.stringify({ chunk })}
+
+`);
+          charIndex++;
+        } else {
+          // Send completion signal
+          res.write(`data: ${JSON.stringify({ done: true, conversationHistory: [...conversationHistory, { role: "user", content: message }, { role: "assistant", content: assistantMessage }] })}
+
+`);
+          clearInterval(streamInterval);
+          res.end();
+        }
+      }, 15); // 15ms per character = smooth streaming
+    } else {
+      // Regular response
+      res.json({
+        message: assistantMessage,
+        dbHits: dbContext.totalHits,
+        conversationHistory: [
+          ...conversationHistory,
+          { role: "user", content: message },
+          { role: "assistant", content: assistantMessage },
+        ],
+      });
+    }
   } catch (error) {
     console.error("Ask Sila error:", error);
     res.status(500).json({
@@ -431,11 +460,13 @@ function buildSystemMessage(context: any, userQuery: string): string {
 - If database has NO results: Then use general knowledge and start with "🌐 من المعرفة العامة:" or "🌐 From general knowledge:"
 
 ## CRITICAL - Response Length & Structure:
-- MAXIMUM 80 words for simple queries (e.g., "What is the code for X?")
-- MAXIMUM 120 words for complex queries (e.g., "Explain the difference between...")
+- For simple queries (e.g., "What is the code for X?"): 80-150 words
+- For complex queries (e.g., "Explain the difference between..."): 200-400 words (EXPANDED)
+- For detailed explanations: UP TO 600 words if needed
 - If database results exist, list them inline: "**CODE** (ICD-10-AM) — Description" on ONE line per code
-- NO numbered lists unless user explicitly asks for multiple items
-- NO explanations, NO background info, NO context — ONLY the answer
+- Numbered lists (1. 2. 3.) are ALLOWED for detailed explanations
+- Bullet points (-) are ALLOWED for attributes and lists
+- Paragraphs can be longer (2-3 sentences) for complex topics
 - Respond directly without any introduction
 - CRITICAL: Always check if database results exist in the context below. If they do, include them with 📋 label
 - CRITICAL: Never respond with "ليس لدى علم" or "I don't have information" if database results are provided above
