@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDb } from "../db";
-import { drugEntries, icdCodes, icdBranches, nonCoveredCodes } from "../../drizzle/schema";
+import { drugEntries, icdCodes, icdBranches, nonCoveredCodes, drugLens } from "../../drizzle/schema";
 import { like, or, eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 
@@ -203,6 +203,7 @@ async function deepDatabaseSearch(query: string) {
 
   const results = {
     medications: [] as any[],
+    drugLensResults: [] as any[],
     icdCodes: [] as any[],
     icdBranches: [] as any[],
     nonCoveredCodes: [] as any[],
@@ -213,6 +214,32 @@ async function deepDatabaseSearch(query: string) {
   if (searchTerms.length === 0) return results;
 
   try {
+    // --- Search drug_lens (comprehensive drug database) ---
+    const drugLensConditions = searchTerms.flatMap((k) => [
+      like(drugLens.scientificName, `%${k}%`),
+      like(drugLens.tradeName, `%${k}%`),
+      like(drugLens.uses, `%${k}%`),
+    ]);
+
+    const drugLensData = await db
+      .select()
+      .from(drugLens)
+      .where(or(...drugLensConditions))
+      .limit(8);
+
+    results.drugLensResults = (drugLensData as any[]).map((d: any) => ({
+      scientificName: d.scientificName,
+      tradeName: d.tradeName,
+      price: d.price,
+      uses: d.uses,
+      standardDose: d.standardDose,
+      pregnancyCategory: d.pregnancyCategory,
+      pharmacologicalAction: d.pharmacologicalAction,
+      blackBoxWarning: d.blackBoxWarning,
+      contraindicatedInteractions: d.contraindicatedInteractions,
+      majorInteractions: d.majorInteractions,
+    }));
+
     // --- Search drug_entries ---
     const drugConditions = searchTerms.flatMap((k) => [
       like(drugEntries.scientificName, `%${k}%`),
@@ -286,6 +313,7 @@ async function deepDatabaseSearch(query: string) {
 
     results.totalHits =
       results.medications.length +
+      results.drugLensResults.length +
       results.icdCodes.length +
       results.nonCoveredCodes.length;
 
@@ -306,6 +334,15 @@ function buildSystemMessage(context: any, userQuery: string): string {
 
   if (context.totalHits > 0) {
     const parts: string[] = [];
+
+    if (context.drugLensResults && context.drugLensResults.length > 0) {
+      parts.push(
+        `## Medications Found in drug_lens Database (${context.drugLensResults.length} results):\n` +
+        (context.drugLensResults as any[]).map((m) =>
+          `- **${m.tradeName}** (${m.scientificName})\n  Uses: ${m.uses}\n  Price: ${m.price} SAR\n  Standard Dose: ${m.standardDose}${m.blackBoxWarning ? `\n  ⚠️ Black Box Warning: ${m.blackBoxWarning}` : ""}${m.contraindicatedInteractions ? `\n  Contraindicated Interactions: ${m.contraindicatedInteractions}` : ""}`
+        ).join("\n")
+      );
+    }
 
     if (context.medications.length > 0) {
       parts.push(
@@ -343,7 +380,7 @@ function buildSystemMessage(context: any, userQuery: string): string {
       );
     }
 
-    dbSection = `\n\n---\n### 📂 Data Retrieved from drugindex.click Database:\n${parts.join("\n\n")}`;
+    dbSection = parts.length > 0 ? `\n\n---\n### 📂 Data Retrieved from drugindex.click Database:\n${parts.join("\n\n")}` : `\n\n---\n### 📂 Database Search Result:\nNo results found in the drugindex.click database for this query. Responding from general medical knowledge.`;
   } else {
     dbSection = `\n\n---\n### 📂 Database Search Result:\nNo results found in the drugindex.click database for this query. Responding from general medical knowledge.`;
   }
