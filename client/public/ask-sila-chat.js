@@ -87,6 +87,42 @@
         border: 2px solid rgba(168, 85, 247, 0.3);
         animation: sila-pulse 2.5s ease-in-out infinite;
       }
+      #sila-fab.closed {
+        opacity: 0.6;
+      }
+      #sila-fab.closed::before {
+        animation: none;
+        border-color: rgba(168, 85, 247, 0.15);
+      }
+      #sila-fab-close-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        color: white;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        z-index: 10;
+      }
+      #sila-fab:hover #sila-fab-close-btn {
+        opacity: 1;
+        transform: scale(1);
+      }
+      #sila-fab-close-btn:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+      }
       @keyframes sila-pulse {
         0%, 100% { opacity: 0.6; transform: scale(1); }
         50% { opacity: 0; transform: scale(1.2); }
@@ -536,6 +572,7 @@
       <div class="sila-fab-badge">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
       </div>
+      <button id="sila-fab-close-btn" aria-label="Close Sila">✕</button>
     `;
 
     const win = document.createElement("div");
@@ -594,6 +631,10 @@
   // ── Events ──
   function bindEvents() {
     document.getElementById("sila-fab").addEventListener("click", toggleChat);
+    document.getElementById("sila-fab-close-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeFab();
+    });
     document.getElementById("sila-close").addEventListener("click", closeChat);
     document.getElementById("sila-send").addEventListener("click", sendMessage);
     document.getElementById("sila-input").addEventListener("keydown", (e) => {
@@ -605,6 +646,12 @@
         document.getElementById("sila-input").value = q;
         sendMessage();
       });
+    });
+    // Re-open FAB on click when closed
+    document.getElementById("sila-fab").addEventListener("click", () => {
+      if (document.getElementById("sila-fab").classList.contains("closed")) {
+        reopenFab();
+      }
     });
   }
 
@@ -618,6 +665,22 @@
   function closeChat() {
     state.isOpen = false;
     document.getElementById("sila-window").style.display = "none";
+  }
+
+  function closeFab() {
+    const fab = document.getElementById("sila-fab");
+    fab.classList.add("closed");
+    fab.style.pointerEvents = "none";
+    fab.style.opacity = "0.4";
+    setTimeout(() => {
+      fab.style.pointerEvents = "auto";
+    }, 300);
+  }
+
+  function reopenFab() {
+    const fab = document.getElementById("sila-fab");
+    fab.classList.remove("closed");
+    fab.style.opacity = "1";
   }
 
   function detectDir(text) {
