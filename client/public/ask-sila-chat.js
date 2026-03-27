@@ -1,5 +1,5 @@
 // Ask Sila - Medical AI Assistant for drugindex.click
-// Version 3.0 - Streaming Support with Expanded Responses
+// Version 3.1 - Fixed Streaming Support
 // ============================================================
 
 (function () {
@@ -48,7 +48,6 @@
         padding: 0;
       }
       #sila-fab:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(26,111,196,0.7), 0 0 0 6px rgba(26,111,196,0.25); }
-      /* Sila avatar inside circle */
       #sila-fab .sila-fab-avatar {
         width: 58px;
         height: 58px;
@@ -56,7 +55,6 @@
         object-fit: cover;
         display: block;
       }
-      /* Chat bubble indicator at bottom-right */
       #sila-fab .sila-fab-badge {
         position: absolute;
         bottom: -4px;
@@ -76,7 +74,6 @@
         height: 12px;
         fill: white;
       }
-      /* Online pulse ring */
       #sila-fab::before {
         content: '';
         position: absolute;
@@ -290,7 +287,6 @@
         40% { opacity: 1; transform: translateY(-8px); }
       }
 
-      /* Markdown rendering */
       .md-db-badge {
         display: inline-block;
         background: rgba(16, 185, 129, 0.1);
@@ -340,7 +336,6 @@
         margin: 4px 0;
       }
 
-      /* ── Quick actions ── */
       #sila-quick {
         padding: 10px 12px;
         border-top: 1px solid #e2e8f0;
@@ -378,7 +373,6 @@
       }
       .sila-qa-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
 
-      /* ── Input area ── */
       #sila-input-area {
         border-top: 1px solid #e2e8f0;
         padding: 10px 12px;
@@ -425,7 +419,6 @@
 
   // ── Build UI ──
   function buildUI() {
-    // FAB button
     const fab = document.createElement("div");
     fab.id = "sila-fab";
     fab.setAttribute("role", "button");
@@ -437,7 +430,6 @@
       </div>
     `;
 
-    // Chat window
     const win = document.createElement("div");
     win.id = "sila-window";
     win.setAttribute("role", "dialog");
@@ -520,62 +512,46 @@
     document.getElementById("sila-window").style.display = "none";
   }
 
-  // ── Detect text direction ──
   function detectDir(text) {
     const arabicChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
     const latinChars = (text.match(/[a-zA-Z]/g) || []).length;
     return arabicChars > latinChars ? "rtl" : "ltr";
   }
 
-  // ── Markdown renderer ──
   function renderMarkdown(raw) {
-    // Escape HTML
     let t = raw
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Database badge
     t = t.replace(
       /Found in drugindex\.click database|وجدت في قاعدة بيانات الموقع/g,
       '<span class="md-db-badge">🗄️ قاعدة بيانات الموقع</span>'
     );
 
-    // Warning lines (⚠️ or NOT covered)
     t = t.replace(
       /^(⚠️.+|.*NOT covered.*)$/gm,
       '<span class="md-warn">$1</span>'
     );
 
-    // H3 headers (### or ##)
     t = t.replace(/^#{2,3}\s+(.+)$/gm, '<span class="md-h3">$1</span>');
-
-    // Bold
     t = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-    // Italic
     t = t.replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-    // Inline code
     t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
 
-    // Numbered list items
     t = t.replace(
       /^(\d+)\.\s+(.+)$/gm,
       '<span class="md-li"><span class="md-li-marker">$1.</span><span>$2</span></span>'
     );
 
-    // Bullet list items (- or •)
     t = t.replace(
       /^[-•]\s+(.+)$/gm,
       '<span class="md-li"><span class="md-li-marker">•</span><span>$1</span></span>'
     );
 
-    // Paragraphs: split on double newline
     const blocks = t.split(/\n{2,}/);
     t = blocks
       .map((block) => {
-        // If already wrapped in a block element, don't wrap again
         if (
           block.startsWith('<span class="md-h3') ||
           block.startsWith('<span class="md-li') ||
@@ -584,7 +560,6 @@
         ) {
           return block;
         }
-        // Single newlines within a paragraph → <br>
         const inner = block.replace(/\n/g, "<br>");
         return `<span class="md-para">${inner}</span>`;
       })
@@ -593,10 +568,8 @@
     return t;
   }
 
-  // ── Add message to chat ──
   function addMessage(role, content) {
     const container = document.getElementById("sila-messages");
-
     const row = document.createElement("div");
     row.className = `sila-msg-row ${role}`;
 
@@ -631,7 +604,6 @@
     return bubble;
   }
 
-  // ── Loading indicator ──
   function showLoading() {
     const container = document.getElementById("sila-messages");
     const row = document.createElement("div");
@@ -652,33 +624,43 @@
     if (el) el.remove();
   }
 
-  // ── Stream response character by character ──
-  async function streamResponse(bubble, reader) {
+  // ── Stream response with proper SSE parsing ──
+  async function streamResponse(bubble, response) {
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
+    let buffer = "";
 
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Keep last incomplete line in buffer
+        buffer = lines[lines.length - 1];
 
-        for (const line of lines) {
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          
           if (line.startsWith("data: ")) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const jsonStr = line.slice(6);
+              const data = JSON.parse(jsonStr);
+              
               if (data.chunk) {
                 fullText += data.chunk;
                 bubble.innerHTML = renderMarkdown(fullText);
                 bubble.parentElement.parentElement.scrollTop = bubble.parentElement.parentElement.scrollHeight;
               }
+              
               if (data.done) {
                 return { success: true, conversationHistory: data.conversationHistory };
               }
             } catch (e) {
-              console.error("Parse error:", e);
+              console.error("Parse error:", e, "line:", line);
             }
           }
         }
@@ -710,20 +692,16 @@
         body: JSON.stringify({
           message: text,
           conversationHistory: state.history.slice(-8),
-          stream: true, // Request streaming
+          stream: true,
         }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       hideLoading();
-
-      // Create bubble for streaming response
       const bubble = addMessage("assistant", "");
 
-      // Stream the response
-      const reader = res.body.getReader();
-      const result = await streamResponse(bubble, reader);
+      const result = await streamResponse(bubble, res);
 
       if (result && result.conversationHistory) {
         state.history = result.conversationHistory;
