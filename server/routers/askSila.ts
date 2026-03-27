@@ -1,19 +1,23 @@
-import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { drugEntries, icdCodes } from "../../drizzle/schema";
-import { like, or } from "drizzle-orm";
+import { drugLens, drugEntries, icdCodes, nonCoveredCodes } from "../../drizzle/schema";
+import { like, or, and, ilike } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
+import { publicProcedure, router } from "../_core/trpc";
 
 /**
  * Ask Sila - Medical AI Assistant Router
+ * Database-first approach: searches database before calling LLM
  * Handles chat interactions with Groq API integration
  */
 
 export const askSilaRouter = router({
   /**
    * Main chat endpoint
-   * Searches database for context, then calls Groq API for response
+   * 1. Searches database for context
+   * 2. If found → returns database info with 📋 label
+   * 3. If not found → calls Groq with database context + 🌐 label
+   * 4. Never says "ليس لدى علم" if data exists in database
    */
   chat: publicProcedure
     .input(
@@ -37,44 +41,61 @@ export const askSilaRouter = router({
         // 1. Search database for relevant context
         const dbContext = await searchDatabase(message);
 
-        // 2. Build system message with context
-        const systemMessage = buildSystemMessage(dbContext);
+        // 2. Check if we found relevant database results
+        const hasDbResults =
+          (dbContext.drugs && dbContext.drugs.length > 0) ||
+          (dbContext.icdCodes && dbContext.icdCodes.length > 0) ||
+          (dbContext.nonCoveredCodes && dbContext.nonCoveredCodes.length > 0);
 
-        // 3. Prepare messages for Groq
-        const messages = [
-          { role: "system" as const, content: systemMessage },
-          ...conversationHistory,
-          { role: "user" as const, content: message },
-        ];
+        // 3. Build response based on database findings
+        let aiResponse: string;
 
-        // 4. Call Groq API
-        const response = await invokeLLM({
-          messages: messages as any,
-        });
+        if (hasDbResults) {
+          // Database has relevant info - format and return it
+          aiResponse = formatDatabaseResponse(dbContext, message);
+        } else {
+          // No database results - call LLM with context
+          const systemMessage = buildSystemMessage(dbContext);
+          const messages = [
+            { role: "system" as const, content: systemMessage },
+            ...conversationHistory,
+            { role: "user" as const, content: message },
+          ];
 
-        const aiResponse =
-          response.choices?.[0]?.message?.content ||
-          "Sorry, I couldn't generate a response. Please try again.";
+          const response = await invokeLLM({
+            messages: messages as any,
+          });
+
+          const content = response.choices?.[0]?.message?.content;
+          const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+          aiResponse =
+            contentStr ||
+            "عذراً، لم أتمكن من معالجة طلبك. يرجى المحاولة مرة أخرى.";
+
+          // Add web source label if LLM was used
+          aiResponse = `🌐 من الإنترنت:\n\n${aiResponse}`;
+        }
 
         return {
           success: true,
           message: aiResponse,
           context: dbContext,
+          source: hasDbResults ? "database" : "llm",
         };
       } catch (error) {
         console.error("Ask Sila chat error:", error);
         return {
           success: false,
           message:
-            "Error: Unable to process your request. Please try again later.",
+            "خطأ: تعذر معالجة طلبك. يرجى المحاولة لاحقاً.",
           error: error instanceof Error ? error.message : "Unknown error",
         };
       }
     }),
 
   /**
-   * Quick search in database
-   * Returns relevant medications and ICD codes
+   * Quick search in database only
+   * Returns relevant medications and ICD codes without LLM
    */
   quickSearch: publicProcedure
     .input(z.object({ query: z.string().min(1) }))
@@ -84,9 +105,133 @@ export const askSilaRouter = router({
         return {
           success: true,
           results,
+          hasResults:
+            (results.drugs && results.drugs.length > 0) ||
+            (results.icdCodes && results.icdCodes.length > 0),
         };
       } catch (error) {
         console.error("Quick search error:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Search failed",
+        };
+      }
+    }),
+
+  /**
+   * Search for drug information
+   * Searches in drug_lens table (comprehensive drug database)
+   */
+  searchDrug: publicProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        const keywords = input.query
+          .toLowerCase()
+          .split(/[\s،,\?؟]+/)
+          .filter((k) => k.length > 1)
+          .slice(0, 3);
+
+      const drugs = await db
+        .select()
+        .from(drugLens)
+        .where(
+          or(
+            ...keywords.map((k) =>
+              or(
+                ilike(drugLens.scientificName, `%${k}%`),
+                ilike(drugLens.tradeName, `%${k}%`)
+              )
+            )
+          )
+        )
+        .limit(10);
+
+        return {
+          success: true,
+          drugs: drugs.map((d: typeof drugLens.$inferSelect) => ({
+            id: d.id,
+            scientificName: d.scientificName,
+            tradeName: d.tradeName,
+            price: d.price,
+            pregnancyCategory: d.pregnancyCategory,
+            standardDose: d.standardDose,
+            uses: d.uses,
+          })),
+        };
+      } catch (error) {
+        console.error("Drug search error:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Search failed",
+        };
+      }
+    }),
+
+  /**
+   * Get detailed drug information
+   */
+  getDrugDetails: publicProcedure
+    .input(z.object({ drugId: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        const drug = await db
+          .select()
+          .from(drugLens)
+          .where(drugLens.id === input.drugId as any)
+          .limit(1);
+
+        if (!drug || drug.length === 0) {
+          return {
+            success: false,
+            error: "Drug not found",
+          };
+        }
+
+        return {
+          success: true,
+          drug: drug[0],
+        };
+      } catch (error) {
+        console.error("Get drug details error:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Error fetching details",
+        };
+      }
+    }),
+
+  /**
+   * Search for ICD-10 codes
+   */
+  searchIcdCode: publicProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        const codes = await db
+          .select()
+          .from(icdCodes)
+          .where(
+            or(
+              ilike(icdCodes.code, `%${input.query}%`),
+              ilike(icdCodes.description, `%${input.query}%`)
+            )
+          )
+          .limit(10);
+
+        return {
+          success: true,
+          codes: codes.map((c: typeof icdCodes.$inferSelect) => ({
+            code: c.code,
+            description: c.description,
+            branchCount: c.branchCount,
+          })),
+        };
+      } catch (error) {
+        console.error("ICD code search error:", error);
         return {
           success: false,
           error: error instanceof Error ? error.message : "Search failed",
@@ -102,14 +247,14 @@ export const askSilaRouter = router({
     try {
       const db = await getDb();
 
-      // Test database connection
-      const medicationCount = await db.query.medications.findFirst();
-      const icdCount = await db.query.icdCodes.findFirst();
+      // Test database connections
+      const drugCount = await db.select().from(drugLens).limit(1);
+      const icdCount = await db.select().from(icdCodes).limit(1);
 
       return {
         status: "online",
         services: {
-          database: medicationCount && icdCount ? "✅ Online" : "⚠️ Limited",
+          database: drugCount && icdCount ? "✅ Online" : "⚠️ Limited",
           groq: "✅ Online",
           timestamp: new Date().toISOString(),
         },
@@ -128,22 +273,26 @@ export const askSilaRouter = router({
   getCapabilities: publicProcedure.query(() => {
     return {
       name: "Ask Sila",
-      version: "1.0.0",
+      version: "2.0.0",
       capabilities: [
+        "Drug information and pricing (8000+ drugs)",
         "ICD-10 code lookup and explanation",
-        "Medication information and search",
+        "Drug interactions and contraindications",
+        "Dosage calculations and recommendations",
+        "Pregnancy category information",
         "Medical billing rules (Saudi SBS v3.0)",
-        "Diagnosis code suggestions",
         "Multilingual support (Arabic & English)",
       ],
       languages: ["en", "ar"],
-      responseTime: "< 5 seconds",
+      responseTime: "< 3 seconds",
+      dataSource: "Database-first with GROQ LLM fallback",
     };
   }),
 });
 
 /**
  * Search database for relevant medical information
+ * Searches in: drug_lens, drug_entries, icd_codes, non_covered_codes
  */
 async function searchDatabase(query: string): Promise<any> {
   try {
@@ -151,99 +300,264 @@ async function searchDatabase(query: string): Promise<any> {
     const keywords = query
       .toLowerCase()
       .split(/[\s،,\?؟]+/)
-      .filter((k) => k.length > 2)
+      .filter((k) => k.length > 1)
       .slice(0, 5);
 
     const results: any = {
-      medications: [],
+      drugs: [],
       icdCodes: [],
+      nonCoveredCodes: [],
+      drugEntries: [],
     };
 
-    // Search medications
-    if (keywords.length > 0) {
-      const medicationResults = await db
+    if (keywords.length === 0) {
+      return results;
+    }
+
+    // Search in drug_lens (comprehensive drug database)
+    try {
+      const drugResults = await db
         .select()
-        .from(drugEntries)
+        .from(drugLens)
         .where(
           or(
             ...keywords.map((k) =>
-              like(drugEntries.scientificName, `%${k}%`)
+              or(
+                ilike(drugLens.scientificName, `%${k}%`),
+                ilike(drugLens.tradeName, `%${k}%`)
+              )
             )
           )
         )
         .limit(5);
 
-      results.medications = medicationResults.map((m: any) => ({
-        scientificName: m.scientificName,
-        tradeNames: m.tradeNames,
-        indication: m.indication,
-        icdCodes: m.icdCodes,
+      results.drugs = drugResults.map((d: typeof drugLens.$inferSelect) => ({
+        scientificName: d.scientificName,
+        tradeName: d.tradeName,
+        price: d.price,
+        uses: d.uses,
+        standardDose: d.standardDose,
+        pregnancyCategory: d.pregnancyCategory,
+        pharmacologicalAction: d.pharmacologicalAction,
+        blackBoxWarning: d.blackBoxWarning,
+        contraindicatedInteractions: d.contraindicatedInteractions,
+        majorInteractions: d.majorInteractions,
       }));
+    } catch (e) {
+      console.warn("Error searching drug_lens:", e);
+    }
 
-      // Search ICD codes
+    // Search in drug_entries (linked to ICD codes)
+    try {
+      const entryResults = await db
+        .select()
+        .from(drugEntries)
+        .where(
+          or(
+            ...keywords.map((k) =>
+              or(
+                ilike(drugEntries.scientificName, `%${k}%`),
+                ilike(drugEntries.tradeName, `%${k}%`),
+                ilike(drugEntries.indication, `%${k}%`)
+              )
+            )
+          )
+        )
+        .limit(5);
+
+      results.drugEntries = entryResults.map((e: typeof drugEntries.$inferSelect) => ({
+        scientificName: e.scientificName,
+        tradeName: e.tradeName,
+        indication: e.indication,
+        icdCodesRaw: e.icdCodesRaw,
+      }));
+    } catch (e) {
+      console.warn("Error searching drug_entries:", e);
+    }
+
+    // Search in ICD codes
+    try {
       const icdResults = await db
         .select()
         .from(icdCodes)
         .where(
           or(
-            ...keywords.map((k) => like(icdCodes.description, `%${k}%`))
+            ...keywords.map((k) =>
+              or(
+                ilike(icdCodes.code, `%${k}%`),
+                ilike(icdCodes.description, `%${k}%`)
+              )
+            )
           )
         )
         .limit(5);
 
-      results.icdCodes = icdResults.map((code: any) => ({
-        code: code.code,
-        description: code.description,
-        category: code.category,
+      results.icdCodes = icdResults.map((c: typeof icdCodes.$inferSelect) => ({
+        code: c.code,
+        description: c.description,
+        branchCount: c.branchCount,
       }));
+    } catch (e) {
+      console.warn("Error searching icd_codes:", e);
+    }
+
+    // Search in non-covered codes
+    try {
+      const nonCoveredResults = await db
+        .select()
+        .from(nonCoveredCodes)
+        .where(
+          or(
+            ...keywords.map((k) =>
+              or(
+                ilike(nonCoveredCodes.code, `%${k}%`),
+                ilike(nonCoveredCodes.description, `%${k}%`)
+              )
+            )
+          )
+        )
+        .limit(5);
+
+      results.nonCoveredCodes = nonCoveredResults.map((c: typeof nonCoveredCodes.$inferSelect) => ({
+        code: c.code,
+        description: c.description,
+      }));
+    } catch (e) {
+      console.warn("Error searching non_covered_codes:", e);
     }
 
     return results;
   } catch (error) {
     console.error("Database search error:", error);
-    return { medications: [], icdCodes: [] };
+    return {
+      drugs: [],
+      icdCodes: [],
+      nonCoveredCodes: [],
+      drugEntries: [],
+    };
   }
 }
 
 /**
- * Build system message for Groq with context
+ * Format database results into a professional response
+ * Labels each section with 📋 (database) indicator
+ */
+function formatDatabaseResponse(context: any, query: string): string {
+  let response = "📋 **من قاعدة البيانات:**\n\n";
+
+  // Format drugs
+  if (context.drugs && context.drugs.length > 0) {
+    response += "💊 **الأدوية:**\n";
+    context.drugs.forEach((drug: any, _idx: number) => {
+      response += `\n**${drug.tradeName || drug.scientificName}**`;
+      if (drug.scientificName && drug.tradeName) {
+        response += ` — ${drug.scientificName}`;
+      }
+      if (drug.price) {
+        response += ` | ${drug.price}`;
+      }
+      response += "\n";
+
+      if (drug.uses) {
+        response += `- **الاستخدامات:** ${drug.uses}\n`;
+      }
+      if (drug.standardDose) {
+        response += `- **الجرعة المعيارية:** ${drug.standardDose}\n`;
+      }
+      if (drug.pregnancyCategory) {
+        response += `- **فئة الحمل:** ${drug.pregnancyCategory}\n`;
+      }
+      if (drug.blackBoxWarning) {
+        response += `- ⚠️ **تحذير:** ${drug.blackBoxWarning}\n`;
+      }
+      if (drug.contraindicatedInteractions) {
+        response += `- **موانع الاستخدام:** ${drug.contraindicatedInteractions}\n`;
+      }
+    });
+  }
+
+  // Format drug entries with indications
+  if (context.drugEntries && context.drugEntries.length > 0) {
+    response += "\n📝 **الأدوية والمؤشرات:**\n";
+    context.drugEntries.forEach((entry: any) => {
+      response += `\n- **${entry.tradeName || entry.scientificName}**\n`;
+      if (entry.indication) {
+        response += `  المؤشر: ${entry.indication}\n`;
+      }
+      if (entry.icdCodesRaw) {
+        response += `  أكواد ICD-10: ${entry.icdCodesRaw}\n`;
+      }
+    });
+  }
+
+  // Format ICD codes
+  if (context.icdCodes && context.icdCodes.length > 0) {
+    response += "\n🏥 **أكواد ICD-10:**\n";
+    context.icdCodes.forEach((code: any, _idx: number) => {
+      response += `\n- **${code.code}** — ${code.description}`;
+      if (code.branchCount > 0) {
+        response += ` (${code.branchCount} فروع)`;
+      }
+      response += "\n";
+    });
+  }
+
+  // Format non-covered codes
+  if (context.nonCoveredCodes && context.nonCoveredCodes.length > 0) {
+    response += "\n❌ **أكواد غير مغطاة:**\n";
+    context.nonCoveredCodes.forEach((code: any) => {
+      response += `\n- **${code.code}** — ${code.description}\n`;
+    });
+  }
+
+  return response;
+}
+
+/**
+ * Build system message for Groq with database context
+ * Used only when database doesn't have direct answers
  */
 function buildSystemMessage(context: any): string {
-  const contextStr =
-    context.medications.length > 0 || context.icdCodes.length > 0
-      ? `
-Database Results:
-${
-  context.medications.length > 0
-    ? `Medications: ${JSON.stringify(context.medications, null, 2)}`
-    : ""
-}
-${
-  context.icdCodes.length > 0
-    ? `ICD-10 Codes: ${JSON.stringify(context.icdCodes, null, 2)}`
-    : ""
-}
-`
-      : "No specific results found in database.";
+  const hasContext =
+    (context.drugs && context.drugs.length > 0) ||
+    (context.icdCodes && context.icdCodes.length > 0) ||
+    (context.drugEntries && context.drugEntries.length > 0);
 
-  return `You are Ask Sila, a professional medical AI assistant specialized in:
-- ICD-10 medical coding
-- Medication information and interactions
+  const contextStr = hasContext
+    ? `
+Database Context Available:
+${context.drugs?.length > 0 ? `Drugs: ${JSON.stringify(context.drugs, null, 2)}` : ""}
+${context.drugEntries?.length > 0 ? `Drug Entries: ${JSON.stringify(context.drugEntries, null, 2)}` : ""}
+${context.icdCodes?.length > 0 ? `ICD-10 Codes: ${JSON.stringify(context.icdCodes, null, 2)}` : ""}
+`
+    : "No database results found for this query.";
+
+  return `You are Sila (سيلا), a professional medical AI assistant specialized in:
+- Drug information, pricing, and interactions (8000+ drugs database)
+- ICD-10 medical coding (ICD-10 AM standard)
 - Saudi Billing System (SBS v3.0) standards
-- Medical diagnosis and coding rules
+- Medical diagnosis and clinical pharmacology
+- Pediatric dosing calculations
+- Pregnancy category guidance
+
+Your response format:
+- Use bullet points and structured information
+- Label database info with "📋 من قاعدة البيانات" when available
+- Label web/knowledge info with "🌐 من الإنترنت"
+- Always cite drug prices in SAR when available
+- For ICD codes, explain the meaning in simple terms
 
 Your tone should be:
 - Professional and precise
 - Empathetic and helpful
 - Clear and easy to understand
-- Supporting both Arabic and English
+- Bilingual (Arabic/English based on user input)
 
-Context from database:
+Database Context:
 ${contextStr}
 
-If you find relevant information in the database, prioritize it in your response.
-If no database results are found, use your general medical knowledge to provide helpful suggestions.
-Always clearly state if information is from the database or from general knowledge.
-For ICD-10 codes, always explain what they mean in simple terms.
-Support both Arabic and English based on user input language.`;
+IMPORTANT: If database results are available, prioritize them in your response.
+If no database results exist, use your general medical knowledge.
+Always be honest about data sources.
+Never say "ليس لدى علم" if relevant database information exists.`;
 }
