@@ -79,13 +79,30 @@ export const drugLensRouter = router({
       };
     }),
 
-  // Get single drug detail by ID
+  // Get single drug detail by ID - returns ALL fields
   getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
       const results = await db
-        .select()
+        .select({
+          id: drugLens.id,
+          tradeName: drugLens.tradeName,
+          scientificName: drugLens.scientificName,
+          price: drugLens.price,
+          pharmacologicalAction: drugLens.pharmacologicalAction,
+          blackBoxWarning: drugLens.blackBoxWarning,
+          uses: drugLens.uses,
+          pregnancyCategory: drugLens.pregnancyCategory,
+          standardDose: drugLens.standardDose,
+          adjustedDose: drugLens.adjustedDose,
+          neonatalDose: drugLens.neonatalDose,
+          doseSource: drugLens.doseSource,
+          contraindicatedInteractions: drugLens.contraindicatedInteractions,
+          majorInteractions: drugLens.majorInteractions,
+          moderateInteractions: drugLens.moderateInteractions,
+          minorInteractions: drugLens.minorInteractions,
+        })
         .from(drugLens)
         .where(eq(drugLens.id, input.id))
         .limit(1);

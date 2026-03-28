@@ -531,46 +531,114 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
 
               {/* Details Sections */}
               <div className="space-y-4">
-                {drug.indications && (
+                {/* Pharmacological Action */}
+                {drug.pharmacologicalAction && (
+                  <div className="border-t border-white/10 pt-4">
+                    <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-yellow-400" />
+                      Pharmacological Action
+                    </h3>
+                    <p className="text-slate-300 whitespace-pre-wrap">{drug.pharmacologicalAction}</p>
+                  </div>
+                )}
+
+                {/* Uses / Indications */}
+                {drug.uses && (
                   <div className="border-t border-white/10 pt-4">
                     <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-400" />
-                      Indications
+                      Uses & Indications
                     </h3>
-                    <p className="text-slate-300">{drug.indications}</p>
+                    <p className="text-slate-300 whitespace-pre-wrap">{drug.uses}</p>
                   </div>
                 )}
 
-                {drug.warnings && (
-                  <div className="border-t border-white/10 pt-4">
-                    <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-400" />
-                      Warnings & Contraindications
+                {/* Black Box Warning */}
+                {drug.blackBoxWarning && (
+                  <div className="border-t border-white/10 pt-4 bg-red-500/10 rounded-lg p-4 border-l-4 border-red-500">
+                    <h3 className="font-semibold text-red-300 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      ⚠️ Black Box Warning
                     </h3>
-                    <p className="text-slate-300">{drug.warnings}</p>
+                    <p className="text-red-100 whitespace-pre-wrap">{drug.blackBoxWarning}</p>
                   </div>
                 )}
 
-                {drug.sideEffects && (
+                {/* Pregnancy Category */}
+                {drug.pregnancyCategory && (
                   <div className="border-t border-white/10 pt-4">
-                    <h3 className="font-semibold text-white mb-2">Side Effects</h3>
-                    <p className="text-slate-300">{drug.sideEffects}</p>
+                    <h3 className="font-semibold text-white mb-2">Pregnancy Category</h3>
+                    <p className="text-slate-300 font-semibold">{drug.pregnancyCategory}</p>
                   </div>
                 )}
 
-                {drug.interactions && (
-                  <div className="border-t border-white/10 pt-4">
-                    <h3 className="font-semibold text-white mb-2">Drug Interactions</h3>
-                    <p className="text-slate-300">{drug.interactions}</p>
+                {/* Dosages Section */}
+                <div className="border-t border-white/10 pt-4">
+                  <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                    Dosage Information
+                  </h3>
+                  <div className="space-y-3">
+                    {drug.standardDose && (
+                      <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-400/30">
+                        <p className="text-sm text-blue-300 font-semibold mb-1">Standard Dose</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.standardDose}</p>
+                      </div>
+                    )}
+                    {drug.adjustedDose && (
+                      <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-400/30">
+                        <p className="text-sm text-purple-300 font-semibold mb-1">Adjusted Dose</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.adjustedDose}</p>
+                      </div>
+                    )}
+                    {drug.neonatalDose && (
+                      <div className="bg-pink-500/10 rounded-lg p-3 border border-pink-400/30">
+                        <p className="text-sm text-pink-300 font-semibold mb-1">Neonatal Dose</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.neonatalDose}</p>
+                      </div>
+                    )}
+                    {drug.doseSource && (
+                      <div className="bg-slate-500/10 rounded-lg p-3 border border-slate-400/30">
+                        <p className="text-sm text-slate-300 font-semibold mb-1">Dose Source</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.doseSource}</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {drug.pharmacology && (
-                  <div className="border-t border-white/10 pt-4">
-                    <h3 className="font-semibold text-white mb-2">Pharmacology</h3>
-                    <p className="text-slate-300">{drug.pharmacology}</p>
+                {/* Drug Interactions Section */}
+                <div className="border-t border-white/10 pt-4">
+                  <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-orange-400" />
+                    Drug Interactions
+                  </h3>
+                  <div className="space-y-3">
+                    {drug.contraindicatedInteractions && (
+                      <div className="bg-red-500/10 rounded-lg p-3 border border-red-400/30">
+                        <p className="text-sm text-red-300 font-semibold mb-1">🚫 Contraindicated (Avoid)</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.contraindicatedInteractions}</p>
+                      </div>
+                    )}
+                    {drug.majorInteractions && (
+                      <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-400/30">
+                        <p className="text-sm text-orange-300 font-semibold mb-1">⚠️ Major Interactions</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.majorInteractions}</p>
+                      </div>
+                    )}
+                    {drug.moderateInteractions && (
+                      <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-400/30">
+                        <p className="text-sm text-yellow-300 font-semibold mb-1">⚡ Moderate Interactions</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.moderateInteractions}</p>
+                      </div>
+                    )}
+                    {drug.minorInteractions && (
+                      <div className="bg-green-500/10 rounded-lg p-3 border border-green-400/30">
+                        <p className="text-sm text-green-300 font-semibold mb-1">ℹ️ Minor Interactions</p>
+                        <p className="text-slate-300 whitespace-pre-wrap">{drug.minorInteractions}</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Action Buttons */}

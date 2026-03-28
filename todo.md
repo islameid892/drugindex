@@ -490,3 +490,23 @@
 - [ ] Test Sila AI integration
 - [ ] Create checkpoint before publishing
 - [x] Fix Recent Search not working - root cause: missing 'source' column in DB causing silent INSERT failures
+
+## Phase 40: Enhanced DetailView - Complete Drug Information Display
+- [x] Updated TRPC getById procedure to return ALL 18 database columns
+- [x] Enhanced DetailView component to display all drug information:
+  - [x] Pharmacological Action (yellow icon)
+  - [x] Uses & Indications (green icon)
+  - [x] Black Box Warning (red alert styling)
+  - [x] Pregnancy Category
+  - [x] Standard Dose (blue)
+  - [x] Adjusted Dose (purple)
+  - [x] Neonatal Dose (pink)
+  - [x] Dose Source (gray)
+  - [x] Contraindicated Interactions (red - Avoid)
+  - [x] Major Interactions (orange)
+  - [x] Moderate Interactions (yellow)
+  - [x] Minor Interactions (green)
+- [x] Color-coded sections for easy identification
+- [x] Proper formatting with whitespace preservation
+- [x] TypeScript compilation clean - no errors
+- [x] All 218 tests passing
