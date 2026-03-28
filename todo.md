@@ -510,3 +510,13 @@
 - [x] Proper formatting with whitespace preservation
 - [x] TypeScript compilation clean - no errors
 - [x] All 218 tests passing
+
+## Phase 41: Smart Alternatives Feature - Same Scientific Name & Form
+- [x] Added `form` column to drug_lens table in database schema
+- [x] Created migration for new form column with index
+- [x] Updated getAlternatives TRPC procedure to match scientific name + form
+- [x] Built AlternativesModal component with beautiful UI
+- [x] Integrated modal into DetailView with state management
+- [x] Shows matching drugs with same scientific name and pharmaceutical form
+- [x] Displays trade name, scientific name, form, dose, and price
+- [x] TypeScript compilation clean - no errors

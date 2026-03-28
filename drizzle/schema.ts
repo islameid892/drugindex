@@ -231,6 +231,7 @@ export const drugLens = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     scientificName: varchar("scientific_name", { length: 500 }).notNull(),
     tradeName: varchar("trade_name", { length: 500 }).notNull(),
+    form: varchar("form", { length: 100 }), // Pharmaceutical form: tablet, capsule, injection, suppository, etc.
     price: varchar("price", { length: 100 }),
     pharmacologicalAction: text("pharmacological_action"),
     blackBoxWarning: text("black_box_warning"),
@@ -250,6 +251,7 @@ export const drugLens = mysqlTable(
   (t) => ({
     sciNameIdx: index("idx_drug_lens_sci_name").on(t.scientificName),
     tradeNameIdx: index("idx_drug_lens_trade_name").on(t.tradeName),
+    formIdx: index("idx_drug_lens_form").on(t.form),
   })
 );
 

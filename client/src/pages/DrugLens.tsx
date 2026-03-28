@@ -6,6 +6,7 @@ import {
 import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { AlternativesModal } from '@/components/AlternativesModal';
 
 const DrugLens = () => {
   const [, setLocation] = useLocation();
@@ -430,6 +431,8 @@ const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
 
 // Detail View Component
 const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any) => {
+  const [showAlternatives, setShowAlternatives] = useState(false);
+
   const handleImageSearch = () => {
     if (drug) {
       const searchQuery = encodeURIComponent(`${drug.tradeName} ${drug.scientificName}`);
@@ -438,10 +441,7 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
   };
 
   const handleAlternatives = () => {
-    if (drug && drug.scientificName) {
-      const searchQuery = encodeURIComponent(drug.scientificName);
-      window.open(`${window.location.origin}?search=${searchQuery}`, '_blank');
-    }
+    setShowAlternatives(true);
   };
 
   return (
@@ -664,6 +664,7 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
           <p className="text-slate-400 text-center py-8">Drug not found</p>
         )}
       </div>
+      <AlternativesModal drug={drug} isOpen={showAlternatives} onClose={() => setShowAlternatives(false)} />
     </div>
   );
 };

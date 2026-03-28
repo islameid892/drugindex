@@ -156,25 +156,37 @@ export const drugLensRouter = router({
 
   // Get alternatives by scientific name (same active ingredient)
   getAlternatives: publicProcedure
-    .input(z.object({ scientificName: z.string(), excludeId: z.number() }))
+    .input(z.object({ scientificName: z.string(), form: z.string().optional(), excludeId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
+      
+      let whereCondition: any;
+      if (input.form && input.form.trim()) {
+        whereCondition = and(
+          like(drugLens.scientificName, `%${input.scientificName}%`),
+          like(drugLens.form, `%${input.form}%`),
+          sql`${drugLens.id} != ${input.excludeId}`
+        );
+      } else {
+        whereCondition = and(
+          like(drugLens.scientificName, `%${input.scientificName}%`),
+          sql`${drugLens.id} != ${input.excludeId}`
+        );
+      }
+      
       const results = await db
         .select({
           id: drugLens.id,
           tradeName: drugLens.tradeName,
           scientificName: drugLens.scientificName,
+          form: drugLens.form,
           price: drugLens.price,
+          standardDose: drugLens.standardDose,
         })
         .from(drugLens)
-        .where(
-          and(
-            like(drugLens.scientificName, `%${input.scientificName}%`),
-            sql`${drugLens.id} != ${input.excludeId}`
-          )
-        )
+        .where(whereCondition)
         .orderBy(drugLens.tradeName)
-        .limit(20);
+        .limit(50);
       return results;
     }),
 
