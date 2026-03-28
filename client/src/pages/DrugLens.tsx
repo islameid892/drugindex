@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Search, Beaker, MessageCircle, Scan, ArrowLeft, Loader2, ExternalLink, Image, 
-  ChevronDown, X, AlertCircle, CheckCircle, Heart, Share2, Pill
+  ChevronDown, X, AlertCircle, CheckCircle, Heart, Share2, Pill, Sparkles, TrendingUp
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
@@ -10,7 +10,7 @@ import { useFavorites } from '@/contexts/FavoritesContext';
 
 const DrugLens = () => {
   const [, setLocation] = useLocation();
-  const [activeFilter, setActiveFilter] = useState('Google-style');
+  const [activeFilter, setActiveFilter] = useState('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDrugId, setSelectedDrugId] = useState<number | null>(null);
   const [showSimilar, setShowSimilar] = useState(false);
@@ -20,16 +20,16 @@ const DrugLens = () => {
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   const filters = [
+    { id: 'both', label: 'All', icon: '🔍' },
     { id: 'trade', label: 'Trade Name', icon: '💊' },
-    { id: 'scientific', label: 'Scientific Name', icon: '🧪' },
-    { id: 'google', label: 'Google-style', icon: '🔍' }
+    { id: 'scientific', label: 'Scientific', icon: '🧪' }
   ];
 
   // TRPC search query
   const { data: searchData, isLoading } = trpc.drugLens.search.useQuery(
     {
       query: searchQuery,
-      filterBy: activeFilter === 'Trade Name' ? 'trade' : activeFilter === 'Scientific Name' ? 'scientific' : 'both',
+      filterBy: activeFilter as 'both' | 'trade' | 'scientific',
       page: 1,
       limit: 20,
     },
@@ -98,511 +98,401 @@ const DrugLens = () => {
     }
   };
 
-  const openGoogleImage = (drugName: string) => {
-    const query = encodeURIComponent(drugName + ' drug medication');
-    window.open(`https://www.google.com/search?q=${query}&tbm=isch`, '_blank');
-  };
-
-  // Format price - remove any SAR prefix if present
-  const formatPrice = (price: string | null | undefined) => {
-    if (!price) return null;
-    return price.replace(/^SAR\s*/i, '').trim();
-  };
-
-  const isFavoriteDrug = selectedDrugId && favorites.some(f => f.id === String(selectedDrugId));
-
-  // Skeleton Loader Component
-  const SkeletonCard = () => (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 animate-pulse">
-      <div className="space-y-3">
-        <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-        <div className="h-6 bg-slate-200 rounded w-3/4"></div>
-        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-        <div className="flex gap-2 pt-2">
-          <div className="h-10 bg-slate-200 rounded flex-1"></div>
-          <div className="h-10 bg-slate-200 rounded flex-1"></div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Detail view
+  // Show detail view if drug is selected
   if (selectedDrugId !== null) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-24">
-        {/* Detail Header */}
-        <header className="bg-gradient-to-r from-blue-600 to-blue-700 pt-6 pb-8 px-4 shadow-lg text-white">
-          <div className="flex justify-between items-center mb-4 max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+        {/* Header */}
+        <div className="sticky top-0 z-40 backdrop-blur-md bg-white/80 border-b border-slate-200/50">
+          <div className="container mx-auto px-4 py-4">
             <button
               onClick={handleGoBack}
-              className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4"
             >
               <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back</span>
             </button>
-            <h1 className="text-xl font-bold tracking-tight">Drug Details</h1>
-            <div className="w-9"></div>
           </div>
-        </header>
+        </div>
 
-        <div className="p-4 max-w-4xl mx-auto">
-          {detailLoading && (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+        {/* Content */}
+        <div className="container mx-auto px-4 py-8">
+          {detailLoading ? (
+            <div className="flex justify-center items-center h-96">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
-          )}
-
-          {!detailLoading && selectedDrug && (
-            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-              {/* Title + Google Image Button + Favorite */}
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-slate-900">
-                    {selectedDrug.tradeName || selectedDrug.scientificName}
-                  </h2>
-                </div>
-                <div className="flex gap-2 flex-shrink-0">
+          ) : selectedDrug ? (
+            <div className="space-y-8">
+              {/* Drug Header Card */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-100">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h1 className="text-4xl font-bold text-slate-900 mb-2">
+                      {selectedDrug.tradeName}
+                    </h1>
+                    <p className="text-lg text-slate-600">
+                      {selectedDrug.scientificName}
+                    </p>
+                  </div>
                   <button
                     onClick={() => {
-                      if (isFavoriteDrug) {
-                        removeFavorite(String(selectedDrugId));
-                      } else if (selectedDrug) {
-                        addFavorite({
-                          id: String(selectedDrugId),
-                          scientific_name: selectedDrug.scientificName || '',
-                          trade_name: selectedDrug.tradeName || '',
-                          indication: '',
-                          icd10_codes: '',
-                          atc_codes: '',
-                          addedAt: Date.now()
-                        });
+                      if (isFavorite(selectedDrug.id)) {
+                        removeFavorite(selectedDrug.id);
+                      } else {
+                        addFavorite(selectedDrug);
                       }
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
-                      isFavoriteDrug
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                    title={isFavoriteDrug ? 'Remove from favorites' : 'Add to favorites'}
+                    className="p-3 rounded-full hover:bg-slate-100 transition-colors"
                   >
-                    <Heart className={`w-4 h-4 ${isFavoriteDrug ? 'fill-current' : ''}`} />
-                  </button>
-                  <button
-                    onClick={() => openGoogleImage(selectedDrug.tradeName || selectedDrug.scientificName || '')}
-                    className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
-                    title="Search drug image on Google"
-                  >
-                    <Image className="w-4 h-4" />
-                    <span>Image</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <Heart
+                      className={`w-6 h-6 ${
+                        isFavorite(selectedDrug.id)
+                          ? 'fill-red-500 text-red-500'
+                          : 'text-slate-400'
+                      }`}
+                    />
                   </button>
                 </div>
+
+                {/* Key Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {selectedDrug.price && (
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                      <p className="text-sm text-blue-600 font-semibold mb-1">Price</p>
+                      <p className="text-2xl font-bold text-blue-900">
+                        {selectedDrug.price} SAR
+                      </p>
+                    </div>
+                  )}
+                  {selectedDrug.dosage && (
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
+                      <p className="text-sm text-emerald-600 font-semibold mb-1">Dosage</p>
+                      <p className="text-lg font-bold text-emerald-900">
+                        {selectedDrug.dosage}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDrug.form && (
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                      <p className="text-sm text-purple-600 font-semibold mb-1">Form</p>
+                      <p className="text-lg font-bold text-purple-900">
+                        {selectedDrug.form}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Scientific Name */}
-              {selectedDrug.scientificName && (
-                <p className="text-sm text-slate-600 flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-                  <Beaker className="w-4 h-4 text-blue-600" />
-                  {selectedDrug.scientificName}
-                </p>
-              )}
-
-              {/* Price */}
-              {formatPrice(selectedDrug.price) && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 inline-block">
-                  <p className="text-xs text-slate-600 mb-1 font-semibold">Price (SAR)</p>
-                  <p className="text-3xl font-black text-slate-900">
-                    {formatPrice(selectedDrug.price)} <span className="text-sm font-semibold text-slate-600">SAR</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Black Box Warning */}
-              {selectedDrug.blackBoxWarning && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-red-900 mb-1">⚠️ Black Box Warning</h3>
-                    <p className="text-red-800 text-sm whitespace-pre-line">{selectedDrug.blackBoxWarning}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Details Grid */}
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
-                {selectedDrug.uses && (
-                  <div className="md:col-span-2">
-                    <h3 className="font-bold text-slate-900 mb-2 text-base flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      Uses
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.uses}</p>
+              {/* Details Sections */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Indications */}
+                {selectedDrug.indications && (
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+                    <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-emerald-600" />
+                      Indications
+                    </h2>
+                    <p className="text-slate-700 leading-relaxed">
+                      {selectedDrug.indications}
+                    </p>
                   </div>
                 )}
 
-                {selectedDrug.pharmacologicalAction && (
-                  <div className="md:col-span-2">
-                    <h3 className="font-bold text-slate-900 mb-2 text-base flex items-center gap-2">
-                      <Beaker className="w-5 h-5 text-blue-600" />
-                      Pharmacological Action
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.pharmacologicalAction}</p>
+                {/* Warnings */}
+                {selectedDrug.warnings && (
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-amber-100">
+                    <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      Warnings
+                    </h2>
+                    <p className="text-slate-700 leading-relaxed">
+                      {selectedDrug.warnings}
+                    </p>
                   </div>
                 )}
 
-                {selectedDrug.standardDose && (
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base flex items-center gap-2">
-                      <Pill className="w-5 h-5 text-purple-600" />
-                      Standard Dose
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.standardDose}</p>
+                {/* Side Effects */}
+                {selectedDrug.sideEffects && (
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+                    <h2 className="text-xl font-bold text-slate-900 mb-4">
+                      Side Effects
+                    </h2>
+                    <p className="text-slate-700 leading-relaxed">
+                      {selectedDrug.sideEffects}
+                    </p>
                   </div>
                 )}
 
-                {selectedDrug.adjustedDose && (
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Adjusted Dose (Renal/Hepatic)</h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.adjustedDose}</p>
-                  </div>
-                )}
-
-                {selectedDrug.neonatalDose && (
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Neonatal Dose</h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.neonatalDose}</p>
-                  </div>
-                )}
-
-                {selectedDrug.pregnancyCategory && (
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Pregnancy Category</h3>
-                    <span className="inline-block bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded-lg text-sm">
-                      Category {selectedDrug.pregnancyCategory}
-                    </span>
+                {/* Interactions */}
+                {selectedDrug.interactions && (
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+                    <h2 className="text-xl font-bold text-slate-900 mb-4">
+                      Drug Interactions
+                    </h2>
+                    <p className="text-slate-700 leading-relaxed">
+                      {selectedDrug.interactions}
+                    </p>
                   </div>
                 )}
               </div>
-
-              {/* Interactions */}
-              <div className="space-y-4 mb-6">
-                {selectedDrug.contraindicatedInteractions && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                    <h3 className="font-bold text-red-700 mb-2 text-base flex items-center gap-2">
-                      🚫 Contraindicated Interactions
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.contraindicatedInteractions}</p>
-                  </div>
-                )}
-
-                {selectedDrug.majorInteractions && (
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
-                    <h3 className="font-bold text-orange-700 mb-2 text-base flex items-center gap-2">
-                      ⚠️ Major Interactions
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.majorInteractions}</p>
-                  </div>
-                )}
-
-                {selectedDrug.moderateInteractions && (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                    <h3 className="font-bold text-yellow-700 mb-2 text-base flex items-center gap-2">
-                      ⚡ Moderate Interactions
-                    </h3>
-                    <p className="text-slate-700 text-sm whitespace-pre-line">{selectedDrug.moderateInteractions}</p>
-                  </div>
-                )}
-              </div>
-
-              {selectedDrug.doseSource && (
-                <div className="pt-4 border-t border-slate-100">
-                  <h3 className="font-bold text-slate-500 mb-1 text-xs uppercase tracking-wide">Sources</h3>
-                  <p className="text-slate-500 text-xs whitespace-pre-line">{selectedDrug.doseSource}</p>
-                </div>
-              )}
 
               {/* Action Buttons */}
-              <div className="mt-6 flex gap-3 flex-col sm:flex-row">
-                <button
-                  onClick={() => setShowSimilar(!showSimilar)}
-                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-colors ${
-                    showSimilar
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
+              <div className="flex gap-4 flex-wrap">
+                <Button
+                  onClick={() => setShowSimilar(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg font-semibold transition-all"
                 >
-                  {showSimilar ? 'Hide Similar' : 'View Similar Drugs'}
-                </button>
-                <button
-                  onClick={handleGoBack}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
-                >
-                  Back to Results
-                </button>
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Similar Drugs
+                </Button>
+                {selectedDrug.externalLink && (
+                  <a
+                    href={selectedDrug.externalLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-6 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    More Info
+                  </a>
+                )}
               </div>
-            </div>
-          )}
 
-          {/* Similar Drugs Section */}
-          {showSimilar && (
-            <div className="mt-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Pill className="w-5 h-5 text-blue-600" />
-                Similar Drugs (Same Active Ingredient)
-              </h3>
-              {similarLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                </div>
-              )}
-              {!similarLoading && (!similarDrugs || similarDrugs.length === 0) && (
-                <p className="text-slate-500 text-center py-8 bg-white rounded-xl border border-slate-100">
-                  No similar drugs found with the same active ingredient
-                </p>
-              )}
-              {!similarLoading && similarDrugs && similarDrugs.length > 0 && (
-                <div className="space-y-3">
-                  {similarDrugs.map((drug: any) => (
-                    <button
-                      key={drug.id}
-                      onClick={() => handleDrugClick(drug.id)}
-                      className="w-full text-left bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:border-blue-400 hover:shadow-md transition-all"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-slate-900 text-sm">
-                            {drug.tradeName || drug.scientificName}
-                          </h4>
-                          {drug.scientificName && (
-                            <p className="text-xs text-slate-500 mt-0.5">{drug.scientificName}</p>
-                          )}
-                        </div>
-                        {formatPrice(drug.price) && (
-                          <p className="font-bold text-slate-900 ml-4 text-sm flex-shrink-0">
-                            {formatPrice(drug.price)} <span className="text-xs text-slate-500">SAR</span>
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+              {/* Similar Drugs */}
+              {showSimilar && (
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                    Similar Medications
+                  </h2>
+                  {similarLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                    </div>
+                  ) : similarDrugs && similarDrugs.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {similarDrugs.map((drug: any) => (
+                        <DrugCard
+                          key={drug.id}
+                          drug={drug}
+                          onSelect={handleDrugClick}
+                          isFav={isFavorite(drug.id)}
+                          onFavorite={() => {
+                            if (isFavorite(drug.id)) {
+                              removeFavorite(drug.id);
+                            } else {
+                              addFavorite(drug);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-600 text-center py-8">
+                      No similar medications found
+                    </p>
+                  )}
                 </div>
               )}
             </div>
+          ) : (
+            <p className="text-slate-600 text-center py-8">Drug not found</p>
           )}
         </div>
       </div>
     );
   }
 
-  // Main search view
+  // Main Search View
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white pt-12 pb-20">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
 
-      {/* Header & Search */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-700 pt-6 pb-8 px-4 shadow-lg text-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Pill className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Drug Intelligence</h1>
-                <p className="text-blue-100 text-xs font-medium">Instantly search & compare medications</p>
-              </div>
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Logo and Title */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+              <Pill className="w-6 h-6 text-white" />
             </div>
-            <span className="text-[10px] bg-blue-500 px-3 py-1 rounded-full font-bold uppercase">v3.0</span>
+            <div>
+              <h1 className="text-4xl font-bold">DrugLens</h1>
+              <p className="text-blue-100 text-sm">Intelligent Drug Reference</p>
+            </div>
           </div>
 
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-blue-200" />
+          {/* Subtitle */}
+          <p className="text-xl text-blue-50 mb-8 max-w-2xl">
+            Search, compare, and discover comprehensive drug information instantly
+          </p>
+
+          {/* Search Bar */}
+          <div className="relative max-w-2xl">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+              <Search className="w-5 h-5" />
             </div>
             <input
               type="text"
-              className="w-full bg-white text-slate-900 rounded-xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-blue-400/30 transition-all shadow-lg placeholder:text-slate-400 text-base"
-              placeholder={activeFilter === 'Google-style' ? 'Search drugs, codes, or conditions...' : `Search by ${activeFilter}...`}
+              placeholder="Search by drug name, scientific name, or indication..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
+              className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/95 backdrop-blur-md border border-white/30 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-lg"
             />
-            <div className="absolute inset-y-0 right-4 flex items-center">
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-              ) : (
-                <Scan className="w-5 h-5 text-slate-400" />
-              )}
-            </div>
           </div>
-        </div>
-      </header>
 
-      {/* Filters */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex justify-center gap-2 flex-wrap">
-            {filters.map((f) => (
+          {/* Filter Pills */}
+          <div className="flex gap-2 mt-6 flex-wrap">
+            {filters.map((filter) => (
               <button
-                key={f.id}
-                onClick={() => setActiveFilter(f.label)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  activeFilter === f.label
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id)}
+                className={`px-4 py-2 rounded-full font-semibold transition-all ${
+                  activeFilter === filter.id
+                    ? 'bg-white text-blue-600 shadow-lg'
+                    : 'bg-white/20 text-white hover:bg-white/30 border border-white/30'
                 }`}
               >
-                <span>{f.icon}</span>
-                {f.label}
+                {filter.icon} {filter.label}
               </button>
             ))}
           </div>
-
-          {/* Advanced Filters Toggle */}
-          {searchQuery.trim() && (
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="mt-3 w-full flex items-center justify-between px-4 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-            >
-              <span>Advanced Filters</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </button>
-          )}
-
-          {/* Advanced Filters */}
-          {showFilters && searchQuery.trim() && (
-            <div className="mt-3 p-4 bg-slate-50 rounded-lg space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1 block">Trade Name</label>
-                <input
-                  type="text"
-                  placeholder="Filter by trade name..."
-                  value={tradeNameFilter}
-                  onChange={(e) => setTradeNameFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 mb-1 block">Scientific Name</label>
-                <input
-                  type="text"
-                  placeholder="Filter by scientific name..."
-                  value={scientificNameFilter}
-                  onChange={(e) => setScientificNameFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              {(tradeNameFilter || scientificNameFilter) && (
-                <button
-                  onClick={() => {
-                    setTradeNameFilter('');
-                    setScientificNameFilter('');
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  Clear Filters
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Results */}
-      <div className="p-6 max-w-4xl mx-auto">
-        {isLoading && searchQuery.trim() && (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        )}
-
-        {!isLoading && searchQuery.trim() && filteredResults.length === 0 && (
-          <div className="text-center py-16">
-            <Search className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-            <p className="text-slate-600 text-lg font-medium">No results found</p>
-            <p className="text-slate-500 text-sm mt-1">Try adjusting your search or filters</p>
-          </div>
-        )}
-
-        {!isLoading && filteredResults.length > 0 && (
+      {/* Results Section */}
+      <div className="container mx-auto px-4 py-12">
+        {searchQuery.trim() ? (
           <>
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-slate-600 font-medium">
-                Found <span className="font-bold text-slate-900">{filteredResults.length}</span> result{filteredResults.length !== 1 ? 's' : ''}
-              </p>
-              {(tradeNameFilter || scientificNameFilter) && (
-                <span className="text-xs text-slate-500">Filtered results</span>
-              )}
+            {/* Results Count */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-slate-900">
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    Searching...
+                  </span>
+                ) : (
+                  <span>
+                    Found <span className="text-blue-600">{filteredResults.length}</span> results
+                  </span>
+                )}
+              </h2>
             </div>
-            <div className="space-y-4">
-              {filteredResults.map((drug: any) => (
-                <div
-                  key={drug.id}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 hover:border-blue-300 hover:shadow-md transition-all"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
-                          {activeFilter}
-                        </span>
-                        {formatPrice(drug.price) && (
-                          <span className="text-sm font-bold text-slate-900">
-                            {formatPrice(drug.price)} SAR
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900">
-                        {drug.tradeName || drug.scientificName || 'Unknown'}
-                      </h3>
-                      {drug.scientificName && drug.tradeName && (
-                        <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                          <Beaker className="w-3 h-3" /> {drug.scientificName}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => openGoogleImage(drug.tradeName || drug.scientificName || '')}
-                      className="flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-blue-100 transition-colors flex-shrink-0 ml-2"
-                      title="Search image on Google"
-                    >
-                      <Image className="w-3 h-3" />
-                      Image
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewSimilar(drug.id)}
-                      className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
-                    >
-                      View Similar
-                    </button>
-                    <button
-                      onClick={() => handleDrugClick(drug.id)}
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-colors"
-                    >
-                      Full Details
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
 
-        {!searchQuery.trim() && (
+            {/* Results Grid */}
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-64 bg-white rounded-2xl animate-pulse"></div>
+                ))}
+              </div>
+            ) : filteredResults.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredResults.map((drug: any) => (
+                  <DrugCard
+                    key={drug.id}
+                    drug={drug}
+                    onSelect={handleDrugClick}
+                    isFav={isFavorite(drug.id)}
+                    onFavorite={() => {
+                      if (isFavorite(drug.id)) {
+                        removeFavorite(drug.id);
+                      } else {
+                        addFavorite(drug);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <Pill className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-xl text-slate-600">No drugs found</p>
+                <p className="text-slate-500">Try a different search term</p>
+              </div>
+            )}
+          </>
+        ) : (
           <div className="text-center py-16">
-            <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-blue-600" />
-            </div>
-            <p className="text-slate-700 text-lg font-medium">Start searching for drugs</p>
-            <p className="text-slate-500 text-sm mt-2">Enter a drug name, scientific name, or condition to get started</p>
+            <Sparkles className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+            <p className="text-xl text-slate-600">Start searching to discover drugs</p>
+            <p className="text-slate-500">Enter a drug name or indication above</p>
           </div>
         )}
       </div>
+    </div>
+  );
+};
 
+// Drug Card Component
+const DrugCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
+  return (
+    <div
+      onClick={() => onSelect(drug.id)}
+      className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer border border-slate-100 hover:border-blue-300"
+    >
+      {/* Card Header with Gradient */}
+      <div className="h-2 bg-gradient-to-r from-blue-500 to-cyan-500 group-hover:to-blue-600 transition-all"></div>
+
+      <div className="p-6">
+        {/* Trade Name */}
+        <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          {drug.tradeName}
+        </h3>
+
+        {/* Scientific Name */}
+        <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+          {drug.scientificName}
+        </p>
+
+        {/* Info Grid */}
+        <div className="space-y-3 mb-4">
+          {drug.price && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-medium">Price</span>
+              <span className="text-sm font-bold text-blue-600">{drug.price} SAR</span>
+            </div>
+          )}
+          {drug.dosage && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-medium">Dosage</span>
+              <span className="text-sm font-semibold text-slate-900">{drug.dosage}</span>
+            </div>
+          )}
+          {drug.form && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-medium">Form</span>
+              <span className="text-sm font-semibold text-slate-900">{drug.form}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-slate-100 my-4"></div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFavorite();
+            }}
+            className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition-colors font-medium text-sm"
+          >
+            <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+            {isFav ? 'Saved' : 'Save'}
+          </button>
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition-colors font-medium text-sm group-hover:bg-blue-100"
+          >
+            <ChevronDown className="w-4 h-4" />
+            Details
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
