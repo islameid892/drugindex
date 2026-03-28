@@ -1,0 +1,59 @@
+{
+  "query": "SELECT id, trade_name, scientific_name, form, price FROM drug_lens WHERE scientific_name = 'PARACETAMOL' AND form = 'Tablet' AND id != 5814 ORDER BY trade_name LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT id, trade_name, scientific_name, form, price FROM drug_lens WHERE scientific_name = 'PARACETAMOL' AND form = 'Tablet' AND id != 5814 ORDER BY trade_name LIMIT 10;",
+  "rows": [
+    {
+      "id": "5833",
+      "trade_name": "EMIDOL 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "3.45"
+    },
+    {
+      "id": "5826",
+      "trade_name": "FEVADOL 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "6.3"
+    },
+    {
+      "id": "5809",
+      "trade_name": "OMOL 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "2.65"
+    },
+    {
+      "id": "5818",
+      "trade_name": "PANADOL SOLUBLE 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "14.25"
+    },
+    {
+      "id": "5804",
+      "trade_name": "PANADREX 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "5.05"
+    },
+    {
+      "id": "5829",
+      "trade_name": "PANDA ADVANCE 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "3.2"
+    },
+    {
+      "id": "5825",
+      "trade_name": "TYLENOL FORTE 500 mg Tablet",
+      "scientific_name": "PARACETAMOL",
+      "form": "Tablet",
+      "price": "7.55"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttrade_name\tscientific_name\tform\tprice\n5833\tEMIDOL 500 mg Tablet\tPARACETAMOL\tTablet\t3.45\n5826\tFEVADOL 500 mg Tablet\tPARACETAMOL\tTablet\t6.3\n5809\tOMOL 500 mg Tablet\tPARACETAMOL\tTablet\t2.65\n5818\tPANADOL SOLUBLE 500 mg Tablet\tPARACETAMOL\tTablet\t14.25\n5804\tPANADREX 500 mg Tablet\tPARACETAMOL\tTablet\t5.05\n5829\tPANDA ADVANCE 500 mg Tablet\tPARACETAMOL\tTablet\t3.2\n5825\tTYLENOL FORTE 500 mg Tablet\tPARACETAMOL\tTablet\t7.55\n",
+  "stderr": "",
+  "execution_time_ms": 1595
+}

@@ -89,6 +89,7 @@ export const drugLensRouter = router({
           id: drugLens.id,
           tradeName: drugLens.tradeName,
           scientificName: drugLens.scientificName,
+          form: drugLens.form,
           price: drugLens.price,
           pharmacologicalAction: drugLens.pharmacologicalAction,
           blackBoxWarning: drugLens.blackBoxWarning,
@@ -162,14 +163,15 @@ export const drugLensRouter = router({
       
       let whereCondition: any;
       if (input.form && input.form.trim()) {
+        // Exact form match to avoid mixing tablet with film-coated tablet etc.
         whereCondition = and(
-          like(drugLens.scientificName, `%${input.scientificName}%`),
-          like(drugLens.form, `%${input.form}%`),
+          eq(drugLens.scientificName, input.scientificName),
+          eq(drugLens.form, input.form),
           sql`${drugLens.id} != ${input.excludeId}`
         );
       } else {
         whereCondition = and(
-          like(drugLens.scientificName, `%${input.scientificName}%`),
+          eq(drugLens.scientificName, input.scientificName),
           sql`${drugLens.id} != ${input.excludeId}`
         );
       }

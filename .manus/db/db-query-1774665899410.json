@@ -1,0 +1,90 @@
+{
+  "query": "SELECT form, COUNT(*) as count FROM drug_lens GROUP BY form ORDER BY count DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT form, COUNT(*) as count FROM drug_lens GROUP BY form ORDER BY count DESC LIMIT 20;",
+  "rows": [
+    {
+      "form": "Film-Coated Tablet",
+      "count": "2218"
+    },
+    {
+      "form": "Solution for Injection",
+      "count": "1273"
+    },
+    {
+      "form": "Tablet",
+      "count": "1222"
+    },
+    {
+      "form": "Solution for Infusion",
+      "count": "501"
+    },
+    {
+      "form": "Solution",
+      "count": "466"
+    },
+    {
+      "form": "Hard Capsule",
+      "count": "368"
+    },
+    {
+      "form": "Capsule",
+      "count": "321"
+    },
+    {
+      "form": "Injection",
+      "count": "312"
+    },
+    {
+      "form": "Cream",
+      "count": "175"
+    },
+    {
+      "form": "Syrup",
+      "count": "148"
+    },
+    {
+      "form": "Suspension",
+      "count": "143"
+    },
+    {
+      "form": "Oral Suspension",
+      "count": "138"
+    },
+    {
+      "form": "NULL",
+      "count": "137"
+    },
+    {
+      "form": "Drops",
+      "count": "115"
+    },
+    {
+      "form": "Ointment",
+      "count": "96"
+    },
+    {
+      "form": "Oral Solution",
+      "count": "93"
+    },
+    {
+      "form": "Infusion",
+      "count": "87"
+    },
+    {
+      "form": "Gel",
+      "count": "75"
+    },
+    {
+      "form": "Soft Capsule",
+      "count": "59"
+    },
+    {
+      "form": "Inhaler",
+      "count": "43"
+    }
+  ],
+  "messages": [],
+  "stdout": "form\tcount\nFilm-Coated Tablet\t2218\nSolution for Injection\t1273\nTablet\t1222\nSolution for Infusion\t501\nSolution\t466\nHard Capsule\t368\nCapsule\t321\nInjection\t312\nCream\t175\nSyrup\t148\nSuspension\t143\nOral Suspension\t138\nNULL\t137\nDrops\t115\nOintment\t96\nOral Solution\t93\nInfusion\t87\nGel\t75\nSoft Capsule\t59\nInhaler\t43\n",
+  "stderr": "",
+  "execution_time_ms": 1567
+}
