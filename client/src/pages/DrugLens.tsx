@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Search, ArrowLeft, Loader2, Heart, Pill, ChevronRight,
   AlertCircle, CheckCircle, Zap, Clock, Shield, Grid3x3, List, X, Image as ImageIcon
@@ -14,12 +14,13 @@ const DrugLens = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [formFilter, setFormFilter] = useState('');
+  const [searchFilterMode, setSearchFilterMode] = useState<'both' | 'trade' | 'scientific'>('both');
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   const { data: searchData, isLoading } = trpc.drugLens.search.useQuery(
     {
       query: searchQuery,
-      filterBy: 'both',
+      filterBy: searchFilterMode,
       page: 1,
       limit: 20,
     },
@@ -28,6 +29,8 @@ const DrugLens = () => {
       staleTime: 30000,
     }
   );
+
+
 
   const { data: selectedDrug, isLoading: detailLoading } = trpc.drugLens.getById.useQuery(
     { id: selectedDrugId! },
@@ -117,7 +120,7 @@ const DrugLens = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <div className="relative">
             <input
               type="text"
@@ -130,7 +133,41 @@ const DrugLens = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Search Filter Buttons */}
+        <div className="flex gap-3 flex-wrap mb-6">
+          <button
+            onClick={() => setSearchFilterMode('both')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+              searchFilterMode === 'both'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
+            }`}
+          >
+            🔍 Google Style
+          </button>
+          <button
+            onClick={() => setSearchFilterMode('trade')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+              searchFilterMode === 'trade'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
+            }`}
+          >
+            💊 Trade Name
+          </button>
+          <button
+            onClick={() => setSearchFilterMode('scientific')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+              searchFilterMode === 'scientific'
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
+            }`}
+          >
+            🧪 Scientific Name
+          </button>
+        </div>
+
+        {/* Additional Filters */}
         {searchQuery.trim() && (
           <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-4 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
