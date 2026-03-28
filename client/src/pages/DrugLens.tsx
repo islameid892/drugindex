@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { 
   Search, ArrowLeft, Loader2, Heart, Pill, ChevronRight,
-  AlertCircle, CheckCircle, Zap, Clock, Shield, Grid3x3, List, X
+  AlertCircle, CheckCircle, Zap, Clock, Shield, Grid3x3, List, X, Image as ImageIcon
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
@@ -88,9 +88,11 @@ const DrugLens = () => {
       <header className="relative z-40 border-b border-white/10 backdrop-blur-md bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Pill className="w-6 h-6 text-white" />
-            </div>
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/druglens_logo-nQ7M2Hr2EG4qPVSFFSFL3R.webp" 
+              alt="DrugLens Logo" 
+              className="w-10 h-10 drop-shadow-lg"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">DrugLens</h1>
               <p className="text-xs text-blue-300">Medical Database</p>
@@ -126,22 +128,6 @@ const DrugLens = () => {
             />
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-3 flex-wrap justify-center mb-6">
-          <button className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 backdrop-blur-md border border-white/20 flex items-center gap-2 text-sm hover:scale-105">
-            <Zap className="w-4 h-4" />
-            Interactions
-          </button>
-          <button className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 backdrop-blur-md border border-white/20 flex items-center gap-2 text-sm hover:scale-105">
-            <Clock className="w-4 h-4" />
-            Pediatric Dose
-          </button>
-          <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-lg shadow-blue-500/30 flex items-center gap-2 text-sm hover:scale-105">
-            <Shield className="w-4 h-4" />
-            Advanced Search
-          </button>
         </div>
 
         {/* Filters */}
@@ -323,22 +309,6 @@ const DrugGridCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
           </p>
         )}
 
-        {/* Quick Info */}
-        <div className="space-y-1 mb-4 text-sm">
-          {drug.dosage && (
-            <div className="flex items-center gap-2 text-slate-300">
-              <CheckCircle className="w-3 h-3 text-green-400" />
-              <span>{drug.dosage}</span>
-            </div>
-          )}
-          {drug.form && (
-            <div className="flex items-center gap-2 text-slate-300">
-              <Pill className="w-3 h-3 text-blue-400" />
-              <span>{drug.form}</span>
-            </div>
-          )}
-        </div>
-
         {/* Divider */}
         <div className="h-px bg-white/10 my-3"></div>
 
@@ -357,7 +327,7 @@ const DrugGridCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
             onClick={onSelect}
             className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold text-sm transition-all duration-300 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1"
           >
-            Details
+            See Details
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -411,7 +381,7 @@ const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
               onClick={onSelect}
               className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold text-sm transition-all shadow-lg shadow-blue-500/20 flex items-center gap-1"
             >
-              Details
+              See Details
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -423,6 +393,20 @@ const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
 
 // Detail View Component
 const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any) => {
+  const handleImageSearch = () => {
+    if (drug) {
+      const searchQuery = encodeURIComponent(`${drug.tradeName} ${drug.scientificName}`);
+      window.open(`https://www.google.com/search?q=${searchQuery}&tbm=isch`, '_blank');
+    }
+  };
+
+  const handleAlternatives = () => {
+    if (drug && drug.scientificName) {
+      const searchQuery = encodeURIComponent(drug.scientificName);
+      window.open(`${window.location.origin}?search=${searchQuery}`, '_blank');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Animated Background */}
@@ -447,7 +431,7 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
       </div>
 
       {/* Content */}
-      <div className="relative z-30 max-w-7xl mx-auto px-4 py-8">
+      <div className="relative z-30 max-w-4xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-96">
             <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
@@ -456,6 +440,7 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
           <div className="space-y-6">
             {/* Main Info Card */}
             <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-8 shadow-2xl">
+              {/* Header with Favorite */}
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-4xl font-bold text-white mb-2">
@@ -549,6 +534,24 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
                     <p className="text-slate-300">{drug.pharmacology}</p>
                   </div>
                 )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 flex-wrap mt-6 pt-6 border-t border-white/10">
+                <button
+                  onClick={handleImageSearch}
+                  className="flex-1 min-w-[150px] py-3 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 hover:scale-105"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  Image
+                </button>
+                <button
+                  onClick={handleAlternatives}
+                  className="flex-1 min-w-[150px] py-3 px-4 rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 hover:scale-105"
+                >
+                  <Zap className="w-5 h-5" />
+                  Alternatives
+                </button>
               </div>
             </div>
           </div>
