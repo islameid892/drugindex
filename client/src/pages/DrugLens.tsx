@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
-  Search, ArrowLeft, Loader2, Heart, Pill, ChevronRight,
-  AlertCircle, CheckCircle, Zap, Clock, Shield, Grid3x3, List, X, Image as ImageIcon
+  Search, ArrowLeft, Loader2, Pill, ChevronRight,
+  AlertCircle, CheckCircle, Zap, Clock, Shield, Grid3x3, List, X, Image as ImageIcon,
+  Shuffle
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
-import { useFavorites } from '@/contexts/FavoritesContext';
 import { AlternativesModal } from '@/components/AlternativesModal';
 
 const DrugLens = () => {
@@ -16,7 +16,7 @@ const DrugLens = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [formFilter, setFormFilter] = useState('');
   const [searchFilterMode, setSearchFilterMode] = useState<'both' | 'trade' | 'scientific'>('both');
-  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const [, navigate] = useLocation();
 
   const { data: searchData, isLoading } = trpc.drugLens.search.useQuery(
     {
@@ -66,16 +66,6 @@ const DrugLens = () => {
         drug={selectedDrug}
         isLoading={detailLoading}
         onBack={() => setSelectedDrugId(null)}
-        isFav={selectedDrugId ? isFavorite(selectedDrugId.toString()) : false}
-        onFavorite={() => {
-          if (selectedDrug && selectedDrugId) {
-            if (isFavorite(selectedDrugId.toString())) {
-              removeFavorite(selectedDrugId.toString());
-            } else {
-              addFavorite(selectedDrug);
-            }
-          }
-        }}
       />
     );
   }
@@ -92,6 +82,15 @@ const DrugLens = () => {
       <header className="relative z-40 border-b border-white/10 backdrop-blur-md bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {/* Back Button */}
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-sm font-medium transition-all duration-200 border border-white/10 hover:border-white/20"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+            <div className="w-px h-6 bg-white/20" />
             <img 
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/druglens_logo-nQ7M2Hr2EG4qPVSFFSFL3R.webp" 
               alt="DrugLens Logo" 
@@ -135,7 +134,7 @@ const DrugLens = () => {
         </div>
 
         {/* Search Filter Buttons */}
-        <div className="flex gap-3 flex-wrap mb-6">
+        <div className="flex gap-3 flex-wrap mb-6 justify-center">
           <button
             onClick={() => setSearchFilterMode('both')}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
@@ -261,14 +260,6 @@ const DrugLens = () => {
                       key={drug.id}
                       drug={drug}
                       onSelect={() => setSelectedDrugId(drug.id)}
-                      isFav={isFavorite(drug.id.toString())}
-                      onFavorite={() => {
-                        if (isFavorite(drug.id.toString())) {
-                          removeFavorite(drug.id.toString());
-                        } else {
-                          addFavorite(drug);
-                        }
-                      }}
                     />
                   ))}
                 </div>
@@ -295,14 +286,6 @@ const DrugLens = () => {
                       key={drug.id}
                       drug={drug}
                       onSelect={() => setSelectedDrugId(drug.id)}
-                      isFav={isFavorite(drug.id.toString())}
-                      onFavorite={() => {
-                        if (isFavorite(drug.id.toString())) {
-                          removeFavorite(drug.id.toString());
-                        } else {
-                          addFavorite(drug);
-                        }
-                      }}
                     />
                   ))}
                 </div>
@@ -326,7 +309,7 @@ const DrugLens = () => {
 };
 
 // Grid Card Component (Google-style)
-const DrugGridCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
+const DrugGridCard = ({ drug, onSelect }: any) => {
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer hover:scale-105 hover:bg-white/15">
       <div className="p-5">
@@ -355,11 +338,12 @@ const DrugGridCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onFavorite();
+              console.log('Show alternatives for drug', drug.tradeName);
             }}
-            className="flex-1 py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-300 border border-white/10 hover:border-white/20 flex items-center justify-center"
+            className="flex-1 py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-300 border border-white/10 hover:border-white/20 flex items-center justify-center gap-1"
           >
-            <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+            <Shuffle className="w-4 h-4 text-purple-300" />
+            <span className="text-purple-200">Alternative</span>
           </button>
           <button
             onClick={onSelect}
@@ -375,7 +359,7 @@ const DrugGridCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
 };
 
 // List Card Component
-const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
+const DrugListCard = ({ drug, onSelect }: any) => {
   const [showActions, setShowActions] = useState(false);
 
   return (
@@ -409,11 +393,12 @@ const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onFavorite();
+                console.log('Show alternatives for drug', drug.tradeName);
               }}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
+              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all flex items-center gap-1.5 border border-white/10 hover:border-purple-400/40"
             >
-              <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+              <Shuffle className="w-4 h-4 text-purple-300" />
+              <span className="text-purple-200 text-sm font-medium">Alternative</span>
             </button>
             <button
               onClick={onSelect}
@@ -430,7 +415,7 @@ const DrugListCard = ({ drug, onSelect, isFav, onFavorite }: any) => {
 };
 
 // Detail View Component
-const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any) => {
+const DetailView = ({ drugId, drug, isLoading, onBack }: any) => {
   const [showAlternatives, setShowAlternatives] = useState(false);
 
   const handleImageSearch = () => {
@@ -477,28 +462,14 @@ const DetailView = ({ drugId, drug, isLoading, onBack, isFav, onFavorite }: any)
           <div className="space-y-6">
             {/* Main Info Card */}
             <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-8 shadow-2xl">
-              {/* Header with Favorite */}
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-4xl font-bold text-white mb-2">
-                    {drug.tradeName}
-                  </h2>
-                  <p className="text-lg text-slate-300">
-                    {drug.scientificName}
-                  </p>
-                </div>
-                <button
-                  onClick={onFavorite}
-                  className="p-3 rounded-xl hover:bg-white/10 transition-all duration-300"
-                >
-                  <Heart
-                    className={`w-6 h-6 ${
-                      isFav
-                        ? 'fill-red-500 text-red-500'
-                        : 'text-slate-400'
-                    }`}
-                  />
-                </button>
+              {/* Header */}
+              <div className="mb-6">
+                <h2 className="text-4xl font-bold text-white mb-2">
+                  {drug.tradeName}
+                </h2>
+                <p className="text-lg text-slate-300">
+                  {drug.scientificName}
+                </p>
               </div>
 
               {/* Info Grid */}
