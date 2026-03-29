@@ -123,22 +123,13 @@ const DrugLens = () => {
             Smarter Search for Saudi Medications
           </p>
           
-          {/* Feature Highlights with Icons */}
-          <div className="flex flex-wrap justify-center gap-6 mb-8">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">💊</span>
-              <span className="text-lg font-semibold text-blue-300">Drugs</span>
-            </div>
-            <div className="w-1 h-6 bg-white/20"></div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🔄</span>
-              <span className="text-lg font-semibold text-purple-300">Alternatives</span>
-            </div>
-            <div className="w-1 h-6 bg-white/20"></div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📋</span>
-              <span className="text-lg font-semibold text-emerald-300">Full Info</span>
-            </div>
+          {/* Feature Highlights */}
+          <div className="flex justify-center gap-8 mb-8">
+            <span className="text-lg font-semibold text-blue-300">Drugs</span>
+            <span className="text-lg font-semibold text-slate-400">•</span>
+            <span className="text-lg font-semibold text-purple-300">Alternatives</span>
+            <span className="text-lg font-semibold text-slate-400">•</span>
+            <span className="text-lg font-semibold text-emerald-300">Full Info</span>
           </div>
           
           <p className="text-slate-300 max-w-2xl mx-auto opacity-80">
