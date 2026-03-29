@@ -8,6 +8,7 @@ import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
 import { AlternativesModal } from '@/components/AlternativesModal';
 import { useAlternativesModal } from '@/hooks/useAlternativesModal';
+import { InlineAlternativesTab } from '@/components/InlineAlternativesTab';
 
 const DrugLens = () => {
   const [, setLocation] = useLocation();
@@ -18,6 +19,7 @@ const DrugLens = () => {
   const [formFilter, setFormFilter] = useState('');
   const [searchFilterMode, setSearchFilterMode] = useState<'both' | 'trade' | 'scientific'>('both');
   const [, navigate] = useLocation();
+  const [expandedAlternativesId, setExpandedAlternativesId] = useState<number | null>(null);
 
   const { data: searchData, isLoading } = trpc.drugLens.search.useQuery(
     {
@@ -257,11 +259,27 @@ const DrugLens = () => {
               ) : filteredResults.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredResults.map((drug: any) => (
-                    <DrugGridCard
-                      key={drug.id}
-                      drug={drug}
-                      onSelect={() => setSelectedDrugId(drug.id)}
-                    />
+                    <div key={drug.id}>
+                      <DrugGridCard
+                        drug={drug}
+                        onSelect={() => setSelectedDrugId(drug.id)}
+                        onAlternativesToggle={() => {
+                          setExpandedAlternativesId(
+                            expandedAlternativesId === drug.id ? null : drug.id
+                          );
+                        }}
+                        isAlternativesOpen={expandedAlternativesId === drug.id}
+                      />
+                      {expandedAlternativesId === drug.id && (
+                        <div className="px-4 pb-4">
+                          <InlineAlternativesTab
+                            drug={drug}
+                            isOpen={expandedAlternativesId === drug.id}
+                            onClose={() => setExpandedAlternativesId(null)}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -283,11 +301,27 @@ const DrugLens = () => {
               ) : filteredResults.length > 0 ? (
                 <div className="space-y-3">
                   {filteredResults.map((drug: any) => (
-                    <DrugListCard
-                      key={drug.id}
-                      drug={drug}
-                      onSelect={() => setSelectedDrugId(drug.id)}
-                    />
+                    <div key={drug.id}>
+                      <DrugListCard
+                        drug={drug}
+                        onSelect={() => setSelectedDrugId(drug.id)}
+                        onAlternativesToggle={() => {
+                          setExpandedAlternativesId(
+                            expandedAlternativesId === drug.id ? null : drug.id
+                          );
+                        }}
+                        isAlternativesOpen={expandedAlternativesId === drug.id}
+                      />
+                      {expandedAlternativesId === drug.id && (
+                        <div className="px-4 py-3">
+                          <InlineAlternativesTab
+                            drug={drug}
+                            isOpen={expandedAlternativesId === drug.id}
+                            onClose={() => setExpandedAlternativesId(null)}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -310,9 +344,7 @@ const DrugLens = () => {
 };
 
 // Grid Card Component (Google-style)
-const DrugGridCard = ({ drug, onSelect }: any) => {
-  const { showAlternatives, handleOpenAlternatives, handleCloseAlternatives } = useAlternativesModal();
-
+const DrugGridCard = ({ drug, onSelect, onAlternativesToggle, isAlternativesOpen }: any) => {
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer hover:scale-105 hover:bg-white/15">
       <div className="p-5">
@@ -341,7 +373,7 @@ const DrugGridCard = ({ drug, onSelect }: any) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleOpenAlternatives();
+              onAlternativesToggle();
             }}
             className="flex-1 py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-300 border border-white/10 hover:border-white/20 flex items-center justify-center gap-1"
           >
@@ -357,15 +389,13 @@ const DrugGridCard = ({ drug, onSelect }: any) => {
           </button>
         </div>
       </div>
-      <AlternativesModal drug={drug} isOpen={showAlternatives} onClose={handleCloseAlternatives} />
     </div>
   );
 };
 
 // List Card Component
-const DrugListCard = ({ drug, onSelect }: any) => {
+const DrugListCard = ({ drug, onSelect, onAlternativesToggle, isAlternativesOpen }: any) => {
   const [showActions, setShowActions] = useState(false);
-  const { showAlternatives, handleOpenAlternatives, handleCloseAlternatives } = useAlternativesModal();
 
   return (
     <div
@@ -398,7 +428,7 @@ const DrugListCard = ({ drug, onSelect }: any) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleOpenAlternatives();
+                onAlternativesToggle();
               }}
               className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all flex items-center gap-1.5 border border-white/10 hover:border-purple-400/40"
             >
@@ -415,7 +445,6 @@ const DrugListCard = ({ drug, onSelect }: any) => {
           </div>
         )}
       </div>
-      <AlternativesModal drug={drug} isOpen={showAlternatives} onClose={handleCloseAlternatives} />
     </div>
   );
 };
