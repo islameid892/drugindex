@@ -111,13 +111,37 @@ const DrugLens = () => {
       </header>
 
       {/* Hero Section */}
-      <div className="relative z-30 max-w-6xl mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Find Your<br />
-            <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Perfect Medication</span>
-          </h2>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+      <div className="relative z-30 max-w-6xl mx-auto px-4 py-16">
+        <div className="text-center mb-10">
+          {/* Main Title - DRUGLENS */}
+          <h1 className="text-6xl md:text-7xl font-black text-white mb-4" style={{ letterSpacing: '0.15em' }}>
+            <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">DRUGLENS</span>
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-2xl md:text-3xl font-bold text-white mb-6">
+            Smarter Search for Saudi Medications
+          </p>
+          
+          {/* Feature Highlights with Icons */}
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">💊</span>
+              <span className="text-lg font-semibold text-blue-300">Drugs</span>
+            </div>
+            <div className="w-1 h-6 bg-white/20"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🔄</span>
+              <span className="text-lg font-semibold text-purple-300">Alternatives</span>
+            </div>
+            <div className="w-1 h-6 bg-white/20"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📋</span>
+              <span className="text-lg font-semibold text-emerald-300">Full Info</span>
+            </div>
+          </div>
+          
+          <p className="text-slate-300 max-w-2xl mx-auto opacity-80">
             Search from 8,141 medications with complete information
           </p>
         </div>
