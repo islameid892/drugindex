@@ -1,0 +1,60 @@
+{
+  "query": "\nSELECT trade_name, COUNT(*) as count, GROUP_CONCAT(id) as ids\nFROM drug_lens\nWHERE trade_name IS NOT NULL AND trade_name != ''\nGROUP BY trade_name\nHAVING COUNT(*) > 1\nORDER BY count DESC\nLIMIT 50\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nSELECT trade_name, COUNT(*) as count, GROUP_CONCAT(id) as ids\nFROM drug_lens\nWHERE trade_name IS NOT NULL AND trade_name != ''\nGROUP BY trade_name\nHAVING COUNT(*) > 1\nORDER BY count DESC\nLIMIT 50\n",
+  "rows": [
+    {
+      "trade_name": "PRICK TEST 0 mg/mL Solution",
+      "count": "3",
+      "ids": "178,185,187"
+    },
+    {
+      "trade_name": "ESSENTIAL D-3 5000 iu Capsule",
+      "count": "2",
+      "ids": "1574,1873"
+    },
+    {
+      "trade_name": "WATER FOR 1 mg Solution for Injection/Infusion",
+      "count": "2",
+      "ids": "8121,8123"
+    },
+    {
+      "trade_name": "MEGAMOX 500/125 mg Tablet",
+      "count": "2",
+      "ids": "369,382"
+    },
+    {
+      "trade_name": "TISSEEL Lyophilised 72/1102/250/375/0399/9508480 mg Powder+Solv Sealant",
+      "count": "2",
+      "ids": "3621,3623"
+    },
+    {
+      "trade_name": "ESSENTIAL D-3 10000 iu/u Capsule",
+      "count": "2",
+      "ids": "1562,1870"
+    },
+    {
+      "trade_name": "ALFACORT 1 mg Cream",
+      "count": "2",
+      "ids": "3714,3715"
+    },
+    {
+      "trade_name": "D-SEUL 50000 iu/u Soft Capsule",
+      "count": "2",
+      "ids": "1564,1884"
+    },
+    {
+      "trade_name": "DEXTROSE 5% IV Infusion",
+      "count": "2",
+      "ids": "2232,2239"
+    },
+    {
+      "trade_name": "ESSENTIAL D-3 5000 iu/u Capsule",
+      "count": "2",
+      "ids": "1572,1874"
+    }
+  ],
+  "messages": [],
+  "stdout": "trade_name\tcount\tids\nPRICK TEST 0 mg/mL Solution\t3\t178,185,187\nESSENTIAL D-3 5000 iu Capsule\t2\t1574,1873\nWATER FOR 1 mg Solution for Injection/Infusion\t2\t8121,8123\nMEGAMOX 500/125 mg Tablet\t2\t369,382\nTISSEEL Lyophilised 72/1102/250/375/0399/9508480 mg Powder+Solv Sealant\t2\t3621,3623\nESSENTIAL D-3 10000 iu/u Capsule\t2\t1562,1870\nALFACORT 1 mg Cream\t2\t3714,3715\nD-SEUL 50000 iu/u Soft Capsule\t2\t1564,1884\nDEXTROSE 5% IV Infusion\t2\t2232,2239\nESSENTIAL D-3 5000 iu/u Capsule\t2\t1572,1874\n",
+  "stderr": "",
+  "execution_time_ms": 3389
+}

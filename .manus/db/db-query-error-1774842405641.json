@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT id, trade_name, scientific_name, form, price, manufacturer, strength\nFROM drug_lens\nWHERE id IN (178, 185, 187)\nORDER BY id\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nSELECT id, trade_name, scientific_name, form, price, manufacturer, strength\nFROM drug_lens\nWHERE id IN (178, 185, 187)\nORDER BY id\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'manufacturer' in 'field list'"
+  ]
+}
