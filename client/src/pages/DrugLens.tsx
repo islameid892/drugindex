@@ -111,14 +111,14 @@ const DrugLens = () => {
 
           {/* Right Side - Minimal Actions */}
           <div className="flex items-center gap-2">
-            {/* Back Button - Subtle */}
+            {/* Back Button - Always Visible */}
             <button
               onClick={() => navigate('/')}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-sm font-medium transition-all duration-200 border border-transparent hover:border-white/20"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-sm font-medium transition-all duration-200 border border-transparent hover:border-white/20"
               title="Back to Home"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline">Home</span>
+              <span className="hidden sm:inline">Back</span>
             </button>
           </div>
         </div>
