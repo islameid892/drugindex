@@ -128,25 +128,25 @@ const DrugLens = () => {
       <div className="relative z-30 max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           {/* Main Title - DRUGLENS */}
-          <h1 className="text-6xl md:text-7xl font-black text-white mb-4" style={{ letterSpacing: '0.15em' }}>
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4" style={{ fontFamily: '"Inter", sans-serif', letterSpacing: '0.05em', fontWeight: 700 }}>
             <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">DRUGLENS</span>
           </h1>
           
           {/* Subtitle */}
-          <p className="text-2xl md:text-3xl font-bold text-white mb-6">
+          <p className="text-xl md:text-2xl font-medium text-white mb-6" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 500 }}>
             Smarter Search for Saudi Medications
           </p>
           
           {/* Feature Highlights */}
-          <div className="flex justify-center gap-8 mb-8">
-            <span className="text-lg font-semibold text-blue-300">Drugs</span>
-            <span className="text-lg font-semibold text-slate-400">•</span>
-            <span className="text-lg font-semibold text-purple-300">Alternatives</span>
-            <span className="text-lg font-semibold text-slate-400">•</span>
-            <span className="text-lg font-semibold text-emerald-300">Full Info</span>
+          <div className="flex justify-center gap-6 mb-8 flex-wrap">
+            <span className="text-base font-medium text-blue-300" style={{ fontFamily: '"Inter", sans-serif' }}>Drugs</span>
+            <span className="text-base font-medium text-slate-400">•</span>
+            <span className="text-base font-medium text-purple-300" style={{ fontFamily: '"Inter", sans-serif' }}>Alternatives</span>
+            <span className="text-base font-medium text-slate-400">•</span>
+            <span className="text-base font-medium text-emerald-300" style={{ fontFamily: '"Inter", sans-serif' }}>Full Info</span>
           </div>
           
-          <p className="text-slate-300 max-w-2xl mx-auto opacity-80">
+          <p className="text-slate-300 max-w-2xl mx-auto opacity-80 text-base" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, lineHeight: '1.6' }}>
             Search from 8,141 medications with complete information
           </p>
         </div>
