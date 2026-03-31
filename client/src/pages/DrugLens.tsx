@@ -87,7 +87,7 @@ const DrugLens = () => {
           {/* Logo & Branding */}
           <div className="flex items-center gap-3 group cursor-pointer hover:opacity-90 transition-opacity duration-300">
             {/* New Logo - Magnifying Glass */}
-            <div className="relative w-14 h-14 flex items-center justify-center">
+            <div className="relative w-44 h-44 flex items-center justify-center">
               <img 
                 src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
                 alt="DrugLens" 
@@ -124,7 +124,7 @@ const DrugLens = () => {
       <div className="relative z-30 max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           {/* Large Logo in Hero */}
-          <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
+          <div className="relative w-96 h-96 mx-auto mb-8 flex items-center justify-center">
             <img 
               src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
               alt="DrugLens" 
