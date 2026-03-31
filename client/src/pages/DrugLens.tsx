@@ -83,7 +83,7 @@ const DrugLens = () => {
           {/* Logo & Branding */}
           <div className="flex items-center gap-3 group cursor-pointer hover:opacity-90 transition-opacity duration-300">
             {/* New Logo - Magnifying Glass */}
-            <div className="relative w-44 h-44 flex items-center justify-center">
+            <div className="relative w-10 h-10 flex-shrink-0">
               <img 
                 src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
                 alt="DrugLens" 
@@ -116,45 +116,35 @@ const DrugLens = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="relative z-30 max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-10">
-          {/* Main Title - DRUGLENS */}
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4" style={{ fontFamily: '"Inter", sans-serif', letterSpacing: '0.05em', fontWeight: 700 }}>
-            <span className="text-white">Drug</span><span className="text-teal-400">Lens</span>
-          </h1>
-          
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl font-medium text-white mb-2" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 500 }}>
-            Saudi Drug Index
-          </p>
-          
-          {/* Large Logo in Hero - BEFORE Smart Search */}
-          <div className="relative w-96 h-96 mx-auto mb-2 flex items-center justify-center" style={{ filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))' }}>
-            <img 
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
-              alt="DrugLens" 
-              className="w-full h-full object-contain"
-              style={{ filter: 'brightness(1.1) contrast(1.1)' }}
-            />
+      {/* Hero Section - Compact Above-the-Fold */}
+      <div className="relative z-30 max-w-3xl mx-auto px-4 pt-6 pb-4">
+        <div className="text-center">
+          {/* Logo + Title + Subtitle as one tight block */}
+          <div className="flex flex-col items-center gap-1 mb-4">
+            <div className="w-28 h-28 md:w-36 md:h-36" style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.4))' }}>
+              <img 
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
+                alt="DrugLens" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mt-1" style={{ fontFamily: '"Inter", sans-serif', letterSpacing: '0.04em' }}>
+              <span className="text-white">Drug</span><span className="text-teal-400">Lens</span>
+            </h1>
+            <p className="text-base font-semibold text-white/80" style={{ fontFamily: '"Inter", sans-serif' }}>
+              Saudi Drug Index
+            </p>
+            <p className="text-sm text-teal-300 mt-0.5" style={{ fontFamily: '"Inter", sans-serif' }}>
+              Smart Search for Medications & Alternatives
+            </p>
+            <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+              <span className="text-teal-400">Drugs</span>
+              <span>•</span>
+              <span className="text-teal-400">Alternatives</span>
+              <span>•</span>
+              <span className="text-teal-400">Full Info</span>
+            </div>
           </div>
-          
-          <p className="text-base md:text-lg font-medium text-teal-300 mb-6" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 500 }}>
-            Smart Search for Medications & Alternatives
-          </p>
-          
-          {/* Feature Highlights */}
-          <div className="flex justify-center gap-6 mb-8 flex-wrap">
-            <span className="text-base font-medium text-teal-300" style={{ fontFamily: '"Inter", sans-serif' }}>Drugs</span>
-            <span className="text-base font-medium text-slate-400">•</span>
-            <span className="text-base font-medium text-teal-300" style={{ fontFamily: '"Inter", sans-serif' }}>Alternatives</span>
-            <span className="text-base font-medium text-slate-400">•</span>
-            <span className="text-base font-medium text-teal-300" style={{ fontFamily: '"Inter", sans-serif' }}>Full Info</span>
-          </div>
-          
-          <p className="text-slate-300 max-w-2xl mx-auto opacity-80 text-base" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 400, lineHeight: '1.6' }}>
-            Search from 8,141 medications with complete information
-          </p>
         </div>
 
         {/* Search Bar */}
