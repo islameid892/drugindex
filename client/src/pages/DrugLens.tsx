@@ -83,11 +83,12 @@ const DrugLens = () => {
           {/* Logo & Branding */}
           <div className="flex items-center gap-3 group cursor-pointer hover:opacity-90 transition-opacity duration-300">
             {/* New Logo - Magnifying Glass */}
-            <div className="relative w-10 h-10 flex-shrink-0">
+            <div className="relative w-10 h-10 flex-shrink-0 overflow-hidden">
               <img 
                 src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
                 alt="DrugLens" 
                 className="w-full h-full object-contain drop-shadow-lg"
+                style={{ transform: 'scale(1.7)', transformOrigin: 'center center' }}
               />
             </div>
             
@@ -121,11 +122,12 @@ const DrugLens = () => {
         <div className="text-center">
           {/* Logo + Title + Subtitle as one tight block */}
           <div className="flex flex-col items-center gap-1 mb-4">
-            <div className="w-28 h-28 md:w-36 md:h-36" style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.4))' }}>
+            <div className="w-28 h-28 md:w-36 md:h-36 overflow-hidden" style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.4))' }}>
               <img 
                 src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
                 alt="DrugLens" 
                 className="w-full h-full object-contain"
+                style={{ transform: 'scale(1.6)', transformOrigin: 'center center' }}
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mt-1" style={{ fontFamily: '"Inter", sans-serif', letterSpacing: '0.04em' }}>
