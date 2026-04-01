@@ -578,26 +578,34 @@ function CodesBrowse() {
 
         {!loading && displayCodes?.map((code: any, idx: number) => {
           const isExpanded = expandedCodes.has(code.id);
+          const isUCode = code.code?.startsWith("U");
           return (
             <div key={idx} className={`border rounded-xl overflow-hidden ${
-              code.isNonCovered ? "border-red-200 dark:border-red-800" : "border-border"
+              code.isNonCovered ? "border-red-200 dark:border-red-800" : isUCode ? "border-orange-200 dark:border-orange-800" : "border-border"
             }`}>
               <button
                 onClick={() => code.branches?.length > 0 && toggleCode(code.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                   code.isNonCovered
                     ? "bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50"
+                    : isUCode
+                    ? "bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50"
                     : "bg-card hover:bg-muted/50"
                 }`}
               >
                 <span className={`font-mono text-sm font-bold px-2 py-1 rounded flex-shrink-0 ${
                   code.isNonCovered
                     ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                    : isUCode
+                    ? "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300"
                     : "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
                 }`}>
                   {code.code}
                 </span>
                 <span className="text-sm text-foreground flex-1 text-left">{code.description}</span>
+                {isUCode && (
+                  <Badge className="text-xs flex-shrink-0 bg-orange-500 hover:bg-orange-600 text-white">secondary diagnosis only</Badge>
+                )}
                 {code.isNonCovered && (
                   <Badge variant="destructive" className="text-xs flex-shrink-0">Non-Covered</Badge>
                 )}

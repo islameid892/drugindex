@@ -75,20 +75,27 @@ const DrugLens = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
 
       {/* Premium Navbar - Google/Stripe Style */}
       <header className="sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl bg-slate-900/40 shadow-lg shadow-black/20">
-        <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           {/* Logo & Branding */}
           <div className="flex items-center gap-3 group cursor-pointer hover:opacity-90 transition-opacity duration-300">
-            {/* New Logo - Magnifying Glass */}
-            <div className="relative w-10 h-10 flex-shrink-0 overflow-hidden">
+            {/* Logo with CSS cleanup */}
+            <div className="relative w-10 h-10 flex items-center justify-center">
               <img 
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/druglens_logo-nQ7M2Hr2EG4qPVSFFSFL3R.webp" 
                 alt="DrugLens" 
-                className="w-full h-full object-contain drop-shadow-lg"
-                style={{ transform: 'scale(1.7)', transformOrigin: 'center center' }}
+                className="w-full h-full object-contain filter drop-shadow-md"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                  mixBlendMode: 'lighten'
+                }}
               />
             </div>
             
@@ -96,9 +103,9 @@ const DrugLens = () => {
             <div className="flex flex-col justify-center">
               <div className="flex items-baseline gap-1">
                 <h1 className="text-lg font-bold text-white tracking-tight">Drug</h1>
-                <span className="text-lg font-bold text-teal-400 tracking-tight">Lens</span>
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent tracking-tight">Lens</span>
               </div>
-              <p className="text-xs text-teal-300/70 font-medium -mt-1">Saudi Drug Index</p>
+              <p className="text-xs text-slate-400 font-medium -mt-1">Medical Database</p>
             </div>
           </div>
 
@@ -117,36 +124,31 @@ const DrugLens = () => {
         </div>
       </header>
 
-      {/* Hero Section - Compact Above-the-Fold */}
-      <div className="relative z-30 max-w-3xl mx-auto px-4 pt-6 pb-4">
-        <div className="text-center">
-          {/* Logo + Title + Subtitle as one tight block */}
-          <div className="flex flex-col items-center gap-1 mb-4">
-            <div className="w-28 h-28 md:w-36 md:h-36 overflow-hidden" style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.4))' }}>
-              <img 
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/74C43FEB-8117-48D0-96EC-ACD372B6EAF1_53690a5a.png" 
-                alt="DrugLens" 
-                className="w-full h-full object-contain"
-                style={{ transform: 'scale(1.6)', transformOrigin: 'center center' }}
-              />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mt-1" style={{ fontFamily: '"Inter", sans-serif', letterSpacing: '0.04em' }}>
-              <span className="text-white">Drug</span><span className="text-teal-400">Lens</span>
-            </h1>
-            <p className="text-base font-semibold text-white/80" style={{ fontFamily: '"Inter", sans-serif' }}>
-              Saudi Drug Index
-            </p>
-            <p className="text-sm text-teal-300 mt-0.5" style={{ fontFamily: '"Inter", sans-serif' }}>
-              Smart Search for Medications & Alternatives
-            </p>
-            <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-              <span className="text-teal-400">Drugs</span>
-              <span>•</span>
-              <span className="text-teal-400">Alternatives</span>
-              <span>•</span>
-              <span className="text-teal-400">Full Info</span>
-            </div>
+      {/* Hero Section */}
+      <div className="relative z-30 max-w-6xl mx-auto px-4 py-16">
+        <div className="text-center mb-10">
+          {/* Main Title - DRUGLENS */}
+          <h1 className="text-6xl md:text-7xl font-black text-white mb-4" style={{ letterSpacing: '0.15em' }}>
+            <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">DRUGLENS</span>
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-2xl md:text-3xl font-bold text-white mb-6">
+            Smarter Search for Saudi Medications
+          </p>
+          
+          {/* Feature Highlights */}
+          <div className="flex justify-center gap-8 mb-8">
+            <span className="text-lg font-semibold text-blue-300">Drugs</span>
+            <span className="text-lg font-semibold text-slate-400">•</span>
+            <span className="text-lg font-semibold text-purple-300">Alternatives</span>
+            <span className="text-lg font-semibold text-slate-400">•</span>
+            <span className="text-lg font-semibold text-emerald-300">Full Info</span>
           </div>
+          
+          <p className="text-slate-300 max-w-2xl mx-auto opacity-80">
+            Search from 8,141 medications with complete information
+          </p>
         </div>
 
         {/* Search Bar */}
@@ -157,7 +159,7 @@ const DrugLens = () => {
               placeholder='Search drugs, dosages, or conditions...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-6 py-4 pl-14 rounded-2xl bg-white/10 border border-teal-500/30 backdrop-blur-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-2xl transition-all duration-300 hover:bg-white/15 hover:border-teal-500/50"
+              className="w-full px-6 py-4 pl-14 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-2xl transition-all duration-300 hover:bg-white/15"
             />
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           </div>
@@ -169,7 +171,7 @@ const DrugLens = () => {
             onClick={() => setSearchFilterMode('both')}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
               searchFilterMode === 'both'
-                ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                 : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
             }`}
           >
@@ -179,7 +181,7 @@ const DrugLens = () => {
             onClick={() => setSearchFilterMode('trade')}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
               searchFilterMode === 'trade'
-                ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
                 : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
             }`}
           >
@@ -189,7 +191,7 @@ const DrugLens = () => {
             onClick={() => setSearchFilterMode('scientific')}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
               searchFilterMode === 'scientific'
-                ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30'
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30'
                 : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
             }`}
           >
@@ -491,7 +493,11 @@ const DetailView = ({ drugId, drug, isLoading, onBack }: any) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
 
       {/* Header */}
       <div className="relative z-40 border-b border-white/10 backdrop-blur-md bg-slate-900/50">
