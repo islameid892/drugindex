@@ -618,19 +618,24 @@ function CodesBrowse() {
               </button>
               {isExpanded && code.branches?.length > 0 && (
                 <div className="border-t border-border/50 bg-muted/20 divide-y divide-border/30">
-                  {code.branches.map((branch: any, bIdx: number) => (
-                    <div key={bIdx} className={`flex items-center gap-3 px-4 py-2 text-xs ${
-                      branch.isNonCovered ? "bg-red-50/50 dark:bg-red-950/20" : ""
-                    }`}>
-                      <span className={`font-mono font-bold flex-shrink-0 ${
-                        branch.isNonCovered ? "text-red-600 dark:text-red-400" : "text-purple-600 dark:text-purple-400"
+                  {code.branches.map((branch: any, bIdx: number) => {
+                    const branchIsUCode = branch.branchCode?.startsWith("U");
+                    const branchIsNonCovered = branch.isNonCovered || code.isNonCovered;
+                    return (
+                      <div key={bIdx} className={`flex items-center gap-3 px-4 py-2 text-xs ${
+                        branchIsNonCovered ? "bg-red-50/50 dark:bg-red-950/20" : branchIsUCode ? "bg-orange-50/50 dark:bg-orange-950/20" : ""
                       }`}>
-                        {branch.branchCode}
-                      </span>
-                      <span className="text-muted-foreground flex-1">{branch.branchDescription}</span>
-                      {branch.isNonCovered && <span className="text-red-500 flex-shrink-0">Non-Covered</span>}
-                    </div>
-                  ))}
+                        <span className={`font-mono font-bold flex-shrink-0 ${
+                          branchIsNonCovered ? "text-red-600 dark:text-red-400" : branchIsUCode ? "text-orange-600 dark:text-orange-400" : "text-purple-600 dark:text-purple-400"
+                        }`}>
+                          {branch.branchCode}
+                        </span>
+                        <span className="text-muted-foreground flex-1">{branch.branchDescription}</span>
+                        {branchIsNonCovered && <span className="text-red-500 flex-shrink-0">Non-Covered</span>}
+                        {branchIsUCode && <span className="text-orange-500 flex-shrink-0">secondary diagnosis only</span>}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
