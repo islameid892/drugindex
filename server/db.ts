@@ -133,12 +133,15 @@ async function enrichDrugEntriesWithCodes(
       .where(inArray(icdBranches.parentCodeId, linkedCodeIds));
   }
 
-  // Load all non-covered codes
+  // Load all non-covered codes - only for the codes we're checking
   const allBranchCodes = branches.map((b) => b.branchCode);
   const allCodesToCheck = [...linkedCodeStrings, ...allBranchCodes];
   let nonCoveredSet = new Set<string>();
   if (allCodesToCheck.length > 0) {
-    const nc = await db.select({ code: nonCoveredCodes.code }).from(nonCoveredCodes);
+    const nc = await db
+      .select({ code: nonCoveredCodes.code })
+      .from(nonCoveredCodes)
+      .where(inArray(nonCoveredCodes.code, allCodesToCheck));
     nonCoveredSet = new Set((nc as Array<{ code: string }>).map((r) => r.code));
   }
 

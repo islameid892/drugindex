@@ -220,15 +220,13 @@ export const drugEntryCodesRelations = relations(drugEntryCodes, ({ one }) => ({
 export const icdCodesRelations = relations(icdCodes, ({ many }) => ({
   branches: many(icdBranches),
   drugEntryCodes: many(drugEntryCodes),
-  nonCoveredCodes: many(nonCoveredCodes),
 }));
 
-export const icdBranchesRelations = relations(icdBranches, ({ one, many }) => ({
+export const icdBranchesRelations = relations(icdBranches, ({ one }) => ({
   parentCode: one(icdCodes, {
     fields: [icdBranches.parentCodeId],
     references: [icdCodes.id],
   }),
-  nonCoveredCodes: many(nonCoveredCodes),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
