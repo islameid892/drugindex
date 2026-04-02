@@ -522,12 +522,12 @@ function CodesBrowse() {
 
   const { data: allCodes, isLoading: loadingAll } = trpc.data.codes.getAll.useQuery(
     { limit: 100 },
-    { enabled: debouncedQuery.length === 0, staleTime: 60000 }
+    { enabled: debouncedQuery.length === 0, staleTime: 0 }
   );
 
   const { data: searchResults, isLoading: isSearching } = trpc.data.codes.search.useQuery(
     { query: debouncedQuery },
-    { enabled: debouncedQuery.length > 0, staleTime: 30000 }
+    { enabled: debouncedQuery.length > 0, staleTime: 0 }
   );
 
   const displayCodes = debouncedQuery.length > 0 ? searchResults : allCodes;

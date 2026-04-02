@@ -49,7 +49,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { query: debouncedScientificNameInput, limit: 8 },
     { 
       enabled: debouncedScientificNameInput.length > 0,
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
@@ -58,7 +58,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { scientificName: scientificName || "", query: debouncedTradeNameInput, limit: 10 },
     { 
       enabled: debouncedTradeNameInput.length > 0,
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
@@ -67,7 +67,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: debouncedIndicationInput || "", limit: 50 },
     { 
       enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0),
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
