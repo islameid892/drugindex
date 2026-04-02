@@ -43,6 +43,13 @@
       "when": 1774665240164,
       "tag": "0005_living_king_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775091656697,
+      "tag": "0006_salty_leader",
+      "breakpoints": true
     }
   ]
 }

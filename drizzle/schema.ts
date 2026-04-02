@@ -113,6 +113,8 @@ export type IcdBranch = typeof icdBranches.$inferSelect;
 export type InsertIcdBranch = typeof icdBranches.$inferInsert;
 
 // ─── Non-Covered Codes ─────────────────────────────────────────────────────────
+// Links non-covered codes to their corresponding ICD-10 codes and branches
+// This ensures data synchronization when icd_codes or icd_branches are updated
 
 export const nonCoveredCodes = mysqlTable(
   "non_covered_codes",
@@ -120,15 +122,33 @@ export const nonCoveredCodes = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     code: varchar("code", { length: 20 }).notNull().unique(),
     description: text("description").notNull(),
+    // Foreign key to icd_codes (for main codes like E11, F10, etc.)
+    icdCodeId: int("icd_code_id").references(() => icdCodes.id, { onDelete: "set null", onUpdate: "cascade" }),
+    // Foreign key to icd_branches (for branch codes like E11.1, F10.2, etc.)
+    icdBranchId: int("icd_branch_id").references(() => icdBranches.id, { onDelete: "set null", onUpdate: "cascade" }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => ({
     codeIdx: index("idx_non_covered_code").on(t.code),
+    icdCodeIdIdx: index("idx_non_covered_icd_code").on(t.icdCodeId),
+    icdBranchIdIdx: index("idx_non_covered_icd_branch").on(t.icdBranchId),
   })
 );
 
 export type NonCoveredCode = typeof nonCoveredCodes.$inferSelect;
 export type InsertNonCoveredCode = typeof nonCoveredCodes.$inferInsert;
+
+// Relations for non-covered codes
+export const nonCoveredCodesRelations = relations(nonCoveredCodes, ({ one }) => ({
+  icdCode: one(icdCodes, {
+    fields: [nonCoveredCodes.icdCodeId],
+    references: [icdCodes.id],
+  }),
+  icdBranch: one(icdBranches, {
+    fields: [nonCoveredCodes.icdBranchId],
+    references: [icdBranches.id],
+  }),
+}));
 
 // ─── Search Analytics ──────────────────────────────────────────────────────────
 
@@ -200,13 +220,15 @@ export const drugEntryCodesRelations = relations(drugEntryCodes, ({ one }) => ({
 export const icdCodesRelations = relations(icdCodes, ({ many }) => ({
   branches: many(icdBranches),
   drugEntryCodes: many(drugEntryCodes),
+  nonCoveredCodes: many(nonCoveredCodes),
 }));
 
-export const icdBranchesRelations = relations(icdBranches, ({ one }) => ({
+export const icdBranchesRelations = relations(icdBranches, ({ one, many }) => ({
   parentCode: one(icdCodes, {
     fields: [icdBranches.parentCodeId],
     references: [icdCodes.id],
   }),
+  nonCoveredCodes: many(nonCoveredCodes),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
