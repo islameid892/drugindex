@@ -22,6 +22,7 @@ import {
   and,
   gte,
   desc,
+  max,
 } from "drizzle-orm";
 import {
   drugEntries,
@@ -410,11 +411,12 @@ export async function getAllNonCoveredCodes() {
   const db = await getDb();
   return db.select({
     code: nonCoveredCodes.code,
-    description: sql`COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description})`,
+    description: sql`MAX(COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description}))`,
   })
     .from(nonCoveredCodes)
     .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
     .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
+    .groupBy(nonCoveredCodes.code)
     .orderBy(nonCoveredCodes.code);
 }
 
@@ -423,7 +425,7 @@ export async function searchNonCoveredCodes(query: string) {
   const q = `%${query}%`;
   return db.select({
     code: nonCoveredCodes.code,
-    description: sql`COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description})`,
+    description: sql`MAX(COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description}))`,
   })
     .from(nonCoveredCodes)
     .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
@@ -434,6 +436,7 @@ export async function searchNonCoveredCodes(query: string) {
       ciLike(icdCodes.description, q),
       ciLike(nonCoveredCodes.description, q)
     ))
+    .groupBy(nonCoveredCodes.code)
     .limit(100);
 }
 
