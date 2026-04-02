@@ -202,7 +202,7 @@ function ConditionBrowse() {
 
   const { data, isLoading } = trpc.data.browseConditions.useQuery(
     { query: debouncedQuery, limit: 10 },
-    { staleTime: 30000 }
+    { staleTime: 0 }
   );
 
   const toggleCode = (key: string) => {

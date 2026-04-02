@@ -391,21 +391,46 @@ async function enrichCodesWithBranches(
     db.select({ code: nonCoveredCodes.code }).from(nonCoveredCodes).where(inArray(nonCoveredCodes.code, codeStrings)),
   ]);
 
-  const nonCoveredSet = new Set((nc as Array<{ code: string }>).map((r) => r.code));
-  const branchMap = new Map<number, Array<{ branchCode: string; branchDescription: string }>>();
-  for (const b of branches) {
-    if (!branchMap.has(b.parentCodeId)) branchMap.set(b.parentCodeId, []);
-    branchMap.get(b.parentCodeId)!.push({ branchCode: b.branchCode, branchDescription: b.branchDescription });
+  // Get all branch codes for the given parent codes
+  const allBranchCodes = branches.map((b: any) => b.branchCode);
+  
+  // Check if any of the branches are non-covered
+  let branchNonCovered: Array<{ code: string }> = [];
+  if (allBranchCodes.length > 0) {
+    branchNonCovered = await db
+      .select({ code: nonCoveredCodes.code })
+      .from(nonCoveredCodes)
+      .where(inArray(nonCoveredCodes.code, allBranchCodes));
   }
 
-  return codes.map((c) => ({
-    id: c.id,
-    code: c.code,
-    description: c.description,
-    branchCount: c.branchCount,
-    branches: branchMap.get(c.id) ?? [],
-    isNonCovered: nonCoveredSet.has(c.code),
-  }));
+  // Combine both main codes and branch codes into one set
+  const nonCoveredSet = new Set<string>();
+  (nc as Array<{ code: string }>).forEach((r) => nonCoveredSet.add(r.code));
+  branchNonCovered.forEach((r) => nonCoveredSet.add(r.code));
+
+  const branchMap = new Map<number, Array<{ branchCode: string; branchDescription: string; isNonCovered: boolean }>>();
+  for (const b of branches) {
+    if (!branchMap.has(b.parentCodeId)) branchMap.set(b.parentCodeId, []);
+    branchMap.get(b.parentCodeId)!.push({ 
+      branchCode: b.branchCode, 
+      branchDescription: b.branchDescription,
+      isNonCovered: nonCoveredSet.has(b.branchCode)
+    });
+  }
+
+  return codes.map((c) => {
+    const codeBranches = branchMap.get(c.id) ?? [];
+    // A code is non-covered if the main code is non-covered OR any of its branches are non-covered
+    const isNonCovered = nonCoveredSet.has(c.code) || codeBranches.some((b) => b.isNonCovered);
+    return {
+      id: c.id,
+      code: c.code,
+      description: c.description,
+      branchCount: c.branchCount,
+      branches: codeBranches.map(({ isNonCovered, ...rest }) => rest),
+      isNonCovered,
+    };
+  });
 }
 
 // ─── Non-Covered Codes ─────────────────────────────────────────────────────────
