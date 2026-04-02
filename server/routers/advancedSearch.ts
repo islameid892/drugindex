@@ -8,6 +8,7 @@ import {
   getAllNonCoveredCodes,
   getDb,
 } from "../db";
+import { checkCoverageMultiple } from "../coverage";
 import { drugEntries } from "../../drizzle/schema";
 import { asc } from "drizzle-orm";
 
@@ -77,9 +78,19 @@ export const advancedSearchRouter = router({
           limit: 500,
         });
 
-        // Get non-covered codes for coverage checking
-        const nonCoveredData = await getAllNonCoveredCodes();
-        const nonCoveredSet = new Set((nonCoveredData as Array<{ code: string }>).map((nc) => nc.code));
+        // Collect all unique codes to check coverage
+        const allCodesToCheck = new Set<string>();
+        for (const entry of results) {
+          for (const code of entry.icdCodes) {
+            allCodesToCheck.add(code.code);
+            for (const branch of code.branches) {
+              allCodesToCheck.add(branch.branchCode);
+            }
+          }
+        }
+        
+        // Check coverage for all codes using hierarchical logic
+        const coverageMap = await checkCoverageMultiple(Array.from(allCodesToCheck));
 
         // Format results: each drug entry with its codes and branches
         const drugs = results.map((entry) => ({
@@ -92,11 +103,11 @@ export const advancedSearchRouter = router({
             code: c.code,
             description: c.description,
             branchCount: c.branchCount,
-            isNonCovered: nonCoveredSet.has(c.code),
+            isNonCovered: !coverageMap.get(c.code),
             branches: c.branches.map((b) => ({
               code: b.branchCode,
               description: b.branchDescription,
-              isNonCovered: nonCoveredSet.has(b.branchCode),
+              isNonCovered: !coverageMap.get(b.branchCode),
             })),
           })),
         }));
@@ -115,7 +126,7 @@ export const advancedSearchRouter = router({
               codeMap.set(c.code, {
                 code: c.code,
                 description: c.description,
-                isNonCovered: c.isNonCovered,
+                isNonCovered: !coverageMap.get(c.code),
                 branches: c.branches,
               });
             }
