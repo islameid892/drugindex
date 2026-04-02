@@ -408,25 +408,14 @@ async function enrichCodesWithBranches(
 
 export async function getAllNonCoveredCodes() {
   const db = await getDb();
-  return db.select({
-    code: nonCoveredCodes.code,
-    description: icdCodes.description,
-  })
-    .from(nonCoveredCodes)
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
-    .orderBy(nonCoveredCodes.code);
+  return db.select().from(nonCoveredCodes);
 }
 
 export async function searchNonCoveredCodes(query: string) {
   const db = await getDb();
   const q = `%${query}%`;
-  return db.select({
-    code: nonCoveredCodes.code,
-    description: icdCodes.description,
-  })
-    .from(nonCoveredCodes)
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
-    .where(or(ciLike(nonCoveredCodes.code, q), ciLike(icdCodes.description, q)))
+  return db.select().from(nonCoveredCodes)
+    .where(or(ciLike(nonCoveredCodes.code, q), ciLike(nonCoveredCodes.description, q)))
     .limit(100);
 }
 
