@@ -4,6 +4,7 @@ import {
   searchCodes,
   searchNonCoveredCodes,
 } from '../db';
+import { checkCoverageMultiple } from '../coverage';
 
 export const bulkRouter = router({
   suggestions: publicProcedure
@@ -35,13 +36,17 @@ export const bulkRouter = router({
     }))
     .mutation(async ({ input }) => {
       const results = [];
+      
+      // Collect all codes to check coverage at once
+      const validCodes = input.items.filter(item => /^[A-Z]\d{2}(\.\d{1,2})?$/i.test(item));
+      const coverageMap = await checkCoverageMultiple(validCodes);
 
       for (const item of input.items) {
         const result: any = {
           input: item,
           type: 'code',
           found: false,
-          isCovered: false,
+          isCovered: true,
           details: {}
         };
 
@@ -57,9 +62,8 @@ export const bulkRouter = router({
               result.found = true;
               result.details.name = code.description;
               
-              // Check if code is covered
-              const nonCoveredCodes = await searchNonCoveredCodes(item);
-              result.isCovered = nonCoveredCodes.length === 0;
+              // Check if code is covered using hierarchical logic
+              result.isCovered = coverageMap.get(item) ?? true;
             }
           } catch (error) {
             console.error('Error querying code:', error);
