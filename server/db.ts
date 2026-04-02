@@ -410,10 +410,10 @@ export async function getAllNonCoveredCodes() {
   const db = await getDb();
   return db.select({
     code: nonCoveredCodes.code,
-    description: icdCodes.description,
+    description: icdBranches.branchDescription,
   })
     .from(nonCoveredCodes)
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
+    .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
     .orderBy(nonCoveredCodes.code);
 }
 
@@ -422,11 +422,11 @@ export async function searchNonCoveredCodes(query: string) {
   const q = `%${query}%`;
   return db.select({
     code: nonCoveredCodes.code,
-    description: icdCodes.description,
+    description: icdBranches.branchDescription,
   })
     .from(nonCoveredCodes)
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
-    .where(or(ciLike(nonCoveredCodes.code, q), ciLike(icdCodes.description, q)))
+    .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
+    .where(or(ciLike(nonCoveredCodes.code, q), ciLike(icdBranches.branchDescription, q)))
     .limit(100);
 }
 
