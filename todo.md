@@ -520,3 +520,17 @@
 - [x] Shows matching drugs with same scientific name and pharmaceutical form
 - [x] Displays trade name, scientific name, form, dose, and price
 - [x] TypeScript compilation clean - no errors
+
+
+## Phase 27: Hierarchical Coverage Logic Implementation
+- [ ] Create centralized isCovered() function with hierarchical logic
+- [ ] Update enrichCodesWithBranches to use hierarchical logic
+- [ ] Update enrichDrugEntriesWithCodes to use hierarchical logic
+- [ ] Implement parent code caching for performance
+- [ ] Update Advanced Search to respect hierarchy
+- [ ] Update all API endpoints to return correct coverage status
+- [ ] Update Frontend components to use new coverage logic
+- [ ] Test hierarchical logic with all test cases
+- [ ] Verify coverage status in browse modals
+- [ ] Verify coverage status in search results
+- [ ] Verify coverage status in advanced search
