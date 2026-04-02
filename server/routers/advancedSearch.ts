@@ -92,11 +92,11 @@ export const advancedSearchRouter = router({
             code: c.code,
             description: c.description,
             branchCount: c.branchCount,
-            isCovered: !nonCoveredSet.has(c.code),
+            isNonCovered: nonCoveredSet.has(c.code),
             branches: c.branches.map((b) => ({
               code: b.branchCode,
               description: b.branchDescription,
-              isCovered: !nonCoveredSet.has(b.branchCode),
+              isNonCovered: nonCoveredSet.has(b.branchCode),
             })),
           })),
         }));
@@ -105,8 +105,8 @@ export const advancedSearchRouter = router({
         const codeMap = new Map<string, {
           code: string;
           description: string;
-          isCovered: boolean;
-          branches: Array<{ code: string; description: string; isCovered: boolean }>;
+          isNonCovered: boolean;
+          branches: Array<{ code: string; description: string; isNonCovered: boolean }>;
         }>();
 
         for (const drug of drugs) {
@@ -115,7 +115,7 @@ export const advancedSearchRouter = router({
               codeMap.set(c.code, {
                 code: c.code,
                 description: c.description,
-                isCovered: c.isCovered,
+                isNonCovered: c.isNonCovered,
                 branches: c.branches,
               });
             }
