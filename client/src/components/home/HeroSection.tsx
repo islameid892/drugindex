@@ -1,7 +1,8 @@
 import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
 import { AdvancedSearchFAB } from "@/components/AdvancedSearchFAB";
-import { Stethoscope } from "lucide-react";
+import { Stethoscope, Zap } from "lucide-react";
+import { useRef } from "react";
 
 interface HeroSectionProps {
   query: string;
@@ -113,15 +114,37 @@ export function HeroSection({
           />
         </div>
 
-        {/* Advanced Search Button */}
-        <div className="mt-4 flex flex-col items-center gap-3">
-          <AdvancedSearchFAB variant="inline" />
-          {/* Drug Lens Button */}
-          <a href="/drug-lens" className="group flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>
+        {/* Action Buttons - Advanced Search & Drug Lens */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 px-4">
+          {/* Advanced Search Button - Enhanced */}
+          <div>
+            <button
+              onClick={() => {
+                const btn = document.querySelector('[data-advanced-search-trigger]') as HTMLButtonElement;
+                btn?.click();
+              }}
+              className="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-500 to-blue-600 hover:from-sky-600 hover:via-blue-600 hover:to-blue-700 text-white font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 min-w-[280px] sm:min-w-[320px] border border-sky-300/30 hover:border-sky-300/60"
+              title="Open Advanced Search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Advanced Search</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+            <div className="hidden">
+              <AdvancedSearchFAB variant="inline" />
+            </div>
+          </div>
+
+          {/* Drug Lens Button - Enhanced */}
+          <a
+            href="/drug-lens"
+            className="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:via-teal-600 hover:to-green-700 text-white font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 min-w-[280px] sm:min-w-[320px] border border-emerald-300/30 hover:border-emerald-300/60"
+            title="Go to Drug Lens"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <span>Drug Lens</span>
-            <span className="text-emerald-200 text-xs font-normal">Drug Reference</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <span className="text-emerald-100 text-xs font-normal">Drug Reference</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
         </div>
       </div>
