@@ -277,3 +277,28 @@ export const drugLens = mysqlTable(
 
 export type DrugLens = typeof drugLens.$inferSelect;
 export type InsertDrugLens = typeof drugLens.$inferInsert;
+
+// Feature Usage Tracking - Track clicks on call-to-action buttons
+
+export const featureUsageTracking = mysqlTable(
+  "feature_usage_tracking",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    featureName: varchar("feature_name", { length: 100 }).notNull(),
+    sessionId: varchar("session_id", { length: 128 }),
+    userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    referrer: varchar("referrer", { length: 500 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    featureNameIdx: index("idx_feature_usage_feature").on(t.featureName),
+    sessionIdIdx: index("idx_feature_usage_session").on(t.sessionId),
+    userIdIdx: index("idx_feature_usage_user").on(t.userId),
+    createdAtIdx: index("idx_feature_usage_created").on(t.createdAt),
+  })
+);
+
+export type FeatureUsageTracking = typeof featureUsageTracking.$inferSelect;
+export type InsertFeatureUsageTracking = typeof featureUsageTracking.$inferInsert;

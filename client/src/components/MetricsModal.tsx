@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Activity, Clock, BarChart3, Users, Search, X } from "lucide-react";
+import { TrendingUp, Activity, Clock, BarChart3, Users, Search, X, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { ResponseTimeChart } from "@/components/charts/ResponseTimeChart";
 import { HourlyActivityChart } from "@/components/charts/HourlyActivityChart";
@@ -20,6 +20,37 @@ const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
   month: "30 Days",
   all: "All Time",
 };
+
+function FeatureUsageStats({ timeFilter }: { timeFilter: TimeFilter }) {
+  const { data: featureStats } = trpc.analytics.getAllFeatureUsageStats.useQuery(
+    { days: timeFilter === "day" ? 1 : timeFilter === "week" ? 7 : timeFilter === "month" ? 30 : 365 },
+    { enabled: true }
+  );
+
+  const features = [
+    { name: "advanced_search", label: "Advanced Search", icon: "🔍", color: "text-blue-600" },
+    { name: "drug_lens", label: "Drug Lens", icon: "💊", color: "text-green-600" },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {features.map((feature) => {
+        const count = featureStats?.find((s: any) => s.feature === feature.name)?.count || 0;
+        return (
+          <div key={feature.name} className="flex items-center justify-between py-2 border-b last:border-0">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{feature.icon}</span>
+              <span className="text-sm font-medium">{feature.label}</span>
+            </div>
+            <div className={`text-lg font-bold ${feature.color}`}>
+              {count.toLocaleString()}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
   const [activeTab, setActiveTab] = useState("metrics");
@@ -273,6 +304,19 @@ export function MetricsModal({ open, onOpenChange }: MetricsModalProps) {
                           <p className="text-sm text-muted-foreground py-2">No searches yet</p>
                         )}
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Feature Usage Stats */}
+                  <Card>
+                    <CardHeader className="pb-2 px-4 pt-4">
+                      <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-amber-600 shrink-0" />
+                        Feature Usage ({TIME_FILTER_LABELS[timeFilter]})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <FeatureUsageStats timeFilter={timeFilter} />
                     </CardContent>
                   </Card>
 

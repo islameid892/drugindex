@@ -50,6 +50,13 @@
       "when": 1775091656697,
       "tag": "0006_salty_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1775257172901,
+      "tag": "0007_strong_morlocks",
+      "breakpoints": true
     }
   ]
 }

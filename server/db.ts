@@ -1305,3 +1305,83 @@ export async function updateUserSession(
     });
   }
 }
+
+// ─── Feature Usage Tracking ────────────────────────────────────────────────────
+
+import { featureUsageTracking, type InsertFeatureUsageTracking } from "../drizzle/schema";
+
+export async function trackFeatureUsage(data: Omit<InsertFeatureUsageTracking, 'createdAt'>) {
+  try {
+    const db = await getDb();
+    await db.insert(featureUsageTracking).values({
+      ...data,
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error("Error tracking feature usage:", error);
+  }
+}
+
+export async function getFeatureUsageStats(featureName: string, days: number = 7) {
+  try {
+    const db = await getDb();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const stats = await db
+      .select({
+        count: count(),
+        feature: featureUsageTracking.featureName,
+      })
+      .from(featureUsageTracking)
+      .where(
+        and(
+          eq(featureUsageTracking.featureName, featureName),
+          gte(featureUsageTracking.createdAt, cutoffDate)
+        )
+      )
+      .groupBy(featureUsageTracking.featureName);
+
+    return stats[0]?.count || 0;
+  } catch (error) {
+    console.error("Error getting feature usage stats:", error);
+    return 0;
+  }
+}
+
+export async function getAllFeatureUsageStats(days: number = 7) {
+  try {
+    const db = await getDb();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const stats = await db
+      .select({
+        feature: featureUsageTracking.featureName,
+        count: count(),
+      })
+      .from(featureUsageTracking)
+      .where(gte(featureUsageTracking.createdAt, cutoffDate))
+      .groupBy(featureUsageTracking.featureName);
+
+    return stats;
+  } catch (error) {
+    console.error("Error getting all feature usage stats:", error);
+    return [];
+  }
+}
+
+export async function getTotalFeatureUsageCount(featureName: string) {
+  try {
+    const db = await getDb();
+    const result = await db
+      .select({ count: count() })
+      .from(featureUsageTracking)
+      .where(eq(featureUsageTracking.featureName, featureName));
+
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("Error getting total feature usage count:", error);
+    return 0;
+  }
+}

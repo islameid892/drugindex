@@ -395,5 +395,57 @@ export const appRouter = router({
         console.log('[Analytics] Search recorded successfully');
         return { success: true };
       }),
+
+    trackFeatureUsage: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+        sessionId: z.string().optional(),
+        ipAddress: z.string().optional(),
+        userAgent: z.string().optional(),
+        referrer: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { trackFeatureUsage } = await import("./db");
+        await trackFeatureUsage({
+          featureName: input.featureName,
+          sessionId: input.sessionId,
+          userId: ctx.user?.id,
+          ipAddress: input.ipAddress,
+          userAgent: input.userAgent,
+          referrer: input.referrer,
+        });
+        return { success: true };
+      }),
+
+    getFeatureUsageStats: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+        days: z.number().default(7),
+      }))
+      .query(async ({ input }) => {
+        const { getFeatureUsageStats } = await import("./db");
+        const count = await getFeatureUsageStats(input.featureName, input.days);
+        return { featureName: input.featureName, count, days: input.days };
+      }),
+
+    getAllFeatureUsageStats: publicProcedure
+      .input(z.object({
+        days: z.number().default(7),
+      }))
+      .query(async ({ input }) => {
+        const { getAllFeatureUsageStats } = await import("./db");
+        const stats = await getAllFeatureUsageStats(input.days);
+        return stats;
+      }),
+
+    getTotalFeatureUsageCount: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getTotalFeatureUsageCount } = await import("./db");
+        const count = await getTotalFeatureUsageCount(input.featureName);
+        return { featureName: input.featureName, totalCount: count };
+      }),
   }),
 });

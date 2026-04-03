@@ -2,7 +2,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
 import { AdvancedSearchFAB } from "@/components/AdvancedSearchFAB";
 import { Stethoscope, Zap } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 
 interface HeroSectionProps {
   query: string;
@@ -25,6 +26,23 @@ export function HeroSection({
   trendingSearches,
   children,
 }: HeroSectionProps) {
+  const [advancedSearchCount, setAdvancedSearchCount] = useState(0);
+  const [drugLensCount, setDrugLensCount] = useState(0);
+
+  const { data: featureStats } = trpc.analytics.getAllFeatureUsageStats.useQuery(
+    { days: 7 },
+    { refetchInterval: 60000 }
+  );
+
+  useEffect(() => {
+    if (featureStats) {
+      const advCount = featureStats.find((s: any) => s.feature === "advanced_search")?.count || 0;
+      const drugCount = featureStats.find((s: any) => s.feature === "drug_lens")?.count || 0;
+      setAdvancedSearchCount(advCount);
+      setDrugLensCount(drugCount);
+    }
+  }, [featureStats]);
+
   return (
     <div
       className="relative overflow-hidden rounded-3xl border border-sky-100 dark:border-sky-800/60 shadow-xl animate-in fade-in slide-in-from-top-4 duration-700"
@@ -120,6 +138,13 @@ export function HeroSection({
           <div>
             <button
               onClick={() => {
+                trpc.analytics.trackFeatureUsage.useMutation().mutate({
+                  featureName: "advanced_search",
+                  userAgent: navigator.userAgent,
+                  referrer: document.referrer,
+                }, {
+                  onError: (err: any) => console.error("Failed to track feature usage:", err),
+                });
                 const btn = document.querySelector('[data-advanced-search-trigger]') as HTMLButtonElement;
                 btn?.click();
               }}
@@ -129,6 +154,11 @@ export function HeroSection({
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span>Advanced Search</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              {advancedSearchCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-sky-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                  {advancedSearchCount > 999 ? `${(advancedSearchCount / 1000).toFixed(1)}K` : advancedSearchCount}
+                </span>
+              )}
             </button>
             <div className="hidden">
               <AdvancedSearchFAB variant="inline" />
@@ -138,6 +168,15 @@ export function HeroSection({
           {/* Drug Lens Button - Enhanced */}
           <a
             href="/drug-lens"
+            onClick={() => {
+              trpc.analytics.trackFeatureUsage.useMutation().mutate({
+                featureName: "drug_lens",
+                userAgent: navigator.userAgent,
+                referrer: document.referrer,
+              }, {
+                onError: (err: any) => console.error("Failed to track feature usage:", err),
+              });
+            }}
             className="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:via-teal-600 hover:to-green-700 text-white font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 min-w-[280px] sm:min-w-[320px] border border-emerald-300/30 hover:border-emerald-300/60"
             title="Go to Drug Lens"
           >
@@ -145,6 +184,11 @@ export function HeroSection({
             <span>Drug Lens</span>
             <span className="text-emerald-100 text-xs font-normal">Drug Reference</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            {drugLensCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                {drugLensCount > 999 ? `${(drugLensCount / 1000).toFixed(1)}K` : drugLensCount}
+              </span>
+            )}
           </a>
         </div>
       </div>
