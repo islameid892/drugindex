@@ -1,6 +1,6 @@
 import { SearchBar } from "@/components/SearchBar";
 import { SearchSuggestions } from "@/components/SearchSuggestions";
-import { AdvancedSearchFAB } from "@/components/AdvancedSearchFAB";
+import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Stethoscope, Zap } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
@@ -164,9 +164,7 @@ export function HeroSection({
                 </span>
               )}
             </button>
-            {isAdvancedSearchOpen && (
-              <AdvancedSearchFAB variant="inline" />
-            )}
+            <AdvancedSearchModal isOpen={isAdvancedSearchOpen} onClose={() => setIsAdvancedSearchOpen(false)} />
           </div>
 
           {/* Drug Lens Button - Enhanced */}
