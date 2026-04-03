@@ -3,8 +3,11 @@ import { z } from 'zod';
 import {
   searchCodes,
   searchNonCoveredCodes,
+  getDb,
 } from '../db';
 import { checkCoverageMultiple } from '../coverage';
+import { drugEntries } from '../../drizzle/schema';
+import { like } from 'drizzle-orm';
 
 export const bulkRouter = router({
   suggestions: publicProcedure
@@ -40,12 +43,16 @@ export const bulkRouter = router({
       // Collect all codes to check coverage at once
       const validCodes = input.items.filter(item => /^[A-Z]\d{2}(\.\d{1,2})?$/i.test(item));
       const coverageMap = await checkCoverageMultiple(validCodes);
+      
+      // Get database connection
+      const db = await getDb();
 
       for (const item of input.items) {
         const result: any = {
           input: item,
           type: 'code',
           found: false,
+          status: 'Not Associated with Any Drug',
           isCovered: true,
           details: {}
         };
@@ -63,7 +70,36 @@ export const bulkRouter = router({
               result.details.name = code.description;
               
               // Check if code is covered using hierarchical logic
-              result.isCovered = coverageMap.get(item) ?? true;
+              const isCovered = coverageMap.get(item) ?? true;
+              result.isCovered = isCovered;
+              result.status = isCovered ? 'Covered' : 'Not Covered';
+              
+              // Check if code is associated with any drugs
+              const drugRows = await db
+                .select()
+                .from(drugEntries)
+                .where(like(drugEntries.icdCodesRaw, `%${item}%`));
+              const drugCount = drugRows.length;
+              
+              if (drugCount === 0) {
+                // Check if parent code has drugs (only for child codes)
+                const parentCode = item.includes('.') ? item.split('.')[0] : null;
+                if (parentCode) {
+                  const parentDrugRows = await db
+                    .select()
+                    .from(drugEntries)
+                    .where(like(drugEntries.icdCodesRaw, `%${parentCode}%`));
+                  const parentDrugCount = parentDrugRows.length;
+                  
+                  if (parentDrugCount === 0) {
+                    result.status = 'Not Associated with Any Drug';
+                  }
+                  // else: child has no drugs but parent has drugs, keep coverage status
+                } else {
+                  // Parent code with no drugs
+                  result.status = 'Not Associated with Any Drug';
+                }
+              }
             }
           } catch (error) {
             console.error('Error querying code:', error);
@@ -73,7 +109,7 @@ export const bulkRouter = router({
         results.push(result);
       }
 
-      return results;
+      return results as any;
     }),
 
   exportResults: publicProcedure
