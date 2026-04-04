@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { Streamdown } from "streamdown";
 
 interface Message {
   id: string;
@@ -150,7 +151,13 @@ export default function SilaChatbot() {
                       : "bg-white dark:bg-slate-700 text-slate-900 dark:text-white border border-sky-100 dark:border-sky-700 rounded-bl-none"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+                  <div className="text-sm leading-relaxed break-words prose prose-sm dark:prose-invert max-w-none">
+                    {message.role === "assistant" ? (
+                      <Streamdown>{message.content}</Streamdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between gap-2 mt-1">
                     <p
                       className={`text-xs ${
