@@ -12,6 +12,7 @@ import { monitoringRouter } from "./routers/monitoring";
 import { advancedCachingRouter } from "./routers/advancedCaching";
 import { askSilaRouter } from "./routers/askSila";
 import { drugLensRouter } from "./routers/drugLens";
+import { generateSilaApiKey, getAllSilaApiKeys, deactivateSilaApiKey, deleteSilaApiKey } from "./db";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -54,6 +55,32 @@ export const appRouter = router({
   advancedCaching: advancedCachingRouter,
   askSila: askSilaRouter,
   drugLens: drugLensRouter,
+  silaApiKeys: router({
+    generate: publicProcedure
+      .input(z.object({
+        keyName: z.string().min(1),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await generateSilaApiKey(input.keyName, input.description);
+      }),
+    
+    getAll: publicProcedure.query(async () => {
+      return await getAllSilaApiKeys();
+    }),
+    
+    deactivate: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deactivateSilaApiKey(input.id);
+      }),
+    
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteSilaApiKey(input.id);
+      }),
+  }),
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

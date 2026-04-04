@@ -302,3 +302,27 @@ export const featureUsageTracking = mysqlTable(
 
 export type FeatureUsageTracking = typeof featureUsageTracking.$inferSelect;
 export type InsertFeatureUsageTracking = typeof featureUsageTracking.$inferInsert;
+
+// ─── API Keys for Sila Chat ────────────────────────────────────────────────────
+
+export const silaApiKeys = mysqlTable(
+  "sila_api_keys",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    keyHash: varchar("key_hash", { length: 255 }).notNull().unique(),
+    keyName: varchar("key_name", { length: 100 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    lastUsedAt: timestamp("last_used_at"),
+    usageCount: int("usage_count").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    keyHashIdx: index("idx_sila_key_hash").on(t.keyHash),
+    isActiveIdx: index("idx_sila_is_active").on(t.isActive),
+  })
+);
+
+export type SilaApiKey = typeof silaApiKeys.$inferSelect;
+export type InsertSilaApiKey = typeof silaApiKeys.$inferInsert;

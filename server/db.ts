@@ -1385,3 +1385,93 @@ export async function getTotalFeatureUsageCount(featureName: string) {
     return 0;
   }
 }
+
+
+// ─── Sila API Key Management ───────────────────────────────────────────────
+
+import crypto from 'crypto';
+import { silaApiKeys } from '../drizzle/schema';
+
+/**
+ * Generate a new API key for Sila Chat
+ * Returns both the raw key (to show to user once) and the hash (to store in DB)
+ */
+export async function generateSilaApiKey(keyName: string, description?: string) {
+  const db = await getDb();
+  const rawKey = crypto.randomBytes(32).toString('hex');
+  const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+  
+  const result = await db.insert(silaApiKeys).values({
+    keyHash,
+    keyName,
+    description,
+    isActive: true,
+  });
+  
+  const insertedId = Array.isArray(result) && result.length > 0 ? Number(result[0]) : Number((result as any)?.insertId || (result as any)?.id || 0);
+  
+  return {
+    id: insertedId,
+    rawKey,
+    keyName,
+    createdAt: new Date(),
+  };
+}
+
+/**
+ * Verify an API key and update usage stats
+ */
+export async function verifySilaApiKey(rawKey: string) {
+  const db = await getDb();
+  const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+  
+  const result = await db.select().from(silaApiKeys)
+    .where(and(
+      eq(silaApiKeys.keyHash, keyHash),
+      eq(silaApiKeys.isActive, true)
+    ));
+  
+  const apiKey = result[0];
+  
+  if (!apiKey) {
+    return null;
+  }
+  
+  // Update usage stats
+  await db.update(silaApiKeys)
+    .set({
+      lastUsedAt: new Date(),
+      usageCount: apiKey.usageCount + 1,
+    })
+    .where(eq(silaApiKeys.id, apiKey.id));
+  
+  return apiKey;
+}
+
+/**
+ * Get all Sila API keys (for admin panel)
+ */
+export async function getAllSilaApiKeys() {
+  const db = await getDb();
+  return await db.select().from(silaApiKeys)
+    .orderBy(desc(silaApiKeys.createdAt));
+}
+
+/**
+ * Deactivate an API key
+ */
+export async function deactivateSilaApiKey(id: number) {
+  const db = await getDb();
+  return await db.update(silaApiKeys)
+    .set({ isActive: false })
+    .where(eq(silaApiKeys.id, id));
+}
+
+/**
+ * Delete an API key
+ */
+export async function deleteSilaApiKey(id: number) {
+  const db = await getDb();
+  return await db.delete(silaApiKeys)
+    .where(eq(silaApiKeys.id, id));
+}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getDb } from "../db";
+import { getDb, verifySilaApiKey } from "../db";
 import { drugLens, drugEntries, icdCodes, nonCoveredCodes } from "../../drizzle/schema";
 import { like, or, and, ilike } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
@@ -32,11 +32,20 @@ export const askSilaRouter = router({
           )
           .optional()
           .default([]),
+        apiKey: z.string().optional(), // Optional API Key for external Sila access
       })
     )
     .mutation(async ({ input }) => {
       try {
-        const { message, conversationHistory } = input;
+        const { message, conversationHistory, apiKey } = input;
+        
+        // Verify API Key if provided (for external Sila access)
+        if (apiKey) {
+          const isValid = await verifySilaApiKey(apiKey);
+          if (!isValid) {
+            throw new Error('Invalid or inactive API Key');
+          }
+        }
 
         // 1. Search database for relevant context
         const dbContext = await searchDatabase(message);
