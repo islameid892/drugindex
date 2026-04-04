@@ -71,7 +71,7 @@ export function HeroSection({
       <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-sky-300/20 dark:bg-sky-500/10 blur-3xl pointer-events-none" />
 
       {/* Content */}
-      <div className="relative px-6 pt-12 pb-10 md:px-14 md:pt-16 md:pb-12 text-center">
+      <div className="relative px-6 pt-12 pb-6 md:px-14 md:pt-16 md:pb-6 text-center">
 
         {/* Eyebrow label */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full bg-sky-600/10 dark:bg-sky-400/10 border border-sky-200 dark:border-sky-700/60">
@@ -202,7 +202,7 @@ export function HeroSection({
 
       {/* Browse by Category — rendered as children */}
       {children && (
-        <div className="relative border-t border-sky-100 dark:border-sky-800/40 px-6 py-8 md:px-14">
+        <div className="relative border-t border-sky-100 dark:border-sky-800/40 px-6 py-4 md:px-14">
           {children}
         </div>
       )}
