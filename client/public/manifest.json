@@ -1,22 +1,31 @@
 {
-  "name": "ICD-10 Search Engine",
-  "short_name": "DRUGINDEX",
-  "description": "Comprehensive ICD-10 medical coding and drug reference search engine. Search by scientific name, trade name, indication, or ICD-10 code.",
+  "name": "Drugindex.click - ICD-10 Medical Search",
+  "short_name": "Drugindex.click",
+  "description": "Comprehensive ICD-10 medical coding and drug reference search engine. Search medications by scientific name, trade name, indication, or ICD-10 code instantly.",
+  "version": "2.0.0",
+  "build_timestamp": "2026-03-18T13:53:15Z",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#0EA5E9",
+  "background_color": "#0078DB",
+  "theme_color": "#0078DB",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/icon-192.png?v=2.0.0",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png?v=2.0.0",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon.png",
+      "src": "/icon-512.png?v=2.0.0",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -25,16 +34,16 @@
   "categories": ["medical", "productivity", "reference"],
   "screenshots": [
     {
-      "src": "/icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/icon.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ],
   "shortcuts": [
@@ -42,37 +51,27 @@
       "name": "Search Drugs",
       "short_name": "Drugs",
       "description": "Search medications by scientific or trade name",
-      "url": "/?tab=drugs",
+      "url": "/?shortcut=search-drugs",
       "icons": [
         {
-          "src": "/icon.png",
-          "sizes": "512x512",
+          "src": "/icon-192.png?v=2.0.0",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
     },
     {
-      "name": "Search Codes",
-      "short_name": "Codes",
-      "description": "Search ICD-10 codes and diagnoses",
-      "url": "/?tab=codes",
+      "name": "Bulk Verify",
+      "short_name": "Verify",
+      "description": "Verify multiple ICD-10 codes at once",
+      "url": "/bulk-verify?shortcut=bulk-verify",
       "icons": [
         {
-          "src": "/icon.png",
-          "sizes": "512x512",
+          "src": "/icon-192.png?v=2.0.0",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
     }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  ]
 }

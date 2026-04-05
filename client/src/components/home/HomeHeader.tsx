@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Pill, Activity, Database, BarChart3, Heart, Moon, Sun } from "lucide-react";
+import { Stethoscope, Pill, Activity, Database, BarChart3, Heart, Moon, Sun, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -10,10 +10,10 @@ interface HomeHeaderProps {
     conditions: number;
     codes: number;
   };
-  onAnalyticsClick: () => void;
+  isStale?: boolean;
 }
 
-export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
+export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
   const { favorites } = useFavorites();
   const { theme, toggleTheme } = useTheme();
 
@@ -34,17 +34,17 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
           
           {/* Desktop Stats and Favorites */}
           <div className="flex items-center gap-3 text-xs font-medium text-foreground hidden md:flex">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Pill className="h-4 w-4 text-sky-600" />
               <span className="font-semibold text-sky-900 dark:text-sky-100">{stats.medications.toLocaleString()}</span>
               <span className="text-sky-700 dark:text-sky-300">Meds</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Activity className="h-4 w-4 text-emerald-600" />
               <span className="font-semibold text-emerald-900 dark:text-emerald-100">{stats.conditions.toLocaleString()}</span>
               <span className="text-emerald-700 dark:text-emerald-300">Conditions</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950 transition-opacity duration-300 ${isStale ? 'opacity-60' : 'opacity-100'}`}>
               <Database className="h-4 w-4 text-purple-600" />
               <span className="font-semibold text-purple-900 dark:text-purple-100">{stats.codes.toLocaleString()}</span>
               <span className="text-purple-700 dark:text-purple-300">Codes</span>
@@ -64,15 +64,17 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
               )}
               <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAnalyticsClick}
-              className="gap-2 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </Button>
+            <Link href="/metrics">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950"
+                title="Performance Metrics Dashboard"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Metrics
+              </Button>
+            </Link>
             <Link href="/favorites">
               <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
                 <Heart className="h-4 w-4" />
@@ -108,14 +110,16 @@ export function HomeHeader({ stats, onAnalyticsClick }: HomeHeaderProps) {
                 <Moon className="h-3 w-3" />
               )}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAnalyticsClick}
-              className="gap-1 border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-400 dark:hover:bg-sky-950 h-8 px-2"
-            >
-              <BarChart3 className="h-3 w-3" />
-            </Button>
+            <Link href="/metrics">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950 h-8 px-2"
+                title="Performance Metrics"
+              >
+                <TrendingUp className="h-3 w-3" />
+              </Button>
+            </Link>
             <Link href="/favorites">
               <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950 h-8 px-2">
                 <Heart className="h-3 w-3" />

@@ -1,0 +1,9 @@
+{
+  "query": "SELECT DISTINCT de.indication, COUNT(DISTINCT de.id) as medication_count\nFROM drug_entries de\nWHERE de.icd_codes_raw = '' \n  AND de.indication IS NOT NULL \n  AND de.indication != ''\nGROUP BY de.indication\nORDER BY medication_count DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT de.indication, COUNT(DISTINCT de.id) as medication_count\nFROM drug_entries de\nWHERE de.icd_codes_raw = '' \n  AND de.indication IS NOT NULL \n  AND de.indication != ''\nGROUP BY de.indication\nORDER BY medication_count DESC",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

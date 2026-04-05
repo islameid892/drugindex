@@ -1,0 +1,38 @@
+{
+  "query": "SELECT DATE(createdAt) as date, COUNT(*) as count FROM search_analytics GROUP BY DATE(createdAt) ORDER BY date DESC LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DATE(createdAt) as date, COUNT(*) as count FROM search_analytics GROUP BY DATE(createdAt) ORDER BY date DESC LIMIT 10",
+  "rows": [
+    {
+      "date": "2026-03-07",
+      "count": "35"
+    },
+    {
+      "date": "2026-03-06",
+      "count": "4"
+    },
+    {
+      "date": "2026-03-05",
+      "count": "35"
+    },
+    {
+      "date": "2026-03-04",
+      "count": "25"
+    },
+    {
+      "date": "2026-03-02",
+      "count": "7"
+    },
+    {
+      "date": "2026-03-01",
+      "count": "43"
+    },
+    {
+      "date": "2026-02-28",
+      "count": "41"
+    }
+  ],
+  "messages": [],
+  "stdout": "date\tcount\n2026-03-07\t35\n2026-03-06\t4\n2026-03-05\t35\n2026-03-04\t25\n2026-03-02\t7\n2026-03-01\t43\n2026-02-28\t41\n",
+  "stderr": "",
+  "execution_time_ms": 1601
+}

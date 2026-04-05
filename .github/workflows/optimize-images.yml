@@ -1,0 +1,71 @@
+name: Optimize Images on Push
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'client/public/**/*.{png,jpg,jpeg,gif}'
+      - '.github/workflows/optimize-images.yml'
+
+jobs:
+  optimize-images:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run image optimization
+        run: pnpm run optimize:images
+
+      - name: Check for changes
+        id: verify
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit optimized images
+        if: steps.verify.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Image Optimizer Bot"
+          git add client/public/**/*.webp
+          git commit -m "chore: optimize images - convert to WebP format"
+
+      - name: Push changes
+        if: steps.verify.outputs.has_changes == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Generate optimization report
+        run: |
+          echo "## Image Optimization Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Images have been automatically optimized and converted to WebP format" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Performance Improvements:" >> $GITHUB_STEP_SUMMARY
+          echo "- WebP format provides 25-35% better compression than PNG/JPG" >> $GITHUB_STEP_SUMMARY
+          echo "- Automatic optimization on every push ensures best practices" >> $GITHUB_STEP_SUMMARY
+          echo "- Original files kept as fallback for compatibility" >> $GITHUB_STEP_SUMMARY

@@ -20,7 +20,7 @@ export default function Home() {
   const [showBulkVerification, setShowBulkVerification] = useState(false);
 
   const search = useHomeSearch();
-  const { stats, loading } = useHomeStats();
+  const { stats, loading, isStale } = useHomeStats();
 
   // Set page title for SEO
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function Home() {
       {/* Header */}
       <HomeHeader 
         stats={stats} 
-        onAnalyticsClick={() => setShowDashboard(true)}
+        isStale={isStale}
       />
 
       <main className="flex-1 container py-12 space-y-12">
@@ -121,6 +121,7 @@ export default function Home() {
             currentPage={search.currentPage}
             totalPages={search.totalPages}
             onPageChange={search.setCurrentPage}
+            searchResponse={search.searchResponse}
           />
         )}
       </main>

@@ -1,0 +1,210 @@
+{
+  "query": "SELECT DISTINCT de.indication, COUNT(DISTINCT de.id) as medication_count\nFROM drug_entries de\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND de.id NOT IN (SELECT DISTINCT drug_entry_id FROM drug_entry_codes)\nGROUP BY de.indication\nORDER BY medication_count DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT de.indication, COUNT(DISTINCT de.id) as medication_count\nFROM drug_entries de\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND de.id NOT IN (SELECT DISTINCT drug_entry_id FROM drug_entry_codes)\nGROUP BY de.indication\nORDER BY medication_count DESC",
+  "rows": [
+    {
+      "indication": "POSTOPERATIVE PAIN",
+      "medication_count": "484"
+    },
+    {
+      "indication": "MENSTRUAL DISORDERS",
+      "medication_count": "475"
+    },
+    {
+      "indication": "RENAL TRANSPLANT",
+      "medication_count": "420"
+    },
+    {
+      "indication": "LIVER CIRRHOSIS",
+      "medication_count": "148"
+    },
+    {
+      "indication": "GASTRIC CANCER",
+      "medication_count": "108"
+    },
+    {
+      "indication": "AMYLOIDOSIS - LIGHT CHAIN",
+      "medication_count": "89"
+    },
+    {
+      "indication": "SARCOIDOSIS",
+      "medication_count": "81"
+    },
+    {
+      "indication": "POMPE DISEASE (LOPD)",
+      "medication_count": "59"
+    },
+    {
+      "indication": "ANEMIA IN CHRONIC KIDNEY DISEASE",
+      "medication_count": "46"
+    },
+    {
+      "indication": "INFECTIOUS UVEITIS",
+      "medication_count": "44"
+    },
+    {
+      "indication": "PARATHYROID CANCER - HYPERCALCEMIA",
+      "medication_count": "30"
+    },
+    {
+      "indication": "GASTRIC CANCER-HYPERSENSITIVITY REACTIONS, CUTANEOUS REACTIONS, FLUID RETENTION",
+      "medication_count": "29"
+    },
+    {
+      "indication": "POMPE DISEASE (IOPD/LOPD)",
+      "medication_count": "27"
+    },
+    {
+      "indication": "CONTRAST IMAGING",
+      "medication_count": "21"
+    },
+    {
+      "indication": "CHRONIC KIDNEY DISEASE ASSOCIATED ANEMIA",
+      "medication_count": "21"
+    },
+    {
+      "indication": "VAGINAL AND VULVAR CANCERS",
+      "medication_count": "14"
+    },
+    {
+      "indication": "MRI CONTRAST",
+      "medication_count": "10"
+    },
+    {
+      "indication": "GASTRIC CANCER-CHOLINERGIC SIDE EFFECTS",
+      "medication_count": "9"
+    },
+    {
+      "indication": "HYPERAMMONEMIA",
+      "medication_count": "7"
+    },
+    {
+      "indication": "SCLERODERMA WITH LUNG INVOLVEMENT",
+      "medication_count": "6"
+    },
+    {
+      "indication": "Neurofibromatosis Type 2",
+      "medication_count": "6"
+    },
+    {
+      "indication": "GASTRIC CANCER-RENAL TOXICITY",
+      "medication_count": "6"
+    },
+    {
+      "indication": "LONG-TERM DRUG USE",
+      "medication_count": "6"
+    },
+    {
+      "indication": "PREVENTION AND CHEMOPROPHYLAXIS OF BACTERIAL MENINGITIS- STREPTOCOCCUS B CARRIER STATE COMPLICATING PREGNANCY, CHILDBIRTH AND THE PUERPERIUM",
+      "medication_count": "4"
+    },
+    {
+      "indication": "ERECTILE DYSFUNCTION",
+      "medication_count": "3"
+    },
+    {
+      "indication": "DRY EYE",
+      "medication_count": "3"
+    },
+    {
+      "indication": "FABRY DISEASE",
+      "medication_count": "2"
+    },
+    {
+      "indication": "BILE ACID DISORDER",
+      "medication_count": "2"
+    },
+    {
+      "indication": "AMYLOIDOSIS - HEREDITARY WILD-TYPE TRANSTHYRETIN-RELATED (hATTR)",
+      "medication_count": "2"
+    },
+    {
+      "indication": "ANEMIA DUE TO BETA-THALASSEMIA AND ANEMIA DUE TO MDS",
+      "medication_count": "2"
+    },
+    {
+      "indication": "LIVER FIBROSIS/CIRRHOSIS",
+      "medication_count": "2"
+    },
+    {
+      "indication": "COVID-19",
+      "medication_count": "2"
+    },
+    {
+      "indication": "KIDNEY TRANSPLANT",
+      "medication_count": "2"
+    },
+    {
+      "indication": "Neurofibromatosis Type 1",
+      "medication_count": "2"
+    },
+    {
+      "indication": "THYROID EYE DISEASE",
+      "medication_count": "1"
+    },
+    {
+      "indication": "HOMOCYSTINURIA",
+      "medication_count": "1"
+    },
+    {
+      "indication": "PRIMARY HYPEROXALURIA",
+      "medication_count": "1"
+    },
+    {
+      "indication": "LEBER CONGENITAL AMAUROSIS",
+      "medication_count": "1"
+    },
+    {
+      "indication": "HYPERAMMONEMIA/UREA CYCLE DISORDER",
+      "medication_count": "1"
+    },
+    {
+      "indication": "FACTOR XA INHIBITOR REVERSAL",
+      "medication_count": "1"
+    },
+    {
+      "indication": "LONG-TERM NSAID USE",
+      "medication_count": "1"
+    },
+    {
+      "indication": "AMYLOIDOSIS- WILD-TYPE TRANSTHYRETIN-RELATED (ATTR)",
+      "medication_count": "1"
+    },
+    {
+      "indication": "STRONGYLOIDIASIS",
+      "medication_count": "1"
+    },
+    {
+      "indication": "ALS/MOTOR NEURONE DISEASE",
+      "medication_count": "1"
+    },
+    {
+      "indication": "LIVER MRI CONTRAST",
+      "medication_count": "1"
+    },
+    {
+      "indication": "DERMATITIS",
+      "medication_count": "1"
+    },
+    {
+      "indication": "ACUTE PORPHYRIA",
+      "medication_count": "1"
+    },
+    {
+      "indication": "LONG-TERM ASPIRIN USE",
+      "medication_count": "1"
+    },
+    {
+      "indication": "NIEMANN-PICK DISEASE",
+      "medication_count": "1"
+    },
+    {
+      "indication": "PROTEIN C DEFICIENCY",
+      "medication_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "indication\tmedication_count\nPOSTOPERATIVE PAIN\t484\nMENSTRUAL DISORDERS\t475\nRENAL TRANSPLANT\t420\nLIVER CIRRHOSIS\t148\nGASTRIC CANCER\t108\nAMYLOIDOSIS - LIGHT CHAIN\t89\nSARCOIDOSIS\t81\nPOMPE DISEASE (LOPD)\t59\nANEMIA IN CHRONIC KIDNEY DISEASE\t46\nINFECTIOUS UVEITIS\t44\nPARATHYROID CANCER - HYPERCALCEMIA\t30\nGASTRIC CANCER-HYPERSENSITIVITY REACTIONS, CUTANEOUS REACTIONS, FLUID RETENTION\t29\nPOMPE DISEASE (IOPD/LOPD)\t27\nCONTRAST IMAGING\t21\nCHRONIC KIDNEY DISEASE ASSOCIATED ANEMIA\t21\nVAGINAL AND VULVAR CANCERS\t14\nMRI CONTRAST\t10\nGASTRIC CANCER-CHOLINERGIC SIDE EFFECTS\t9\nHYPERAMMONEMIA\t7\nSCLERODERMA WITH LUNG INVOLVEMENT\t6\nNeurofibromatosis Type 2\t6\nGASTRIC CANCER-RENAL TOXICITY\t6\nLONG-TERM DRUG USE\t6\nPREVENTION AND CHEMOPROPHYLAXIS OF BACTERIAL MENINGITIS- STREPTOCOCCUS B CARRIER STATE COMPLICATING PREGNANCY, CHILDBIRTH AND THE PUERPERIUM\t4\nERECTILE DYSFUNCTION\t3\nDRY EYE\t3\nFABRY DISEASE\t2\nBILE ACID DISORDER\t2\nAMYLOIDOSIS - HEREDITARY WILD-TYPE TRANSTHYRETIN-RELATED (hATTR)\t2\nANEMIA DUE TO BETA-THALASSEMIA AND ANEMIA DUE TO MDS\t2\nLIVER FIBROSIS/CIRRHOSIS\t2\nCOVID-19\t2\nKIDNEY TRANSPLANT\t2\nNeurofibromatosis Type 1\t2\nTHYROID EYE DISEASE\t1\nHOMOCYSTINURIA\t1\nPRIMARY HYPEROXALURIA\t1\nLEBER CONGENITAL AMAUROSIS\t1\nHYPERAMMONEMIA/UREA CYCLE DISORDER\t1\nFACTOR XA INHIBITOR REVERSAL\t1\nLONG-TERM NSAID USE\t1\nAMYLOIDOSIS- WILD-TYPE TRANSTHYRETIN-RELATED (ATTR)\t1\nSTRONGYLOIDIASIS\t1\nALS/MOTOR NEURONE DISEASE\t1\nLIVER MRI CONTRAST\t1\nDERMATITIS\t1\nACUTE PORPHYRIA\t1\nLONG-TERM ASPIRIN USE\t1\nNIEMANN-PICK DISEASE\t1\nPROTEIN C DEFICIENCY\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

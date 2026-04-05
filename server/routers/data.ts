@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, searchProcedure, analyticsProcedure } from "../_core/trpc";
 import { z } from "zod";
 import {
   searchMedications,
@@ -15,7 +15,9 @@ import {
   browseConditions,
   browseConditionsCount,
   searchGroupedByScientificName,
+  searchGroupedComprehensive,
 } from "../db";
+import { searchCache, analyticsCache } from "../cache";
 import { drugEntries } from "../../drizzle/schema";
 
 const searchQuerySchema = z.object({
@@ -26,10 +28,19 @@ const searchQuerySchema = z.object({
     .transform((val) => val.replace(/[<>"']/g, "")),
 });
 
+// Add cache stats endpoint for monitoring
+const getCacheStats = () => ({
+  search: searchCache.getStats(),
+  analytics: analyticsCache.getStats(),
+});
+
 export const dataRouter = router({
+  // Cache stats (for monitoring) - with rate limiting
+  cacheStats: analyticsProcedure.query(() => getCacheStats()),
+
   // Drug search (replaces old medications search)
   medications: router({
-    search: publicProcedure
+    search: searchProcedure
       .input(searchQuerySchema.extend({ limit: z.number().optional(), offset: z.number().optional() }))
       .query(async ({ input }) => {
         return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
@@ -116,23 +127,92 @@ export const dataRouter = router({
       return { results, total };
     }),
 
-  // Main search: grouped by scientific name
-  searchGrouped: publicProcedure
+
+  // Main search: grouped by scientific name (with caching and rate limiting)
+  searchGrouped: searchProcedure
     .input(z.object({
       query: z.string().min(1).max(200),
       limit: z.number().optional(),
     }))
-    .query(async ({ input }) => {
-      return await searchGroupedByScientificName(input.query, input.limit ?? 30);
+    .query(async ({ input, ctx }) => {
+      const startTime = Date.now();
+      const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
+      
+      // Check cache first
+      const cached = searchCache.get(cacheKey) as any;
+      if (cached && typeof cached === 'object' && 'medications' in cached) {
+        // Log even cache hits
+        const responseTimeMs = Date.now() - startTime;
+        const { trackSearch } = await import("../db");
+        const totalResults = (cached.medications?.length ?? 0) + (cached.conditions?.length ?? 0) + (cached.codes?.length ?? 0);
+        trackSearch({
+          query: input.query,
+          resultsCount: totalResults,
+          responseTimeMs,
+          userId: ctx.user?.id || null,
+          ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',
+        }).catch(err => console.error('Failed to track search:', err));
+        return cached;
+      }
+      
+      // If not in cache, fetch from database
+      const results = await searchGroupedComprehensive(input.query, input.limit ?? 30);
+      const responseTimeMs = Date.now() - startTime;
+      
+      // Store in cache for future requests
+      searchCache.set(cacheKey, results);
+      
+      // Track search in analytics
+      const { trackSearch } = await import("../db");
+      const totalResults = (results.medications?.length ?? 0) + (results.conditions?.length ?? 0) + (results.codes?.length ?? 0);
+      trackSearch({
+        query: input.query,
+        resultsCount: totalResults,
+        responseTimeMs,
+        userId: ctx.user?.id || null,
+        ipAddress: ctx.req.ip || (ctx.req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown',
+      }).catch(err => console.error('Failed to track search:', err));
+      
+      return results;
     }),
 
-  // Stats
-  stats: publicProcedure.query(async () => {
-    return await getStats();
+
+  // Stats (with caching and rate limiting)
+  stats: analyticsProcedure.query(async () => {
+    const cacheKey = 'stats:all';
+    
+    // Check cache first
+    const cached = analyticsCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
+    // If not in cache, fetch from database
+    const stats = await getStats();
+    
+    // Store in cache
+    analyticsCache.set(cacheKey, stats);
+    
+    return stats;
   }),
 
-  // Dashboard stats (protected)
-  dashboardStats: protectedProcedure.query(async () => {
-    return await getDashboardStats();
+
+  // Dashboard stats (protected, with caching and rate limiting)
+  dashboardStats: protectedProcedure.query(async ({ ctx }) => {
+    const cacheKey = 'stats:dashboard';
+    
+    // Check cache first
+    const cached = analyticsCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
+    // If not in cache, fetch from database
+    const stats = await getDashboardStats();
+    
+    // Store in cache
+    analyticsCache.set(cacheKey, stats);
+    
+    return stats;
   }),
 });

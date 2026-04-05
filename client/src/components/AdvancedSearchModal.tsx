@@ -49,7 +49,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { query: debouncedScientificNameInput, limit: 8 },
     { 
       enabled: debouncedScientificNameInput.length > 0,
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
@@ -58,7 +58,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { scientificName: scientificName || "", query: debouncedTradeNameInput, limit: 10 },
     { 
       enabled: debouncedTradeNameInput.length > 0,
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
@@ -67,7 +67,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
     { scientificName: scientificName || "", tradeNames: tradeName ? [tradeName] : [], query: debouncedIndicationInput || "", limit: 50 },
     { 
       enabled: step === 2 && (scientificName.length > 0 || tradeName.length > 0),
-      staleTime: 30000,
+      staleTime: 0,
       gcTime: 60000,
     }
   );
@@ -164,9 +164,7 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               </div>
               <h1 className="text-3xl font-bold text-foreground">Advanced Search</h1>
             </div>
-            <button onClick={handleClose} className="text-muted-foreground hover:text-foreground transition-colors p-2">
-              <X className="h-6 w-6" />
-            </button>
+
           </div>
         </div>
 
@@ -365,11 +363,11 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                   {results.map((code, idx) => {
                     const isUCode = code.code.startsWith('U');
                     return (
-                    <div key={idx} className={`p-6 border-2 rounded-xl ${isUCode ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-950/20' : 'border-border bg-card'}`}>
+                    <div key={idx} className={`p-6 border-2 rounded-xl ${code.isNonCovered ? 'border-red-400 bg-red-50/50 dark:bg-red-950/20' : isUCode ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-950/20' : 'border-border bg-card'}`}>
                       <div className="flex items-center justify-between gap-4 mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <p className={`font-bold text-lg ${isUCode ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'}`}>{code.code}</p>
+                            <p className={`font-bold text-lg ${code.isNonCovered ? 'text-red-700 dark:text-red-400' : isUCode ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'}`}>{code.code}</p>
                             {isUCode && (
                               <div className="flex items-center gap-1 px-2 py-1 bg-orange-200 dark:bg-orange-900/50 rounded-md">
                                 <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
@@ -398,9 +396,9 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
                             </div>
                           )}
                           {code.branches.map((branch: any, bIdx: number) => (
-                            <div key={bIdx} className="flex items-start justify-between gap-3 p-3 bg-muted/50 rounded-lg">
+                            <div key={bIdx} className={`flex items-start justify-between gap-3 p-3 rounded-lg ${branch.isNonCovered ? 'bg-red-100/50 dark:bg-red-950/30' : 'bg-muted/50'}`}>
                               <div className="flex-1 min-w-0">
-                                <span className="inline-block px-3 py-1.5 bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 rounded-lg font-bold text-base">
+                                <span className={`inline-block px-3 py-1.5 rounded-lg font-bold text-base ${branch.isNonCovered ? 'bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300' : 'bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300'}`}>
                                   {branch.code}
                                 </span>
                                 <p className="text-base text-muted-foreground mt-2">{branch.description}</p>

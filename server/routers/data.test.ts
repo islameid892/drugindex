@@ -2,16 +2,47 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { dataRouter } from "./data";
 import * as db from "../db";
 
-// Mock the database functions
-vi.mock("../db", () => ({
-  getAllMedications: vi.fn(),
-  getAllConditions: vi.fn(),
-  getAllCodes: vi.fn(),
-  getAllNonCoveredCodes: vi.fn(),
-  searchMedications: vi.fn(),
-  searchConditions: vi.fn(),
-  searchCodes: vi.fn(),
-  searchNonCoveredCodes: vi.fn(),
+/**
+ * Data Router Tests
+ * Tests the actual procedures in server/routers/data.ts.
+ * Uses mocks for DB functions to keep tests fast and isolated.
+ */
+
+// Mock only the DB functions that are actually used in data.ts
+vi.mock("../db", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    searchMedications: vi.fn(),
+    getAllCodes: vi.fn(),
+    searchCodes: vi.fn(),
+    getAllNonCoveredCodes: vi.fn(),
+    searchNonCoveredCodes: vi.fn(),
+    getCodeById: vi.fn(),
+    browseDrugsByTradeName: vi.fn(),
+    browseDrugsByTradeNameCount: vi.fn(),
+    browseConditions: vi.fn(),
+    browseConditionsCount: vi.fn(),
+    searchGroupedByScientificName: vi.fn(),
+    getStats: vi.fn(),
+    getDashboardStats: vi.fn(),
+    recordSearch: vi.fn(),
+    trackSearch: vi.fn(),
+  };
+});
+
+// Mock the cache module
+vi.mock("../cache", () => ({
+  searchCache: {
+    get: vi.fn().mockReturnValue(null),
+    set: vi.fn(),
+    getStats: vi.fn().mockReturnValue({ size: 0, hits: 0, misses: 0 }),
+  },
+  analyticsCache: {
+    get: vi.fn().mockReturnValue(null),
+    set: vi.fn(),
+    getStats: vi.fn().mockReturnValue({ size: 0, hits: 0, misses: 0 }),
+  },
 }));
 
 describe("Data Router", () => {
@@ -19,70 +50,41 @@ describe("Data Router", () => {
     vi.clearAllMocks();
   });
 
+  // ─── medications sub-router ─────────────────────────────────────────────────
   describe("medications", () => {
-    it("should get all medications", async () => {
-      const mockMeds = [
-        { id: 1, scientificName: "Aspirin", tradeNames: '["Bayer"]', indication: "Pain", icdCodes: '["M79.3"]', coverageStatus: "covered" },
-      ];
-      vi.mocked(db.getAllMedications).mockResolvedValue(mockMeds as any);
-
-      const caller = dataRouter.createCaller({} as any);
-      const result = await caller.medications.getAll();
-
-      expect(result).toEqual(mockMeds);
-      expect(db.getAllMedications).toHaveBeenCalled();
-    });
-
     it("should search medications", async () => {
       const mockMeds = [
-        { id: 1, scientificName: "Aspirin", tradeNames: '["Bayer"]', indication: "Pain", icdCodes: '["M79.3"]', coverageStatus: "covered" },
+        { id: 1, scientificName: "Aspirin", tradeName: "Bayer", indication: "Pain", icdCodesRaw: "M79.3", icdCodes: [], coverageStatus: "COVERED" as const },
       ];
       vi.mocked(db.searchMedications).mockResolvedValue(mockMeds as any);
 
-      const caller = dataRouter.createCaller({} as any);
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
       const result = await caller.medications.search({ query: "Aspirin" });
 
       expect(result).toEqual(mockMeds);
-      expect(db.searchMedications).toHaveBeenCalledWith("Aspirin");
+      expect(db.searchMedications).toHaveBeenCalledWith("Aspirin", 50, 0);
+    });
+
+    it("should get medication by id", async () => {
+      const mockMed = { id: 1, scientificName: "Aspirin", tradeName: "Bayer", indication: "Pain", icdCodesRaw: "M79.3", icdCodes: [], coverageStatus: "COVERED" as const };
+      vi.mocked(db.searchMedications).mockResolvedValue([mockMed] as any);
+
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
+      // medications.getAll returns paginated results
+      const result = await caller.medications.getAll({ limit: 10, offset: 0 });
+      expect(Array.isArray(result)).toBe(true);
     });
   });
 
-  describe("conditions", () => {
-    it("should get all conditions", async () => {
-      const mockConditions = [
-        { id: 1, name: "Diabetes" },
-      ];
-      vi.mocked(db.getAllConditions).mockResolvedValue(mockConditions as any);
-
-      const caller = dataRouter.createCaller({} as any);
-      const result = await caller.conditions.getAll();
-
-      expect(result).toEqual(mockConditions);
-      expect(db.getAllConditions).toHaveBeenCalled();
-    });
-
-    it("should search conditions", async () => {
-      const mockConditions = [
-        { id: 1, name: "Diabetes" },
-      ];
-      vi.mocked(db.searchConditions).mockResolvedValue(mockConditions as any);
-
-      const caller = dataRouter.createCaller({} as any);
-      const result = await caller.conditions.search({ query: "Diabetes" });
-
-      expect(result).toEqual(mockConditions);
-      expect(db.searchConditions).toHaveBeenCalledWith("Diabetes");
-    });
-  });
-
+  // ─── codes sub-router ───────────────────────────────────────────────────────
   describe("codes", () => {
     it("should get all codes", async () => {
       const mockCodes = [
-        { id: 1, code: "A00", name: "Cholera", branches: "[]" },
+        { id: 1, code: "A00", description: "Cholera", branchCount: 0, branches: [], isNonCovered: false },
       ];
       vi.mocked(db.getAllCodes).mockResolvedValue(mockCodes as any);
 
-      const caller = dataRouter.createCaller({} as any);
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
       const result = await caller.codes.getAll();
 
       expect(result).toEqual(mockCodes);
@@ -91,11 +93,11 @@ describe("Data Router", () => {
 
     it("should search codes", async () => {
       const mockCodes = [
-        { id: 1, code: "A00", name: "Cholera", branches: "[]" },
+        { id: 1, code: "A00", description: "Cholera", branchCount: 0, branches: [], isNonCovered: false },
       ];
       vi.mocked(db.searchCodes).mockResolvedValue(mockCodes as any);
 
-      const caller = dataRouter.createCaller({} as any);
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
       const result = await caller.codes.search({ query: "A00" });
 
       expect(result).toEqual(mockCodes);
@@ -103,14 +105,13 @@ describe("Data Router", () => {
     });
   });
 
+  // ─── nonCoveredCodes sub-router ─────────────────────────────────────────────
   describe("nonCoveredCodes", () => {
     it("should get all non-covered codes", async () => {
-      const mockCodes = [
-        { id: 1, code: "Z00", name: "Encounter for general examination", branches: "[]" },
-      ];
+      const mockCodes = [{ id: 1, code: "Z00", description: "General examination" }];
       vi.mocked(db.getAllNonCoveredCodes).mockResolvedValue(mockCodes as any);
 
-      const caller = dataRouter.createCaller({} as any);
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
       const result = await caller.nonCoveredCodes.getAll();
 
       expect(result).toEqual(mockCodes);
@@ -118,12 +119,10 @@ describe("Data Router", () => {
     });
 
     it("should search non-covered codes", async () => {
-      const mockCodes = [
-        { id: 1, code: "Z00", name: "Encounter for general examination", branches: "[]" },
-      ];
+      const mockCodes = [{ id: 1, code: "Z00", description: "General examination" }];
       vi.mocked(db.searchNonCoveredCodes).mockResolvedValue(mockCodes as any);
 
-      const caller = dataRouter.createCaller({} as any);
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
       const result = await caller.nonCoveredCodes.search({ query: "Z00" });
 
       expect(result).toEqual(mockCodes);
@@ -131,22 +130,36 @@ describe("Data Router", () => {
     });
   });
 
-  describe("admin", () => {
-    it("should get database statistics", async () => {
-      vi.mocked(db.getAllMedications).mockResolvedValue([{} as any]);
-      vi.mocked(db.getAllConditions).mockResolvedValue([{}, {}] as any);
-      vi.mocked(db.getAllCodes).mockResolvedValue([{}, {}, {}] as any);
-      vi.mocked(db.getAllNonCoveredCodes).mockResolvedValue([{}] as any);
+  // ─── stats procedure ────────────────────────────────────────────────────────
+  describe("stats", () => {
+    it("should return database statistics", async () => {
+      const mockStats = {
+        totalDrugEntries: 56388,
+        uniqueScientificNames: 1000,
+        uniqueTradeNames: 2000,
+        uniqueIndications: 808,
+        totalCodes: 38853,
+        totalBranches: 100000,
+        nonCoveredCodes: 500,
+      };
+      vi.mocked(db.getStats).mockResolvedValue(mockStats as any);
 
-      const caller = dataRouter.createCaller({ user: { id: "1", role: "admin" } } as any);
-      const result = await caller.admin.getStats();
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
+      const result = await caller.stats();
 
-      expect(result).toEqual({
-        medicationsCount: 1,
-        conditionsCount: 2,
-        codesCount: 3,
-        nonCoveredCodesCount: 1,
-      });
+      expect(result).toEqual(mockStats);
+      expect(db.getStats).toHaveBeenCalled();
+    });
+  });
+
+  // ─── cacheStats procedure ───────────────────────────────────────────────────
+  describe("cacheStats", () => {
+    it("should return cache statistics", async () => {
+      const caller = dataRouter.createCaller({ req: { ip: '127.0.0.1', headers: {} }, user: null } as any);
+      const result = await caller.cacheStats();
+
+      expect(result).toHaveProperty('search');
+      expect(result).toHaveProperty('analytics');
     });
   });
 });

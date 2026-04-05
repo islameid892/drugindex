@@ -1,0 +1,24 @@
+{
+  "query": "\nSELECT id, trade_name, scientific_name, form, price\nFROM drug_lens\nWHERE id IN (2232, 2239)\nORDER BY id\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nSELECT id, trade_name, scientific_name, form, price\nFROM drug_lens\nWHERE id IN (2232, 2239)\nORDER BY id\n",
+  "rows": [
+    {
+      "id": "2232",
+      "trade_name": "DEXTROSE 5% IV Infusion",
+      "scientific_name": "DEXTROSE",
+      "form": "Infusion",
+      "price": "5.8"
+    },
+    {
+      "id": "2239",
+      "trade_name": "DEXTROSE 5% IV Infusion",
+      "scientific_name": "DEXTROSE,RINGER(S) SOLUTION",
+      "form": "Infusion",
+      "price": "5.8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttrade_name\tscientific_name\tform\tprice\n2232\tDEXTROSE 5% IV Infusion\tDEXTROSE\tInfusion\t5.8\n2239\tDEXTROSE 5% IV Infusion\tDEXTROSE,RINGER(S) SOLUTION\tInfusion\t5.8\n",
+  "stderr": "",
+  "execution_time_ms": 1581
+}

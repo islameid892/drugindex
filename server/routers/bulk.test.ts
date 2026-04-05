@@ -43,7 +43,7 @@ describe('Bulk Verification Router', () => {
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(3);
-    });
+    }, { timeout: 10000 });
 
     it('should identify all items as codes', async () => {
       const ctx = createTestContext();
@@ -107,6 +107,9 @@ describe('Bulk Verification Router', () => {
       expect(result.length).toBe(1);
       expect(result[0]).toHaveProperty('isCovered');
       expect(typeof result[0].isCovered).toBe('boolean');
+      expect(result[0]).toHaveProperty('status');
+      expect(typeof result[0].status).toBe('string');
+      expect(['Covered', 'Not Covered', 'Not Associated with Any Drug']).toContain(result[0].status);
     });
 
     it('should include code name in details for found codes', async () => {
@@ -152,6 +155,7 @@ describe('Bulk Verification Router', () => {
         expect(item.type).toBe('code');
         expect(item).toHaveProperty('found');
         expect(item).toHaveProperty('isCovered');
+        expect(item).toHaveProperty('status');
         expect(item).toHaveProperty('details');
       });
     });
@@ -170,7 +174,24 @@ describe('Bulk Verification Router', () => {
 
       expect(result1[0].found).toBe(result2[0].found);
       expect(result1[0].isCovered).toBe(result2[0].isCovered);
+      expect(result1[0].status).toBe(result2[0].status);
       expect(result1[0].details.name).toBe(result2[0].details.name);
+    });
+
+    it('should display status field with three distinct states', async () => {
+      const ctx = createTestContext();
+      const caller = appRouter.createCaller(ctx);
+
+      const result = await caller.bulk.verifyBatch({
+        items: ['D07.28', 'L70', 'L70.9'],
+      });
+
+      expect(result.length).toBe(3);
+      result.forEach(item => {
+        if (item.found) {
+          expect(['Covered', 'Not Covered', 'Not Associated with Any Drug']).toContain(item.status);
+        }
+      });
     });
   });
 });

@@ -40,9 +40,13 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="ICD-10" />
-    <link rel="icon" type="image/png" href="/icon.png" />
-    <link rel="apple-touch-icon" href="/icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Drugindex.click" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <!-- Apple Touch Icon (iOS PWA - no transparency, solid background) -->
+    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     
     <!-- Hreflang Tags for Language Versions -->
@@ -86,7 +90,7 @@
     <!-- Font Loading Optimization -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
     
     <!-- Font Loading Optimization: Reduce layout shift -->
     <style>
@@ -97,7 +101,6 @@
         font-display: swap;
       }
       body { font-family: 'Inter', 'System Font', sans-serif; }
-      h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', 'System Font', serif; }
     </style>
     
     <!-- Performance Optimization: Preload critical resources -->
@@ -123,6 +126,8 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Ask Sila Medical AI Assistant Chat -->
+    <script defer src="/ask-sila-chat.js"></script>
     <script
       defer
       src="%VITE_ANALYTICS_ENDPOINT%/umami"

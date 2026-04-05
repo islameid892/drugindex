@@ -8,6 +8,10 @@ import { bulkRouter } from "./routers/bulk";
 import { ocrRouter } from "./routers/ocr";
 import { toolsRouter } from "./routers/tools";
 import { advancedSearchRouter } from "./routers/advancedSearch";
+import { monitoringRouter } from "./routers/monitoring";
+import { advancedCachingRouter } from "./routers/advancedCaching";
+import { askSilaRouter } from "./routers/askSila";
+import { drugLensRouter } from "./routers/drugLens";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -37,6 +41,7 @@ async function getRawConnection() {
   return pool.getConnection();
 }
 
+export type AppRouter = typeof appRouter;
 export const appRouter = router({
   system: systemRouter,
   data: dataRouter,
@@ -45,6 +50,10 @@ export const appRouter = router({
   ocr: ocrRouter,
   tools: toolsRouter,
   advancedSearch: advancedSearchRouter,
+  monitoring: monitoringRouter,
+  advancedCaching: advancedCachingRouter,
+  askSila: askSilaRouter,
+  drugLens: drugLensRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -99,44 +108,47 @@ export const appRouter = router({
         const coverageRate = totalSearches > 0 ? Math.round((coveredCount / totalSearches) * 100) : 0;
         const totalCount = totalSearches;
 
-        // 5. Weekly Trends
+        // 5. Weekly Trends - using Drizzle ORM instead of raw connection
         let weeklyTrends: any[] = [];
         try {
-          const conn = await database.connection();
-          const [rows] = await conn.query(`
-            SELECT DATE(createdAt) as date, COUNT(*) as count
-            FROM search_analytics
-            WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-            GROUP BY DATE(createdAt)
-            ORDER BY DATE(createdAt)`);
-          weeklyTrends = (rows as any[])
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const trendsResult = await database
+            .select({
+              date: sql<string>`DATE(search_analytics.createdAt)`,
+              count: sql<number>`COUNT(*)`,
+            })
+            .from(searchAnalytics)
+            .where(gte(searchAnalytics.createdAt, sevenDaysAgo))
+            .groupBy(sql`DATE(search_analytics.createdAt)`)
+            .orderBy(sql`DATE(search_analytics.createdAt)`);
+          weeklyTrends = trendsResult
             .filter((row: any) => row?.date !== null && row?.count !== null)
             .map((row: any) => ({
-              date:  row.date instanceof Date ? row.date.toISOString() : String(row.date),
+              date:  String(row.date),
               count: Number(row.count || 0),
             }));
-          conn.release();
         } catch (e) {
           console.error("Weekly trends query error:", e);
         }
 
-        // 6. Top Searches
+        // 6. Top Searches - using Drizzle ORM instead of raw connection
         let topSearches: any[] = [];
         try {
-          const conn = await database.connection();
-          const [rows] = await conn.query(`
-            SELECT query, COUNT(*) as count
-            FROM search_analytics
-            GROUP BY query
-            ORDER BY count DESC
-            LIMIT 10`);
-          topSearches = (rows as any[])
-            .filter((row: any) => row?.query !== null)
-            .map((row: any) => ({
-              term:  row.query,
-              count: Number(row.count || 0),
-            }));
-          conn.release();
+          const topSearchesResult = await database
+            .select({
+              term: searchAnalytics.query,
+              count: sql<number>`COUNT(*)`,
+            })
+            .from(searchAnalytics)
+            .where(isNotNull(searchAnalytics.query))
+            .groupBy(searchAnalytics.query)
+            .orderBy(sql`COUNT(*) DESC`)
+            .limit(10);
+          topSearches = topSearchesResult.map((row: any) => ({
+            term:  row.term,
+            count: Number(row.count || 0),
+          }));
         } catch (e) {
           console.error("Top searches query error:", e);
         }
@@ -212,10 +224,16 @@ export const appRouter = router({
           .where(gte(searchAnalytics.createdAt, sql`DATE_SUB(NOW(), INTERVAL 7 DAY)`));
         const searchesThisWeek = Number(weekSearchesResult[0]?.count) || 0;
 
+        // Get today's start time in UTC
+        const todayStart = new Date();
+        todayStart.setUTCHours(0, 0, 0, 0);
+        const todayEnd = new Date(todayStart);
+        todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
+        
         const todaySearchesResult = await database
           .select({ count: count() })
           .from(searchAnalytics)
-          .where(sql`DATE(${searchAnalytics.createdAt}) = CURDATE()`);
+          .where(sql`${searchAnalytics.createdAt} >= ${todayStart} AND ${searchAnalytics.createdAt} < ${todayEnd}`);
         const searchesToday = Number(todaySearchesResult[0]?.count) || 0;
 
         // 2. Registered Users
@@ -363,14 +381,71 @@ export const appRouter = router({
       .input(z.object({
         query: z.string(),
         resultCount: z.number(),
-        responseTime: z.number().optional(),
+        responseTime: z.number().default(0),
       }))
       .mutation(async ({ input }) => {
-        return await recordSearch({
+        const searchData = {
           query: input.query,
           resultsCount: input.resultCount,
+          responseTimeMs: input.responseTime || 0,
           searchType: "general",
+        };
+        console.log('[Analytics] Recording search from mutation:', searchData);
+        await recordSearch(searchData);
+        console.log('[Analytics] Search recorded successfully');
+        return { success: true };
+      }),
+
+    trackFeatureUsage: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+        sessionId: z.string().optional(),
+        ipAddress: z.string().optional(),
+        userAgent: z.string().optional(),
+        referrer: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { trackFeatureUsage } = await import("./db");
+        await trackFeatureUsage({
+          featureName: input.featureName,
+          sessionId: input.sessionId,
+          userId: ctx.user?.id,
+          ipAddress: input.ipAddress,
+          userAgent: input.userAgent,
+          referrer: input.referrer,
         });
+        return { success: true };
+      }),
+
+    getFeatureUsageStats: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+        days: z.number().default(7),
+      }))
+      .query(async ({ input }) => {
+        const { getFeatureUsageStats } = await import("./db");
+        const count = await getFeatureUsageStats(input.featureName, input.days);
+        return { featureName: input.featureName, count, days: input.days };
+      }),
+
+    getAllFeatureUsageStats: publicProcedure
+      .input(z.object({
+        days: z.number().default(7),
+      }))
+      .query(async ({ input }) => {
+        const { getAllFeatureUsageStats } = await import("./db");
+        const stats = await getAllFeatureUsageStats(input.days);
+        return stats;
+      }),
+
+    getTotalFeatureUsageCount: publicProcedure
+      .input(z.object({
+        featureName: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const { getTotalFeatureUsageCount } = await import("./db");
+        const count = await getTotalFeatureUsageCount(input.featureName);
+        return { featureName: input.featureName, totalCount: count };
       }),
   }),
 });
