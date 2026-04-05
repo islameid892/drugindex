@@ -79,7 +79,7 @@ export const icdCodes = mysqlTable(
   "icd_codes",
   {
     id: int("id").autoincrement().primaryKey(),
-    code: varchar("code", { length: 20 }).notNull().unique(),
+    code: varchar("code", { length: 255 }).notNull().unique(),
     description: text("description").notNull(),
     branchCount: int("branch_count").notNull().default(0),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
