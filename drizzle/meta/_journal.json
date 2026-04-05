@@ -57,6 +57,48 @@
       "when": 1775257172901,
       "tag": "0007_strong_morlocks",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1775261746442,
+      "tag": "0008_rainy_veda",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1775350666255,
+      "tag": "0009_tiny_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1775352532587,
+      "tag": "0010_sparkling_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1775354327267,
+      "tag": "0011_wide_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1775354612585,
+      "tag": "0012_motionless_nightmare",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1775354785057,
+      "tag": "0013_curved_imperial_guard",
+      "breakpoints": true
     }
   ]
 }

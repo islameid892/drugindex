@@ -1,0 +1,1 @@
+ALTER TABLE `icd_codes` MODIFY COLUMN `code` varchar(20) NOT NULL;
