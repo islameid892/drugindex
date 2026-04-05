@@ -79,7 +79,7 @@ export const icdCodes = mysqlTable(
   "icd_codes",
   {
     id: int("id").autoincrement().primaryKey(),
-    code: varchar("code", { length: 255 }).notNull().unique(),
+    code: varchar("code", { length: 20 }).notNull().unique(),
     description: text("description").notNull(),
     branchCount: int("branch_count").notNull().default(0),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -113,8 +113,6 @@ export type IcdBranch = typeof icdBranches.$inferSelect;
 export type InsertIcdBranch = typeof icdBranches.$inferInsert;
 
 // ─── Non-Covered Codes ─────────────────────────────────────────────────────────
-// Links non-covered codes to their corresponding ICD-10 codes and branches
-// This ensures data synchronization when icd_codes or icd_branches are updated
 
 export const nonCoveredCodes = mysqlTable(
   "non_covered_codes",
@@ -122,33 +120,15 @@ export const nonCoveredCodes = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     code: varchar("code", { length: 20 }).notNull().unique(),
     description: text("description").notNull(),
-    // Foreign key to icd_codes (for main codes like E11, F10, etc.)
-    icdCodeId: int("icd_code_id").references(() => icdCodes.id, { onDelete: "set null", onUpdate: "cascade" }),
-    // Foreign key to icd_branches (for branch codes like E11.1, F10.2, etc.)
-    icdBranchId: int("icd_branch_id").references(() => icdBranches.id, { onDelete: "set null", onUpdate: "cascade" }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => ({
     codeIdx: index("idx_non_covered_code").on(t.code),
-    icdCodeIdIdx: index("idx_non_covered_icd_code").on(t.icdCodeId),
-    icdBranchIdIdx: index("idx_non_covered_icd_branch").on(t.icdBranchId),
   })
 );
 
 export type NonCoveredCode = typeof nonCoveredCodes.$inferSelect;
 export type InsertNonCoveredCode = typeof nonCoveredCodes.$inferInsert;
-
-// Relations for non-covered codes
-export const nonCoveredCodesRelations = relations(nonCoveredCodes, ({ one }) => ({
-  icdCode: one(icdCodes, {
-    fields: [nonCoveredCodes.icdCodeId],
-    references: [icdCodes.id],
-  }),
-  icdBranch: one(icdBranches, {
-    fields: [nonCoveredCodes.icdBranchId],
-    references: [icdBranches.id],
-  }),
-}));
 
 // ─── Search Analytics ──────────────────────────────────────────────────────────
 
@@ -159,46 +139,17 @@ export const searchAnalytics = mysqlTable(
     query: varchar("query", { length: 500 }).notNull(),
     resultsCount: int("results_count").notNull().default(0),
     searchType: varchar("search_type", { length: 50 }).notNull().default("general"),
-    source: varchar("source", { length: 50 }).notNull().default("main"),
-    responseTimeMs: int("response_time_ms").notNull().default(0),
     userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
-    ipAddress: varchar("ip_address", { length: 45 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => ({
     queryIdx: index("idx_search_analytics_query").on(t.query),
     createdAtIdx: index("idx_search_analytics_created").on(t.createdAt),
-    userIdIdx: index("idx_search_analytics_user").on(t.userId),
   })
 );
 
 export type SearchAnalytic = typeof searchAnalytics.$inferSelect;
 export type InsertSearchAnalytic = typeof searchAnalytics.$inferInsert;
-
-// ─── User Sessions ────────────────────────────────────────────────────────────────
-// Track active user sessions for real-time active users count
-
-export const userSessions = mysqlTable(
-  "user_sessions",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    sessionId: varchar("session_id", { length: 128 }).notNull().unique(),
-    userId: int("user_id").references(() => users.id, { onDelete: "cascade" }),
-    ipAddress: varchar("ip_address", { length: 45 }),
-    userAgent: text("user_agent"),
-    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (t) => ({
-    sessionIdIdx: index("idx_user_sessions_session").on(t.sessionId),
-    userIdIdx: index("idx_user_sessions_user").on(t.userId),
-    lastSeenAtIdx: index("idx_user_sessions_last_seen").on(t.lastSeenAt),
-    createdAtIdx: index("idx_user_sessions_created").on(t.createdAt),
-  })
-);
-
-export type UserSession = typeof userSessions.$inferSelect;
-export type InsertUserSession = typeof userSessions.$inferInsert;
 
 // ─── Relations ─────────────────────────────────────────────────────────────────
 
@@ -239,90 +190,3 @@ export const searchAnalyticsRelations = relations(searchAnalytics, ({ one }) => 
     references: [users.id],
   }),
 }));
-
-
-// ─── Drug Lens Database (Separate from drug_entries) ──────────────────────────
-// Comprehensive drug reference with detailed pharmaceutical information
-// 8000+ drugs with dosages, interactions, pregnancy categories, etc.
-
-export const drugLens = mysqlTable(
-  "drug_lens",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    scientificName: varchar("scientific_name", { length: 500 }).notNull(),
-    tradeName: varchar("trade_name", { length: 500 }).notNull(),
-    form: varchar("form", { length: 100 }), // Pharmaceutical form: tablet, capsule, injection, suppository, etc.
-    price: varchar("price", { length: 100 }),
-    pharmacologicalAction: text("pharmacological_action"),
-    blackBoxWarning: text("black_box_warning"),
-    uses: text("uses"),
-    pregnancyCategory: varchar("pregnancy_category", { length: 50 }),
-    standardDose: text("standard_dose"),
-    adjustedDose: text("adjusted_dose"),
-    neonatalDose: text("neonatal_dose"),
-    doseSource: text("dose_source"),
-    contraindicatedInteractions: text("contraindicated_interactions"),
-    majorInteractions: text("major_interactions"),
-    moderateInteractions: text("moderate_interactions"),
-    minorInteractions: text("minor_interactions"),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  },
-  (t) => ({
-    sciNameIdx: index("idx_drug_lens_sci_name").on(t.scientificName),
-    tradeNameIdx: index("idx_drug_lens_trade_name").on(t.tradeName),
-    formIdx: index("idx_drug_lens_form").on(t.form),
-  })
-);
-
-export type DrugLens = typeof drugLens.$inferSelect;
-export type InsertDrugLens = typeof drugLens.$inferInsert;
-
-// Feature Usage Tracking - Track clicks on call-to-action buttons
-
-export const featureUsageTracking = mysqlTable(
-  "feature_usage_tracking",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    featureName: varchar("feature_name", { length: 100 }).notNull(),
-    sessionId: varchar("session_id", { length: 128 }),
-    userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
-    ipAddress: varchar("ip_address", { length: 45 }),
-    userAgent: text("user_agent"),
-    referrer: varchar("referrer", { length: 500 }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (t) => ({
-    featureNameIdx: index("idx_feature_usage_feature").on(t.featureName),
-    sessionIdIdx: index("idx_feature_usage_session").on(t.sessionId),
-    userIdIdx: index("idx_feature_usage_user").on(t.userId),
-    createdAtIdx: index("idx_feature_usage_created").on(t.createdAt),
-  })
-);
-
-export type FeatureUsageTracking = typeof featureUsageTracking.$inferSelect;
-export type InsertFeatureUsageTracking = typeof featureUsageTracking.$inferInsert;
-
-// ─── API Keys for Sila Chat ────────────────────────────────────────────────────
-
-export const silaApiKeys = mysqlTable(
-  "sila_api_keys",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    keyHash: varchar("key_hash", { length: 255 }).notNull().unique(),
-    keyName: varchar("key_name", { length: 100 }).notNull(),
-    description: text("description"),
-    isActive: boolean("is_active").default(true).notNull(),
-    lastUsedAt: timestamp("last_used_at"),
-    usageCount: int("usage_count").default(0).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-  },
-  (t) => ({
-    keyHashIdx: index("idx_sila_key_hash").on(t.keyHash),
-    isActiveIdx: index("idx_sila_is_active").on(t.isActive),
-  })
-);
-
-export type SilaApiKey = typeof silaApiKeys.$inferSelect;
-export type InsertSilaApiKey = typeof silaApiKeys.$inferInsert;

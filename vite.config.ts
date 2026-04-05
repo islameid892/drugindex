@@ -1,10 +1,12 @@
 import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
+import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin()];
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
 
 export default defineConfig({
   plugins,
@@ -14,15 +16,6 @@ export default defineConfig({
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
-    // Ensure only one copy of React is bundled - critical to prevent "Invalid hook call" errors
-    dedupe: [
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
-      "@tanstack/react-query",
-      "@trpc/react-query",
-    ],
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
@@ -30,44 +23,33 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    minify: "terser",
+    minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        passes: 2,
-      },
-      mangle: true,
-      format: {
-        comments: false,
       },
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom"],
-          ui: ["lucide-react"],
-          utils: ["wouter"],
+          'vendor': ['react', 'react-dom'],
+          'ui': ['lucide-react'],
+          'utils': ['wouter'],
         },
       },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
     cssCodeSplit: true,
-    target: "esnext",
+    // Core Web Vitals Optimizations
+    target: 'esnext',
     reportCompressedSize: false,
-    assetsInlineLimit: 4096,
   },
+  // Performance optimizations
   optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "wouter",
-      "lucide-react",
-      "pdf-lib",
-    ],
-    exclude: ["@vite/preload-helper"],
+    include: ['react', 'react-dom', 'wouter', 'lucide-react', 'pdf-lib'],
+
   },
   server: {
     host: true,

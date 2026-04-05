@@ -1,9 +1,0 @@
-{
-  "query": "DELETE FROM drug_lens WHERE id IN (\n  1509, -- FINALLERG (keep 1505)\n  1883, -- D-SEUL (keep 1567)\n  4739, -- MENACTRA (keep 4738)\n  99,   -- ADZOY 0.1/2.5 (keep 97)\n  98,   -- ADZOY 0.3/2.5 (keep 96)\n  2394, -- AVOTRENE EMULGEL 1% (keep 2352)\n  376,  -- MEGAMOX (keep 368)\n  30003, -- AVOTRENE EMULGEL 100g (keep 30002)\n  4935, -- MEDROLONE (keep 4913)\n  1869, -- ESSENTIAL D-3 (keep 1561)\n  2397, -- RUMAFEN (keep 2348)\n  2251, -- SODIUM CHLORIDE (keep 2242)\n  1462, -- CEFUZIME (keep 1439)\n  3595, -- RECOMBIVAX HB (keep 3592)\n  30004, -- AVOTRENE EMULGEL 50g (keep 30001)\n  3505  -- CAPD/DPCA (keep 1130)\n)",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute DELETE FROM drug_lens WHERE id IN (\n  1509, -- FINALLERG (keep 1505)\n  1883, -- D-SEUL (keep 1567)\n  4739, -- MENACTRA (keep 4738)\n  99,   -- ADZOY 0.1/2.5 (keep 97)\n  98,   -- ADZOY 0.3/2.5 (keep 96)\n  2394, -- AVOTRENE EMULGEL 1% (keep 2352)\n  376,  -- MEGAMOX (keep 368)\n  30003, -- AVOTRENE EMULGEL 100g (keep 30002)\n  4935, -- MEDROLONE (keep 4913)\n  1869, -- ESSENTIAL D-3 (keep 1561)\n  2397, -- RUMAFEN (keep 2348)\n  2251, -- SODIUM CHLORIDE (keep 2242)\n  1462, -- CEFUZIME (keep 1439)\n  3595, -- RECOMBIVAX HB (keep 3592)\n  30004, -- AVOTRENE EMULGEL 50g (keep 30001)\n  3505  -- CAPD/DPCA (keep 1130)\n)",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 370
-}

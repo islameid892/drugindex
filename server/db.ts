@@ -22,7 +22,6 @@ import {
   and,
   gte,
   desc,
-  max,
 } from "drizzle-orm";
 import {
   drugEntries,
@@ -32,10 +31,8 @@ import {
   nonCoveredCodes,
   searchAnalytics,
   users,
-  userSessions,
   type InsertSearchAnalytic,
 } from "../drizzle/schema";
-import { checkCoverageMultiple } from "./coverage";
 
 // ─── Database Connection ────────────────────────────────────────────────────────
 
@@ -134,10 +131,14 @@ async function enrichDrugEntriesWithCodes(
       .where(inArray(icdBranches.parentCodeId, linkedCodeIds));
   }
 
-  // Use hierarchical coverage logic for all codes
+  // Load all non-covered codes
   const allBranchCodes = branches.map((b) => b.branchCode);
   const allCodesToCheck = [...linkedCodeStrings, ...allBranchCodes];
-  const coverageMap = await checkCoverageMultiple(allCodesToCheck);
+  let nonCoveredSet = new Set<string>();
+  if (allCodesToCheck.length > 0) {
+    const nc = await db.select({ code: nonCoveredCodes.code }).from(nonCoveredCodes);
+    nonCoveredSet = new Set((nc as Array<{ code: string }>).map((r) => r.code));
+  }
 
   // Build maps
   const branchMap = new Map<number, BranchInfo[]>();
@@ -146,7 +147,7 @@ async function enrichDrugEntriesWithCodes(
     branchMap.get(b.parentCodeId)!.push({
       branchCode: b.branchCode,
       branchDescription: b.branchDescription,
-      isNonCovered: !coverageMap.get(b.branchCode)!,
+      isNonCovered: nonCoveredSet.has(b.branchCode),
     });
   }
 
@@ -154,14 +155,14 @@ async function enrichDrugEntriesWithCodes(
   for (const link of links) {
     if (!codesByEntry.has(link.drugEntryId)) codesByEntry.set(link.drugEntryId, []);
     const codeBranches = branchMap.get(link.codeId) ?? [];
-    const isCodeNotCovered = !coverageMap.get(link.code)!;
+    const parentNonCovered = nonCoveredSet.has(link.code);
     const hasNonCoveredBranch = codeBranches.some((b) => b.isNonCovered);
     codesByEntry.get(link.drugEntryId)!.push({
       id: link.codeId,
       code: link.code,
       description: link.description,
       branchCount: link.branchCount,
-      isNonCovered: isCodeNotCovered || hasNonCoveredBranch,
+      isNonCovered: parentNonCovered || hasNonCoveredBranch,
       branches: codeBranches,
     });
   }
@@ -380,75 +381,40 @@ async function enrichCodesWithBranches(
   const codeIds = codes.map((c) => c.id);
   const codeStrings = codes.map((c) => c.code);
 
-  const branches = await db.select().from(icdBranches).where(inArray(icdBranches.parentCodeId, codeIds));
+  const [branches, nc] = await Promise.all([
+    db.select().from(icdBranches).where(inArray(icdBranches.parentCodeId, codeIds)),
+    db.select({ code: nonCoveredCodes.code }).from(nonCoveredCodes).where(inArray(nonCoveredCodes.code, codeStrings)),
+  ]);
 
-  // Get all branch codes for the given parent codes
-  const allBranchCodes = branches.map((b: any) => b.branchCode);
-  
-  // Collect all codes to check (main codes + branch codes)
-  const allCodesToCheck = [...codeStrings, ...allBranchCodes];
-  
-  // Use hierarchical coverage logic
-  const coverageMap = await checkCoverageMultiple(allCodesToCheck);
-
-  const branchMap = new Map<number, Array<{ branchCode: string; branchDescription: string; isNonCovered: boolean }>>();
+  const nonCoveredSet = new Set((nc as Array<{ code: string }>).map((r) => r.code));
+  const branchMap = new Map<number, Array<{ branchCode: string; branchDescription: string }>>();
   for (const b of branches) {
     if (!branchMap.has(b.parentCodeId)) branchMap.set(b.parentCodeId, []);
-    branchMap.get(b.parentCodeId)!.push({ 
-      branchCode: b.branchCode, 
-      branchDescription: b.branchDescription,
-      isNonCovered: !coverageMap.get(b.branchCode)!
-    });
+    branchMap.get(b.parentCodeId)!.push({ branchCode: b.branchCode, branchDescription: b.branchDescription });
   }
 
-  return codes.map((c) => {
-    const codeBranches = branchMap.get(c.id) ?? [];
-    // A code is non-covered if the main code is non-covered OR any of its branches are non-covered
-    const isCodeNotCovered = !coverageMap.get(c.code)!;
-    const isNonCovered = isCodeNotCovered || codeBranches.some((b) => b.isNonCovered);
-    return {
-      id: c.id,
-      code: c.code,
-      description: c.description,
-      branchCount: c.branchCount,
-      branches: codeBranches.map(({ isNonCovered, ...rest }) => rest),
-      isNonCovered,
-    };
-  });
+  return codes.map((c) => ({
+    id: c.id,
+    code: c.code,
+    description: c.description,
+    branchCount: c.branchCount,
+    branches: branchMap.get(c.id) ?? [],
+    isNonCovered: nonCoveredSet.has(c.code),
+  }));
 }
 
 // ─── Non-Covered Codes ─────────────────────────────────────────────────────────
 
 export async function getAllNonCoveredCodes() {
   const db = await getDb();
-  return db.select({
-    code: nonCoveredCodes.code,
-    description: sql`MAX(COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description}))`,
-  })
-    .from(nonCoveredCodes)
-    .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
-    .groupBy(nonCoveredCodes.code)
-    .orderBy(nonCoveredCodes.code);
+  return db.select().from(nonCoveredCodes);
 }
 
 export async function searchNonCoveredCodes(query: string) {
   const db = await getDb();
   const q = `%${query}%`;
-  return db.select({
-    code: nonCoveredCodes.code,
-    description: sql`MAX(COALESCE(${icdBranches.branchDescription}, ${icdCodes.description}, ${nonCoveredCodes.description}))`,
-  })
-    .from(nonCoveredCodes)
-    .leftJoin(icdBranches, eq(nonCoveredCodes.code, icdBranches.branchCode))
-    .leftJoin(icdCodes, eq(nonCoveredCodes.code, icdCodes.code))
-    .where(or(
-      ciLike(nonCoveredCodes.code, q),
-      ciLike(icdBranches.branchDescription, q),
-      ciLike(icdCodes.description, q),
-      ciLike(nonCoveredCodes.description, q)
-    ))
-    .groupBy(nonCoveredCodes.code)
+  return db.select().from(nonCoveredCodes)
+    .where(or(ciLike(nonCoveredCodes.code, q), ciLike(nonCoveredCodes.description, q)))
     .limit(100);
 }
 
@@ -528,15 +494,10 @@ export async function getDashboardStats() {
 
 export async function recordSearch(data: InsertSearchAnalytic) {
   const db = await getDb();
-  console.log('[recordSearch] Attempting to insert:', JSON.stringify(data));
   try {
-    const result = await db.insert(searchAnalytics).values(data);
-    console.log('[recordSearch] Insert result:', JSON.stringify(result));
-    return result;
-  } catch (error: any) {
-    console.error('[recordSearch] FAILED:', error?.message || error);
-    console.error('[recordSearch] Full error:', JSON.stringify(error, null, 2));
-    throw error;
+    await db.insert(searchAnalytics).values(data);
+  } catch (error) {
+    console.error("[Database] Failed to record search:", error);
   }
 }
 
@@ -558,7 +519,7 @@ export async function getTotalSearchesSince(days: number) {
 export async function getAverageResponseTime() {
   const db = await getDb();
   const result = await db.select({
-    avg: sql<number>`COALESCE(AVG(${searchAnalytics.responseTimeMs}), 0)`,
+    avg: sql<number>`COALESCE(AVG(results_count), 0)`,
   }).from(searchAnalytics);
   return Math.round(Number(result[0]?.avg ?? 0));
 }
@@ -595,15 +556,14 @@ export async function getSearchTrend(days = 7) {
   const db = await getDb();
   const since = new Date();
   since.setDate(since.getDate() - days);
-  // Use raw SQL with explicit table.column to satisfy MySQL only_full_group_by mode
   return db.select({
-    date: sql<string>`DATE(search_analytics.createdAt)`,
+    date: sql<string>`DATE(createdAt)`,
     count: count(),
   })
     .from(searchAnalytics)
     .where(gte(searchAnalytics.createdAt, since))
-    .groupBy(sql`DATE(search_analytics.createdAt)`)
-    .orderBy(sql`DATE(search_analytics.createdAt)`);
+    .groupBy(sql`DATE(createdAt)`)
+    .orderBy(sql`DATE(createdAt)`);
 }
 
 // ─── User Management ───────────────────────────────────────────────────────────
@@ -796,219 +756,25 @@ export interface GroupedDrugResult {
   totalTradeNames: number;
 }
 
-export interface SearchGroupedResponse {
-  medications: GroupedDrugResult[];
-  conditions: Array<{
-    indication: string;
-    scientificNames: string[];
-    tradeNames: string[];
-    codes: CodeInfo[];
-  }>;
-  codes: Array<{
-    code: string;
-    description: string;
-    branchCount: number;
-    isNonCovered: boolean;
-    branches: BranchInfo[];
-    medications: string[]; // scientific names that use this code
-  }>;
-}
-
-export async function searchGroupedComprehensive(
-  query: string,
-  limit = 30
-): Promise<SearchGroupedResponse> {
-  const db = await getDb();
-  
-  // Split query by spaces to handle multi-word searches
-  const words = query.trim().split(/\s+/).filter(w => w.length > 0);
-  
-  // Build search conditions for each word
-  const searchConditions = words.map(word => {
-    const q = `%${word}%`;
-    return or(
-      ciLike(drugEntries.scientificName, q),
-      ciLike(drugEntries.tradeName, q),
-      ciLike(drugEntries.indication, q),
-      ciLike(drugEntries.icdCodesRaw, q)
-    );
-  });
-  
-  // Combine all conditions with AND (all words must match)
-  const combinedCondition = searchConditions.length > 0 
-    ? and(...searchConditions) 
-    : undefined;
-
-  // Step 1: Find all matching entries
-  const allMatches = await db
-    .select()
-    .from(drugEntries)
-    .where(combinedCondition)
-    .limit(limit * 5); // Get more to have enough for all tabs
-
-  if (allMatches.length === 0) return { medications: [], conditions: [], codes: [] };
-
-  // Enrich with codes
-  const enriched = await enrichDrugEntriesWithCodes(
-    allMatches as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>
-  );
-
-  // ===== MEDICATIONS TAB: Group by scientific name =====
-  const medicationsByScientificName = new Map<string, {
-    tradeNames: Set<string>;
-    indicationMap: Map<string, { codes: Map<string, CodeInfo> }>;
-  }>();
-
-  for (const entry of enriched) {
-    if (!medicationsByScientificName.has(entry.scientificName)) {
-      medicationsByScientificName.set(entry.scientificName, {
-        tradeNames: new Set(),
-        indicationMap: new Map(),
-      });
-    }
-    const g = medicationsByScientificName.get(entry.scientificName)!;
-    g.tradeNames.add(entry.tradeName);
-
-    if (!g.indicationMap.has(entry.indication)) {
-      g.indicationMap.set(entry.indication, { codes: new Map() });
-    }
-    const indGroup = g.indicationMap.get(entry.indication)!;
-    for (const code of entry.icdCodes) {
-      if (!indGroup.codes.has(code.code)) {
-        indGroup.codes.set(code.code, code);
-      }
-    }
-  }
-
-  const medications: GroupedDrugResult[] = Array.from(medicationsByScientificName.entries())
-    .slice(0, limit)
-    .map(([sciName, g]) => {
-      const tradeNames = Array.from(g.tradeNames).sort();
-      const indications = Array.from(g.indicationMap.entries()).map(([indication, { codes }]) => {
-        const codeList = Array.from(codes.values());
-        const hasNonCovered = codeList.some(c => c.isNonCovered);
-        const hasCovered = codeList.some(c => !c.isNonCovered);
-        const coverageStatus: "COVERED" | "NON-COVERED" | "PARTIAL" =
-          codeList.length === 0 ? "COVERED" :
-          hasNonCovered && hasCovered ? "PARTIAL" :
-          hasNonCovered ? "NON-COVERED" : "COVERED";
-        return { indication, codes: codeList, coverageStatus };
-      });
-
-      const allCodes = indications.flatMap(i => i.codes);
-      const hasNonCovered = allCodes.some(c => c.isNonCovered);
-      const hasCovered = allCodes.some(c => !c.isNonCovered);
-      const overallCoverage: "COVERED" | "NON-COVERED" | "PARTIAL" =
-        allCodes.length === 0 ? "COVERED" :
-        hasNonCovered && hasCovered ? "PARTIAL" :
-        hasNonCovered ? "NON-COVERED" : "COVERED";
-
-      return {
-        scientificName: sciName,
-        tradeNames,
-        indications,
-        overallCoverage,
-        totalTradeNames: tradeNames.length,
-      };
-    });
-
-  // ===== CONDITIONS TAB: Group by indication =====
-  const conditionsByIndication = new Map<string, {
-    scientificNames: Set<string>;
-    tradeNames: Set<string>;
-    codes: Map<string, CodeInfo>;
-  }>();
-
-  for (const entry of enriched) {
-    if (!conditionsByIndication.has(entry.indication)) {
-      conditionsByIndication.set(entry.indication, {
-        scientificNames: new Set(),
-        tradeNames: new Set(),
-        codes: new Map(),
-      });
-    }
-    const g = conditionsByIndication.get(entry.indication)!;
-    g.scientificNames.add(entry.scientificName);
-    g.tradeNames.add(entry.tradeName);
-    for (const code of entry.icdCodes) {
-      if (!g.codes.has(code.code)) {
-        g.codes.set(code.code, code);
-      }
-    }
-  }
-
-  const conditions = Array.from(conditionsByIndication.entries())
-    .slice(0, limit)
-    .map(([indication, g]) => ({
-      indication,
-      scientificNames: Array.from(g.scientificNames).sort(),
-      tradeNames: Array.from(g.tradeNames).sort(),
-      codes: Array.from(g.codes.values()),
-    }));
-
-  // ===== CODES TAB: Group by ICD-10 code =====
-  const codesByCode = new Map<string, {
-    code: CodeInfo;
-    medications: Set<string>;
-  }>();
-
-  for (const entry of enriched) {
-    for (const code of entry.icdCodes) {
-      if (!codesByCode.has(code.code)) {
-        codesByCode.set(code.code, {
-          code,
-          medications: new Set(),
-        });
-      }
-      const g = codesByCode.get(code.code)!;
-      g.medications.add(entry.scientificName);
-    }
-  }
-
-  const codesResult = Array.from(codesByCode.values())
-    .slice(0, limit)
-    .map(({ code, medications }) => ({
-      code: code.code,
-      description: code.description,
-      branchCount: code.branchCount,
-      isNonCovered: code.isNonCovered,
-      branches: code.branches,
-      medications: Array.from(medications).sort(),
-    }));
-
-  return { medications, conditions, codes: codesResult };
-}
-
 export async function searchGroupedByScientificName(
   query: string,
   limit = 30
 ): Promise<GroupedDrugResult[]> {
   const db = await getDb();
-  
-  // Split query by spaces to handle multi-word searches
-  const words = query.trim().split(/\s+/).filter(w => w.length > 0);
-  
-  // Build search conditions for each word
-  const searchConditions = words.map(word => {
-    const q = `%${word}%`;
-    return or(
-      ciLike(drugEntries.scientificName, q),
-      ciLike(drugEntries.tradeName, q),
-      ciLike(drugEntries.indication, q),
-      ciLike(drugEntries.icdCodesRaw, q)
-    );
-  });
-  
-  // Combine all conditions with AND (all words must match)
-  const combinedCondition = searchConditions.length > 0 
-    ? and(...searchConditions) 
-    : undefined;
+  const q = `%${query}%`;
 
   // Step 1: Find distinct scientific names matching the query
   const sciNames = await db
     .select({ scientificName: drugEntries.scientificName })
     .from(drugEntries)
-    .where(combinedCondition)
+    .where(
+      or(
+        ciLike(drugEntries.scientificName, q),
+        ciLike(drugEntries.tradeName, q),
+        ciLike(drugEntries.indication, q),
+        ciLike(drugEntries.icdCodesRaw, q)
+      )
+    )
     .groupBy(drugEntries.scientificName)
     .orderBy(drugEntries.scientificName)
     .limit(limit);
@@ -1088,390 +854,4 @@ export async function searchGroupedByScientificName(
       totalTradeNames: tradeNames.length,
     };
   }).filter(Boolean) as GroupedDrugResult[];
-}
-
-
-// ─── Metrics & Analytics ────────────────────────────────────────────────────────
-
-/**
- * Get recent searches with timestamps
- * @param limit - number of recent searches to return (default 20)
- */
-export async function getRecentSearches(limit = 20) {
-  const db = await getDb();
-  
-  const searches = await db
-    .select({
-      id: searchAnalytics.id,
-      query: searchAnalytics.query,
-      resultsCount: searchAnalytics.resultsCount,
-      responseTimeMs: searchAnalytics.responseTimeMs,
-      createdAt: searchAnalytics.createdAt,
-    })
-    .from(searchAnalytics)
-    .orderBy(desc(searchAnalytics.createdAt))
-    .limit(limit);
-
-  return searches;
-}
-
-/**
- * Get aggregated recent searches (groups same searches together)
- * @param limit - number of unique searches to return (default 10)
- */
-export async function getAggregatedRecentSearches(limit = 10) {
-  const db = await getDb();
-  
-  // Get unique searches with their latest occurrence and total count
-  const searches = await db
-    .select({
-      query: searchAnalytics.query,
-      count: count().as("count"),
-      lastSearchedAt: sql<Date>`MAX(${searchAnalytics.createdAt})`.as("lastSearchedAt"),
-      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
-    })
-    .from(searchAnalytics)
-    .groupBy(searchAnalytics.query)
-    .orderBy(sql`MAX(${searchAnalytics.createdAt}) DESC`)
-    .limit(limit);
-  
-  return (searches as Array<{
-    query: string;
-    count: number | bigint;
-    lastSearchedAt: Date | null;
-    avgResponseTime: string | number | null;
-  }>).map((row) => ({
-    query: row.query,
-    count: Number(row.count),
-    lastSearchedAt: row.lastSearchedAt,
-    avgResponseTime: Number(row.avgResponseTime ?? 0),
-  }));
-}
-
-/**
- * Get active users count (users with activity in last X minutes)
- * @param minutesAgo - consider users active if they were seen in last X minutes (default 15)
- */
-export async function getActiveUsersCount(minutesAgo = 15) {
-  const db = await getDb();
-  
-  const cutoffTime = new Date(Date.now() - minutesAgo * 60 * 1000);
-  
-  const result = await db
-    .select({ count: count() })
-    .from(userSessions)
-    .where(gte(userSessions.lastSeenAt, cutoffTime));
-
-  return result[0]?.count || 0;
-}
-
-/**
- * Get top searches by frequency
- * @param limit - number of top searches to return (default 10)
- */
-export async function getTopSearches(limit = 10, hoursAgo = 720) {
-  const db = await getDb();
-  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  
-  const topSearches = await db
-    .select({
-      query: searchAnalytics.query,
-      count: count().as("count"),
-      avgResponseTime: sql<number>`ROUND(AVG(${searchAnalytics.responseTimeMs}), 2)`.as("avgResponseTime"),
-    })
-    .from(searchAnalytics)
-    .where(gte(searchAnalytics.createdAt, cutoffTime))
-    .groupBy(searchAnalytics.query)
-    .orderBy(desc(count()))
-    .limit(limit);
-  
-  // Convert avgResponseTime from string (returned by SQL ROUND) to number
-  return (topSearches as Array<{ query: string; count: number | bigint; avgResponseTime: string | number | null }>).map((row) => ({
-    query: row.query,
-    count: Number(row.count),
-    avgResponseTime: Number(row.avgResponseTime ?? 0),
-  }));
-}
-
-/**
- * Get search metrics for the last X hours
- * @param hoursAgo - analyze searches from last X hours (default 24)
- */
-export async function getSearchMetrics(hoursAgo = 24) {
-  const db = await getDb();
-  
-  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  console.log('[Metrics] Fetching search metrics for last', hoursAgo, 'hours');
-  console.log('[Metrics] Cutoff time:', cutoffTime.toISOString());
-  
-  console.log('[Metrics] Query params - hoursAgo:', hoursAgo, 'cutoffTime:', cutoffTime);
-  const result = await db
-    .select({
-      totalSearches: count().as("totalSearches"),
-      avgResponseTime: sql<number>`ROUND(COALESCE(AVG(${searchAnalytics.responseTimeMs}), 0), 2)`.as("avgResponseTime"),
-      minResponseTime: sql<number>`COALESCE(MIN(${searchAnalytics.responseTimeMs}), 0)`.as("minResponseTime"),
-      maxResponseTime: sql<number>`COALESCE(MAX(${searchAnalytics.responseTimeMs}), 0)`.as("maxResponseTime"),
-    })
-    .from(searchAnalytics)
-    .where(gte(searchAnalytics.createdAt, cutoffTime));
-
-  console.log('[Metrics] Raw query result:', result);
-  const row = result[0];
-  console.log('[Metrics] First row:', row);
-  const metrics = {
-    totalSearches: Number(row?.totalSearches ?? 0),
-    avgResponseTime: Number(row?.avgResponseTime ?? 0),
-    minResponseTime: Number(row?.minResponseTime ?? 0),
-    maxResponseTime: Number(row?.maxResponseTime ?? 0),
-  };
-  console.log('[Metrics] Final metrics:', metrics);
-  console.log('[Metrics] totalSearches type:', typeof metrics.totalSearches, 'value:', metrics.totalSearches);
-  return metrics;
-}
-
-/**
- * Get hourly search activity for the last X hours
- * @param hoursAgo - analyze activity from last X hours (default 24)
- */
-export async function getHourlyActivity(hoursAgo = 24) {
-  const db = await getDb();
-  
-  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  
-  // Use raw SQL for complex DATE_FORMAT queries
-  const activity = await db.execute(
-    sql`SELECT DATE_FORMAT(createdAt, '%Y-%m-%d %H:00:00') as hour, COUNT(*) as count
-        FROM search_analytics
-        WHERE createdAt >= ${cutoffTime}
-        GROUP BY DATE_FORMAT(createdAt, '%Y-%m-%d %H:00:00')
-        ORDER BY hour DESC`
-  );
-
-  return (activity as any)[0] || [];
-}
-
-/**
- * Track a search query
- */
-export async function trackSearch(data: InsertSearchAnalytic) {
-  const db = await getDb();
-  
-  try {
-    await db.insert(searchAnalytics).values({
-      query: data.query,
-      resultsCount: data.resultsCount || 0,
-      searchType: data.searchType || 'general',
-      responseTimeMs: data.responseTimeMs || 0,
-      userId: data.userId || null,
-      ipAddress: data.ipAddress || null,
-    });
-  } catch (err) {
-    console.error('Error tracking search:', err);
-  }
-}
-
-/**
- * Update or create user session
- */
-export async function updateUserSession(
-  sessionId: string,
-  userId: number | null,
-  ipAddress?: string,
-  userAgent?: string
-) {
-  const db = await getDb();
-  const { userSessions } = await import("../drizzle/schema");
-  
-  // Try to update existing session
-  const existing = await db
-    .select()
-    .from(userSessions)
-    .where(eq(userSessions.sessionId, sessionId))
-    .limit(1);
-
-  if (existing.length > 0) {
-    // Update last seen time
-    await db
-      .update(userSessions)
-      .set({ lastSeenAt: new Date() })
-      .where(eq(userSessions.sessionId, sessionId));
-  } else {
-    // Create new session
-    await db.insert(userSessions).values({
-      sessionId,
-      userId,
-      ipAddress,
-      userAgent,
-    });
-  }
-}
-
-// ─── Feature Usage Tracking ────────────────────────────────────────────────────
-
-import { featureUsageTracking, type InsertFeatureUsageTracking } from "../drizzle/schema";
-
-export async function trackFeatureUsage(data: Omit<InsertFeatureUsageTracking, 'createdAt'>) {
-  try {
-    const db = await getDb();
-    await db.insert(featureUsageTracking).values({
-      ...data,
-      createdAt: new Date(),
-    });
-  } catch (error) {
-    console.error("Error tracking feature usage:", error);
-  }
-}
-
-export async function getFeatureUsageStats(featureName: string, days: number = 7) {
-  try {
-    const db = await getDb();
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const stats = await db
-      .select({
-        count: count(),
-        feature: featureUsageTracking.featureName,
-      })
-      .from(featureUsageTracking)
-      .where(
-        and(
-          eq(featureUsageTracking.featureName, featureName),
-          gte(featureUsageTracking.createdAt, cutoffDate)
-        )
-      )
-      .groupBy(featureUsageTracking.featureName);
-
-    return stats[0]?.count || 0;
-  } catch (error) {
-    console.error("Error getting feature usage stats:", error);
-    return 0;
-  }
-}
-
-export async function getAllFeatureUsageStats(days: number = 7) {
-  try {
-    const db = await getDb();
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const stats = await db
-      .select({
-        feature: featureUsageTracking.featureName,
-        count: count(),
-      })
-      .from(featureUsageTracking)
-      .where(gte(featureUsageTracking.createdAt, cutoffDate))
-      .groupBy(featureUsageTracking.featureName);
-
-    return stats;
-  } catch (error) {
-    console.error("Error getting all feature usage stats:", error);
-    return [];
-  }
-}
-
-export async function getTotalFeatureUsageCount(featureName: string) {
-  try {
-    const db = await getDb();
-    const result = await db
-      .select({ count: count() })
-      .from(featureUsageTracking)
-      .where(eq(featureUsageTracking.featureName, featureName));
-
-    return result[0]?.count || 0;
-  } catch (error) {
-    console.error("Error getting total feature usage count:", error);
-    return 0;
-  }
-}
-
-
-// ─── Sila API Key Management ───────────────────────────────────────────────
-
-import crypto from 'crypto';
-import { silaApiKeys } from '../drizzle/schema';
-
-/**
- * Generate a new API key for Sila Chat
- * Returns both the raw key (to show to user once) and the hash (to store in DB)
- */
-export async function generateSilaApiKey(keyName: string, description?: string) {
-  const db = await getDb();
-  const rawKey = crypto.randomBytes(32).toString('hex');
-  const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
-  
-  const result = await db.insert(silaApiKeys).values({
-    keyHash,
-    keyName,
-    description,
-    isActive: true,
-  });
-  
-  const insertedId = Array.isArray(result) && result.length > 0 ? Number(result[0]) : Number((result as any)?.insertId || (result as any)?.id || 0);
-  
-  return {
-    id: insertedId,
-    rawKey,
-    keyName,
-    createdAt: new Date(),
-  };
-}
-
-/**
- * Verify an API key and update usage stats
- */
-export async function verifySilaApiKey(rawKey: string) {
-  const db = await getDb();
-  const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
-  
-  const result = await db.select().from(silaApiKeys)
-    .where(and(
-      eq(silaApiKeys.keyHash, keyHash),
-      eq(silaApiKeys.isActive, true)
-    ));
-  
-  const apiKey = result[0];
-  
-  if (!apiKey) {
-    return null;
-  }
-  
-  // Update usage stats
-  await db.update(silaApiKeys)
-    .set({
-      lastUsedAt: new Date(),
-      usageCount: apiKey.usageCount + 1,
-    })
-    .where(eq(silaApiKeys.id, apiKey.id));
-  
-  return apiKey;
-}
-
-/**
- * Get all Sila API keys (for admin panel)
- */
-export async function getAllSilaApiKeys() {
-  const db = await getDb();
-  return await db.select().from(silaApiKeys)
-    .orderBy(desc(silaApiKeys.createdAt));
-}
-
-/**
- * Deactivate an API key
- */
-export async function deactivateSilaApiKey(id: number) {
-  const db = await getDb();
-  return await db.update(silaApiKeys)
-    .set({ isActive: false })
-    .where(eq(silaApiKeys.id, id));
-}
-
-/**
- * Delete an API key
- */
-export async function deleteSilaApiKey(id: number) {
-  const db = await getDb();
-  return await db.delete(silaApiKeys)
-    .where(eq(silaApiKeys.id, id));
 }

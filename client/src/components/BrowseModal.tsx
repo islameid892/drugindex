@@ -69,7 +69,7 @@ function DrugBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search by trade name (e.g. Panadol, Augmentin...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           />
         </div>
         {data && (
@@ -202,7 +202,7 @@ function ConditionBrowse() {
 
   const { data, isLoading } = trpc.data.browseConditions.useQuery(
     { query: debouncedQuery, limit: 10 },
-    { staleTime: 0 }
+    { staleTime: 30000 }
   );
 
   const toggleCode = (key: string) => {
@@ -245,7 +245,7 @@ function ConditionBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search condition (e.g. Diabetes, Hypertension...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           />
         </div>
         {data && (
@@ -456,7 +456,7 @@ function NonCoveredBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search non-covered codes..."
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
         {displayCodes && (
@@ -522,12 +522,12 @@ function CodesBrowse() {
 
   const { data: allCodes, isLoading: loadingAll } = trpc.data.codes.getAll.useQuery(
     { limit: 100 },
-    { enabled: debouncedQuery.length === 0, staleTime: 0 }
+    { enabled: debouncedQuery.length === 0, staleTime: 60000 }
   );
 
   const { data: searchResults, isLoading: isSearching } = trpc.data.codes.search.useQuery(
     { query: debouncedQuery },
-    { enabled: debouncedQuery.length > 0, staleTime: 0 }
+    { enabled: debouncedQuery.length > 0, staleTime: 30000 }
   );
 
   const displayCodes = debouncedQuery.length > 0 ? searchResults : allCodes;
@@ -553,7 +553,7 @@ function CodesBrowse() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search ICD-10 codes (e.g. E11, Diabetes...)"
-            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-3 text-base border border-border rounded-xl bg-muted/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         {displayCodes && (
@@ -578,34 +578,26 @@ function CodesBrowse() {
 
         {!loading && displayCodes?.map((code: any, idx: number) => {
           const isExpanded = expandedCodes.has(code.id);
-          const isUCode = code.code?.startsWith("U");
           return (
             <div key={idx} className={`border rounded-xl overflow-hidden ${
-              code.isNonCovered ? "border-red-200 dark:border-red-800" : isUCode ? "border-orange-200 dark:border-orange-800" : "border-border"
+              code.isNonCovered ? "border-red-200 dark:border-red-800" : "border-border"
             }`}>
               <button
                 onClick={() => code.branches?.length > 0 && toggleCode(code.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                   code.isNonCovered
                     ? "bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50"
-                    : isUCode
-                    ? "bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50"
                     : "bg-card hover:bg-muted/50"
                 }`}
               >
                 <span className={`font-mono text-sm font-bold px-2 py-1 rounded flex-shrink-0 ${
                   code.isNonCovered
                     ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
-                    : isUCode
-                    ? "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300"
                     : "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
                 }`}>
                   {code.code}
                 </span>
                 <span className="text-sm text-foreground flex-1 text-left">{code.description}</span>
-                {isUCode && (
-                  <Badge className="text-xs flex-shrink-0 bg-orange-500 hover:bg-orange-600 text-white">secondary diagnosis only</Badge>
-                )}
                 {code.isNonCovered && (
                   <Badge variant="destructive" className="text-xs flex-shrink-0">Non-Covered</Badge>
                 )}

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -97,8 +99,8 @@ export function BulkVerification() {
 
   // Close suggestions when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -107,72 +109,95 @@ export function BulkVerification() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleCodeSearchChange = useCallback((value: string) => {
-    setCodeSearch(value);
-    if (value.length > 0) {
-      setShowSuggestions(true);
+  const handleCodeSearchChange = (value: string) => {
+    setCodeSearch(value.toUpperCase());
+    setShowSuggestions(value.length > 0);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleSelectSuggestion = (suggestion: Suggestion) => {
+    setCodeSearch(suggestion.code);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          handleSelectSuggestion(suggestions[selectedSuggestionIndex]);
+        } else {
+          handleAddCode();
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        break;
+    }
+  };
+
+  const handleAddCode = useCallback(() => {
+    const trimmedCode = codeSearch.trim().toUpperCase();
+    if (trimmedCode && /^[A-Z]\d{2}(\.\d{1,2})?$/.test(trimmedCode)) {
+      if (!codes.includes(trimmedCode)) {
+        setCodes([...codes, trimmedCode]);
+        setCodeSearch('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }
+  }, [codeSearch, codes]);
+
+  const handleRemoveCode = useCallback((index: number) => {
+    setCodes(codes.filter((_, i) => i !== index));
+  }, [codes]);
+
+  const handleVerify = useCallback(async () => {
+    const allCodes = [
+      ...codes,
+      ...input
+        .split('\n')
+        .map(line => line.trim().toUpperCase())
+        .filter(line => line.length > 0)
+    ];
+
+    if (allCodes.length === 0) return;
+
+    verifyMutation.mutate({ items: allCodes });
+  }, [input, codes, verifyMutation]);
+
+  const handleCameraCapture = useCallback(() => {
+    setCameraError('');
+    if (fileInputRef.current) {
+      // Reset the input value to allow selecting the same file twice
+      fileInputRef.current.value = '';
+      fileInputRef.current.accept = 'image/*';
+      fileInputRef.current.click();
     }
   }, []);
 
-  const handleSelectSuggestion = (suggestion: Suggestion) => {
-    const newCode = suggestion.code;
-    if (!codes.includes(newCode)) {
-      setCodes([...codes, newCode]);
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('No file selected');
+      setCameraError('');
+      return;
     }
-    setCodeSearch('');
-    setShowSuggestions(false);
-  };
 
-  const handleAddCode = () => {
-    if (codeSearch.trim() && !codes.includes(codeSearch.trim())) {
-      setCodes([...codes, codeSearch.trim()]);
-      setCodeSearch('');
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleRemoveCode = (index: number) => {
-    setCodes(codes.filter((_, i) => i !== index));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedSuggestionIndex(prev => 
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (selectedSuggestionIndex >= 0 && suggestions[selectedSuggestionIndex]) {
-        handleSelectSuggestion(suggestions[selectedSuggestionIndex]);
-      } else if (codeSearch.trim()) {
-        handleAddCode();
-      }
-    }
-  };
-
-  const handleVerify = () => {
-    const allCodes = [...codes];
-    if (input.trim()) {
-      const pastedCodes = input.split('\n').map(c => c.trim()).filter(c => c);
-      allCodes.push(...pastedCodes);
-    }
-    if (allCodes.length > 0) {
-      verifyMutation.mutate({ items: allCodes });
-    }
-  };
-
-  const handleCameraCapture = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+    // Validate file is an image
     if (!file.type.startsWith('image/')) {
       const errorMsg = 'Please select a valid image file (JPG, PNG, WebP, etc.)';
       setCameraError(errorMsg);
@@ -244,7 +269,7 @@ export function BulkVerification() {
     <div className="space-y-6">
       {/* Code Search with Autocomplete */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Add ICD-10 Codes</label>
+        <label className="text-sm font-semibold text-slate-700">Add ICD-10 Codes</label>
         <div className="relative" ref={suggestionsRef}>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -254,24 +279,24 @@ export function BulkVerification() {
                 onChange={(e) => handleCodeSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onFocus={() => codeSearch.length > 0 && setShowSuggestions(true)}
-                className="h-10 text-base bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500"
+                className="h-10 text-base"
               />
               
               {/* Autocomplete Dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-white border border-slate-200 dark:border-slate-300 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={suggestion.code}
                       onClick={() => handleSelectSuggestion(suggestion)}
                       className={`px-4 py-2 cursor-pointer transition-colors ${
                         index === selectedSuggestionIndex
-                          ? 'bg-sky-100 dark:bg-sky-100 text-sky-900 dark:text-sky-900'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-100'
+                          ? 'bg-sky-100 text-sky-900'
+                          : 'hover:bg-slate-50'
                       }`}
                     >
-                      <div className="font-semibold text-slate-900 dark:text-slate-900">{suggestion.code}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-700">{suggestion.description}</div>
+                      <div className="font-semibold text-slate-900">{suggestion.code}</div>
+                      <div className="text-sm text-slate-600">{suggestion.description}</div>
                     </div>
                   ))}
                 </div>
@@ -307,26 +332,26 @@ export function BulkVerification() {
 
       {/* Camera Error Message */}
       {cameraError && (
-        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-red-700 dark:text-red-300">{cameraError}</div>
+        <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-red-700">{cameraError}</div>
         </div>
       )}
 
       {/* Selected Codes List */}
       {codes.length > 0 && (
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Selected Codes ({codes.length})</label>
+          <label className="text-sm font-semibold text-slate-700">Selected Codes ({codes.length})</label>
           <div className="flex flex-wrap gap-2">
             {codes.map((code, index) => (
               <div
                 key={index}
-                className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg px-3 py-1 flex items-center gap-2"
+                className="bg-sky-50 border border-sky-200 rounded-lg px-3 py-1 flex items-center gap-2"
               >
-                <span className="font-semibold text-sky-900 dark:text-sky-100">{code}</span>
+                <span className="font-semibold text-sky-900">{code}</span>
                 <button
                   onClick={() => handleRemoveCode(index)}
-                  className="text-sky-600 dark:text-sky-400 hover:text-sky-900 dark:hover:text-sky-200"
+                  className="text-sky-600 hover:text-sky-900"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -338,12 +363,12 @@ export function BulkVerification() {
 
       {/* Paste Multiple Codes */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Paste Multiple Codes (Optional)</label>
+        <label className="text-sm font-semibold text-slate-700">Paste Multiple Codes (Optional)</label>
         <textarea
           placeholder="Paste codes here (one per line)..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="w-full h-32 p-3 border border-slate-200 dark:border-slate-700 rounded-lg font-mono text-sm bg-white dark:bg-white text-slate-900 dark:text-slate-900 placeholder-slate-500"
+          className="w-full h-32 p-3 border border-slate-200 rounded-lg font-mono text-sm"
         />
       </div>
 
@@ -367,7 +392,7 @@ export function BulkVerification() {
       {results.length > 0 && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Results ({results.length})</h3>
+            <h3 className="text-lg font-bold text-slate-900">Results ({results.length})</h3>
             <Button
               onClick={handleExportCSV}
               variant="outline"
@@ -379,20 +404,20 @@ export function BulkVerification() {
             </Button>
           </div>
 
-          <div className="overflow-x-auto bg-white dark:bg-white rounded-lg border border-slate-200 dark:border-slate-300">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-100 dark:bg-slate-200">
+              <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-900">Code</th>
-                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-900">Found</th>
-                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-900">Coverage</th>
-                  <th className="px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-900">Details</th>
+                  <th className="px-4 py-2 text-left font-semibold">Code</th>
+                  <th className="px-4 py-2 text-left font-semibold">Found</th>
+                  <th className="px-4 py-2 text-left font-semibold">Coverage</th>
+                  <th className="px-4 py-2 text-left font-semibold">Details</th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((result, index) => (
-                  <tr key={index} className="border-b border-slate-200 dark:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-100">
-                    <td className="px-4 py-2 font-mono font-semibold text-slate-900 dark:text-slate-900">{result.input}</td>
+                  <tr key={index} className="border-b border-slate-200 hover:bg-slate-50">
+                    <td className="px-4 py-2 font-mono font-semibold text-slate-900">{result.input}</td>
                     <td className="px-4 py-2">
                       {result.found ? (
                         <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -410,10 +435,10 @@ export function BulkVerification() {
                           {result.isCovered ? 'Covered' : 'Not Covered'}
                         </span>
                       ) : (
-                        <span className="text-slate-500 dark:text-slate-600">-</span>
+                        <span className="text-slate-500">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-800">{result.details.name || '-'}</td>
+                    <td className="px-4 py-2 text-slate-700">{result.details.name || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -433,7 +458,7 @@ export function BulkVerification() {
       />
 
       {isProcessingImage && (
-        <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center justify-center gap-2 text-slate-600 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <Loader2 className="h-4 w-4 animate-spin" />
           Processing image with OCR...
         </div>

@@ -1,9 +1,0 @@
-{
-  "query": "DELETE FROM search_analytics WHERE query = 'TEST_FIX_VERIFIED' OR query = 'TEST_MANUAL_TRACK';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute DELETE FROM search_analytics WHERE query = 'TEST_FIX_VERIFIED' OR query = 'TEST_MANUAL_TRACK';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1599
-}

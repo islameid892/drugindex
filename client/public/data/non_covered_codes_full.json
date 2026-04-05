@@ -1,0 +1,810 @@
+[
+  {
+    "code": "Z86.41",
+    "description": "Personal history of alcohol use disorder"
+  },
+  {
+    "code": "Z71.9",
+    "description": "Counselling, unspecified"
+  },
+  {
+    "code": "Z71.8",
+    "description": "Other specified counselling"
+  },
+  {
+    "code": "Z70.8",
+    "description": "Other sex counselling"
+  },
+  {
+    "code": "Z56.7",
+    "description": "Other and unspecified problems related to employment"
+  },
+  {
+    "code": "Z56.5",
+    "description": "Uncongenial work"
+  },
+  {
+    "code": "Z56.4",
+    "description": "Discord with boss and workmates"
+  },
+  {
+    "code": "Z56.3",
+    "description": "Stressful work schedule"
+  },
+  {
+    "code": "Z56.2",
+    "description": "Threat of job loss"
+  },
+  {
+    "code": "Z56.1",
+    "description": "Change of job"
+  },
+  {
+    "code": "Z56.0",
+    "description": "Unemployment, unspecified"
+  },
+  {
+    "code": "Z51.9",
+    "description": "Medical care, unspecified"
+  },
+  {
+    "code": "Z51.88",
+    "description": "Other specified medical care"
+  },
+  {
+    "code": "Z41.1",
+    "description": "Other plastic surgery for unacceptable cosmetic appearance"
+  },
+  {
+    "code": "Z41.0",
+    "description": "Hair transplant"
+  },
+  {
+    "code": "Z31.5",
+    "description": "Genetic counselling"
+  },
+  {
+    "code": "Z31.2",
+    "description": "In vitro fertilisation"
+  },
+  {
+    "code": "Z30.0",
+    "description": "General counselling and advice on contraception"
+  },
+  {
+    "code": "Z13.9",
+    "description": "Special screening examination, unspecified"
+  },
+  {
+    "code": "Z10.8",
+    "description": "Routine general health check-up of other defined subpopulations"
+  },
+  {
+    "code": "Z10.1",
+    "description": "Routine general health check-up of inhabitants of institutions"
+  },
+  {
+    "code": "Z04.9",
+    "description": "Examination and observation for unspecified reason"
+  },
+  {
+    "code": "Z04.8",
+    "description": "Examination and observation for other specified reasons"
+  },
+  {
+    "code": "Z02.9",
+    "description": "Examination for administrative purposes, unspecified"
+  },
+  {
+    "code": "Z02.8",
+    "description": "Other examinations for administrative purposes"
+  },
+  {
+    "code": "Z02.4",
+    "description": "Examination for driving licence"
+  },
+  {
+    "code": "Z01.9",
+    "description": "Special examination, unspecified"
+  },
+  {
+    "code": "Z01.7",
+    "description": "Laboratory examination"
+  },
+  {
+    "code": "Z01.6",
+    "description": "Radiological examination, not elsewhere classified"
+  },
+  {
+    "code": "Z00.8",
+    "description": "Other general examinations"
+  },
+  {
+    "code": "Z00.1",
+    "description": "Routine child health examination"
+  },
+  {
+    "code": "Z00.0",
+    "description": "General medical examination"
+  },
+  {
+    "code": "Y91.9",
+    "description": "Alcohol involvement, not otherwise specified"
+  },
+  {
+    "code": "Y91.0",
+    "description": "Mild alcohol intoxication"
+  },
+  {
+    "code": "Y56.4",
+    "description": "Keratolytics, keratoplastics and other hair treatment drugs and preparations causing adverse effects in therapeutic use"
+  },
+  {
+    "code": "X69",
+    "description": "Intentional self-poisoning by and exposure to other and unspecified chemicals and noxious substances"
+  },
+  {
+    "code": "X64",
+    "description": "Intentional self-poisoning by and exposure to other and unspecified drugs, medicaments and biological substances"
+  },
+  {
+    "code": "X52",
+    "description": "Prolonged stay in weightless environment"
+  },
+  {
+    "code": "U73.08",
+    "description": "Activity, other specified work for income"
+  },
+  {
+    "code": "U68.4",
+    "description": "Activity, parachuting and sky diving"
+  },
+  {
+    "code": "U66.9",
+    "description": "Activity, unspecified wheeled nonmotored sport"
+  },
+  {
+    "code": "U65.9",
+    "description": "Activity, unspecified motor sport"
+  },
+  {
+    "code": "U65.2",
+    "description": "Activity, motor car racing"
+  },
+  {
+    "code": "U64.2",
+    "description": "Activity, mountaineering"
+  },
+  {
+    "code": "U63.09",
+    "description": "Activity, equestrian event unspecified"
+  },
+  {
+    "code": "U63.0",
+    "description": "Activity, Equestrian events"
+  },
+  {
+    "code": "U58",
+    "description": "Aesthetic activities"
+  },
+  {
+    "code": "U57.08",
+    "description": "Activity, other specified gymnastics"
+  },
+  {
+    "code": "U55.7",
+    "description": "Activity, curling"
+  },
+  {
+    "code": "U50.03",
+    "description": "Activity, rugby unspecified"
+  },
+  {
+    "code": "U50.02",
+    "description": "Activity, rugby league"
+  },
+  {
+    "code": "T49.4",
+    "description": "Keratolytics, keratoplastics and other hair treatment drugs and preparations"
+  },
+  {
+    "code": "T38.4",
+    "description": "Oral contraceptives"
+  },
+  {
+    "code": "R78.4",
+    "description": "Finding of other drugs of addictive potential in blood"
+  },
+  {
+    "code": "R78.2",
+    "description": "Finding of cocaine in blood"
+  },
+  {
+    "code": "R68.8",
+    "description": "Other specified general symptoms and signs"
+  },
+  {
+    "code": "R68",
+    "description": "Other general symptoms and signs"
+  },
+  {
+    "code": "R61.1",
+    "description": "Generalised hyperhidrosis"
+  },
+  {
+    "code": "R61.0",
+    "description": "Localised hyperhidrosis"
+  },
+  {
+    "code": "R23.8",
+    "description": "Other and unspecified skin changes"
+  },
+  {
+    "code": "R23.4",
+    "description": "Changes in skin texture"
+  },
+  {
+    "code": "Q84.0",
+    "description": "Congenital alopecia"
+  },
+  {
+    "code": "N97.9",
+    "description": "Female infertility, unspecified"
+  },
+  {
+    "code": "N97.8",
+    "description": "Female infertility of other origin"
+  },
+  {
+    "code": "N97.4",
+    "description": "Female infertility associated with male factors"
+  },
+  {
+    "code": "N97.3",
+    "description": "Female infertility of cervical origin"
+  },
+  {
+    "code": "N97.2",
+    "description": "Female infertility of uterine origin"
+  },
+  {
+    "code": "N97.1",
+    "description": "Female infertility of tubal origin"
+  },
+  {
+    "code": "N97.0",
+    "description": "Female infertility associated with anovulation"
+  },
+  {
+    "code": "N97",
+    "description": "Female infertility"
+  },
+  {
+    "code": "N62",
+    "description": "Hypertrophy of breast"
+  },
+  {
+    "code": "N48.4",
+    "description": "Impotence of organic origin"
+  },
+  {
+    "code": "N46",
+    "description": "Male infertility"
+  },
+  {
+    "code": "L98.9",
+    "description": "Disorder of skin and subcutaneous tissue, unspecified"
+  },
+  {
+    "code": "L98.7",
+    "description": "Excessive and redundant skin and subcutaneous tissue"
+  },
+  {
+    "code": "L98.1",
+    "description": "Factitial dermatitis"
+  },
+  {
+    "code": "L91.8",
+    "description": "Other hypertrophic disorders of skin"
+  },
+  {
+    "code": "L91.09",
+    "description": "Hypertrophic scar due to other specified cause"
+  },
+  {
+    "code": "L91.01",
+    "description": "Hypertrophic scar due to burn"
+  },
+  {
+    "code": "L91.00",
+    "description": "Hypertrophic scar, unspecified cause"
+  },
+  {
+    "code": "L91.0",
+    "description": "Hypertrophic scar"
+  },
+  {
+    "code": "L91",
+    "description": "Hypertrophic disorders of skin"
+  },
+  {
+    "code": "L90.59",
+    "description": "Scar conditions and fibrosis of skin due to other specified cause"
+  },
+  {
+    "code": "L90.51",
+    "description": "Scar conditions and fibrosis of skin due to burn"
+  },
+  {
+    "code": "L90.50",
+    "description": "Scar conditions and fibrosis of skin due to unspecified cause"
+  },
+  {
+    "code": "L82",
+    "description": "Seborrhoeic keratosis"
+  },
+  {
+    "code": "L81.9",
+    "description": "Disorder of pigmentation, unspecified"
+  },
+  {
+    "code": "L81.8",
+    "description": "Other specified disorders of pigmentation"
+  },
+  {
+    "code": "L81.7",
+    "description": "Pigmented purpuric dermatosis"
+  },
+  {
+    "code": "L81.6",
+    "description": "Other disorders of diminished melanin formation"
+  },
+  {
+    "code": "L81.5",
+    "description": "Leukoderma, not elsewhere classified"
+  },
+  {
+    "code": "L81.4",
+    "description": "Other melanin hyperpigmentation"
+  },
+  {
+    "code": "L81.3",
+    "description": "Cafe au lait spots"
+  },
+  {
+    "code": "L81.2",
+    "description": "Freckles"
+  },
+  {
+    "code": "L81.1",
+    "description": "Chloasma"
+  },
+  {
+    "code": "L81.0",
+    "description": "Postinflammatory hyperpigmentation"
+  },
+  {
+    "code": "L81",
+    "description": "Other disorders of pigmentation"
+  },
+  {
+    "code": "L80",
+    "description": "Vitiligo"
+  },
+  {
+    "code": "L75.0",
+    "description": "Bromhidrosis"
+  },
+  {
+    "code": "L73.9",
+    "description": "Follicular disorder, unspecified"
+  },
+  {
+    "code": "L73.8",
+    "description": "Other specified follicular disorders"
+  },
+  {
+    "code": "L73.0",
+    "description": "Acne keloid"
+  },
+  {
+    "code": "L72.9",
+    "description": "Follicular cyst of skin and subcutaneous tissue, unspecified"
+  },
+  {
+    "code": "L70.8",
+    "description": "Other acne"
+  },
+  {
+    "code": "L70.5",
+    "description": "Acne excoriee"
+  },
+  {
+    "code": "L70.4",
+    "description": "Infantile acne"
+  },
+  {
+    "code": "L70.3",
+    "description": "Acne tropica"
+  },
+  {
+    "code": "L70.2",
+    "description": "Acne varioliformis"
+  },
+  {
+    "code": "L70.1",
+    "description": "Acne conglobata"
+  },
+  {
+    "code": "L70.0",
+    "description": "Acne vulgaris"
+  },
+  {
+    "code": "L70",
+    "description": "Acne"
+  },
+  {
+    "code": "L68.8",
+    "description": "Other hypertrichosis"
+  },
+  {
+    "code": "L68.0",
+    "description": "Hirsutism"
+  },
+  {
+    "code": "L68",
+    "description": "Hypertrichosis"
+  },
+  {
+    "code": "L67.9",
+    "description": "Hair colour and hair shaft abnormality, unspecified"
+  },
+  {
+    "code": "L67.8",
+    "description": "Other hair colour and hair shaft abnormalities"
+  },
+  {
+    "code": "L67.1",
+    "description": "Variations in hair colour"
+  },
+  {
+    "code": "L67",
+    "description": "Hair colour and hair shaft abnormalities"
+  },
+  {
+    "code": "L66.9",
+    "description": "Cicatricial alopecia, unspecified"
+  },
+  {
+    "code": "L66.8",
+    "description": "Other cicatricial alopecia"
+  },
+  {
+    "code": "L66.4",
+    "description": "Folliculitis ulerythematosa reticulata"
+  },
+  {
+    "code": "L66.3",
+    "description": "Perifolliculitis capitis abscedens"
+  },
+  {
+    "code": "L66.2",
+    "description": "Folliculitis decalvans"
+  },
+  {
+    "code": "L66.1",
+    "description": "Lichen planopilaris"
+  },
+  {
+    "code": "L66.0",
+    "description": "Pseudopelade"
+  },
+  {
+    "code": "L66",
+    "description": "Cicatricial alopecia [scarring hair loss]"
+  },
+  {
+    "code": "L65.9",
+    "description": "Nonscarring hair loss, unspecified"
+  },
+  {
+    "code": "L65.8",
+    "description": "Other specified nonscarring hair loss"
+  },
+  {
+    "code": "L65.2",
+    "description": "Alopecia mucinosa"
+  },
+  {
+    "code": "L65.1",
+    "description": "Anagen effluvium"
+  },
+  {
+    "code": "L65.0",
+    "description": "Telogen effluvium"
+  },
+  {
+    "code": "L65",
+    "description": "Other nonscarring hair loss"
+  },
+  {
+    "code": "L64.9",
+    "description": "Androgenic alopecia, unspecified"
+  },
+  {
+    "code": "L64.8",
+    "description": "Other androgenic alopecia"
+  },
+  {
+    "code": "L64.0",
+    "description": "Drug-induced androgenic alopecia"
+  },
+  {
+    "code": "L64",
+    "description": "Androgenic alopecia"
+  },
+  {
+    "code": "L63.8",
+    "description": "Other alopecia areata"
+  },
+  {
+    "code": "L63.1",
+    "description": "Alopecia universalis"
+  },
+  {
+    "code": "L63.0",
+    "description": "Alopecia (capitis) totalis"
+  },
+  {
+    "code": "L63",
+    "description": "Alopecia areata"
+  },
+  {
+    "code": "L57.8",
+    "description": "Other skin changes due to chronic exposure to nonionising radiation"
+  },
+  {
+    "code": "K29.20",
+    "description": "Alcoholic gastritis, without mention of haemorrhage"
+  },
+  {
+    "code": "J60",
+    "description": "Coalworker's pneumoconiosis"
+  },
+  {
+    "code": "G47.0",
+    "description": "Disorders of initiating and maintaining sleep [insomnias]"
+  },
+  {
+    "code": "F66.9",
+    "description": "Psychosexual development disorder, unspecified"
+  },
+  {
+    "code": "F66.2",
+    "description": "Sexual relationship disorder"
+  },
+  {
+    "code": "F65.9",
+    "description": "Disorder of sexual preference, unspecified"
+  },
+  {
+    "code": "F65.8",
+    "description": "Other disorders of sexual preference"
+  },
+  {
+    "code": "F65.6",
+    "description": "Multiple disorders of sexual preference"
+  },
+  {
+    "code": "F65",
+    "description": "Disorders of sexual preference"
+  },
+  {
+    "code": "F64.8",
+    "description": "Other gender identity disorders"
+  },
+  {
+    "code": "F64.2",
+    "description": "Gender identity disorder of childhood"
+  },
+  {
+    "code": "F55.5",
+    "description": "Harmful use of nondependence-producing substance, steroids or hormones"
+  },
+  {
+    "code": "F55.4",
+    "description": "Harmful use of nondependence-producing substance, vitamins"
+  },
+  {
+    "code": "F52.9",
+    "description": "Unspecified sexual dysfunction, not caused by organic disorder or disease"
+  },
+  {
+    "code": "F52.8",
+    "description": "Other sexual dysfunction, not caused by organic disorder or disease"
+  },
+  {
+    "code": "F52.7",
+    "description": "Excessive sexual drive"
+  },
+  {
+    "code": "F52.6",
+    "description": "Nonorganic dyspareunia"
+  },
+  {
+    "code": "F52.5",
+    "description": "Nonorganic vaginismus"
+  },
+  {
+    "code": "F52.4",
+    "description": "Premature ejaculation"
+  },
+  {
+    "code": "F52.3",
+    "description": "Orgasmic dysfunction"
+  },
+  {
+    "code": "F52.2",
+    "description": "Failure of genital response"
+  },
+  {
+    "code": "F52.1",
+    "description": "Sexual aversion and lack of sexual enjoyment"
+  },
+  {
+    "code": "F52.0",
+    "description": "Lack or loss of sexual desire"
+  },
+  {
+    "code": "F52",
+    "description": "Sexual dysfunction, not caused by organic disorder or disease"
+  },
+  {
+    "code": "F51.0",
+    "description": "Nonorganic insomnia"
+  },
+  {
+    "code": "F41.1",
+    "description": "Generalised anxiety disorder"
+  },
+  {
+    "code": "F19.9",
+    "description": "Mental and behavioural disorders due to multiple drug use and use of psychoactive substances, unspecified mental and behavioural disorder"
+  },
+  {
+    "code": "F19.2",
+    "description": "Mental and behavioural disorders due to multiple drug use and use of psychoactive substances, dependence syndrome"
+  },
+  {
+    "code": "F19.0",
+    "description": "Mental and behavioural disorders due to multiple drug use and use of psychoactive substances, acute intoxication"
+  },
+  {
+    "code": "F19",
+    "description": "Mental and behavioural disorders due to multiple drug use and use of other psychoactive substances"
+  },
+  {
+    "code": "F17.3",
+    "description": "Mental and behavioural disorders due to use of tobacco, withdrawal state"
+  },
+  {
+    "code": "F17.2",
+    "description": "Mental and behavioural disorders due to use of tobacco, dependence syndrome"
+  },
+  {
+    "code": "F17.1",
+    "description": "Mental and behavioural disorders due to use of tobacco, harmful use"
+  },
+  {
+    "code": "F16.5",
+    "description": "Mental and behavioural disorders due to use of hallucinogens, psychotic disorder"
+  },
+  {
+    "code": "F16.49",
+    "description": "Mental and behavioural disorders due to use of hallucinogens, withdrawal state with delirium, other specified hallucinogen"
+  },
+  {
+    "code": "F16.0",
+    "description": "Mental and behavioural disorders due to use of hallucinogens, acute intoxication"
+  },
+  {
+    "code": "F16",
+    "description": "Mental and behavioural disorders due to use of hallucinogens"
+  },
+  {
+    "code": "F15.1",
+    "description": "Mental and behavioural disorders due to use of other stimulants, including caffeine, harmful use"
+  },
+  {
+    "code": "F15",
+    "description": "Mental and behavioural disorders due to use of other stimulants, including caffeine"
+  },
+  {
+    "code": "F14.5",
+    "description": "Mental and behavioural disorders due to use of cocaine, psychotic disorder"
+  },
+  {
+    "code": "F13.9",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, unspecified mental and behavioural disorder"
+  },
+  {
+    "code": "F13.29",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, dependence syndrome, other specified sedative or hypnotic"
+  },
+  {
+    "code": "F13.20",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, dependence syndrome, unspecified sedative or hypnotic"
+  },
+  {
+    "code": "F13.2",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, dependence syndrome"
+  },
+  {
+    "code": "F13.10",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, harmful use, unspecified sedative or hypnotic"
+  },
+  {
+    "code": "F13.1",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics, harmful use"
+  },
+  {
+    "code": "F13",
+    "description": "Mental and behavioural disorders due to use of sedatives or hypnotics"
+  },
+  {
+    "code": "F12.3",
+    "description": "Mental and behavioural disorders due to use of cannabinoids, withdrawal state"
+  },
+  {
+    "code": "F12.2",
+    "description": "Mental and behavioural disorders due to use of cannabinoids, dependence syndrome"
+  },
+  {
+    "code": "F12.1",
+    "description": "Mental and behavioural disorders due to use of cannabinoids, harmful use"
+  },
+  {
+    "code": "F12.0",
+    "description": "Mental and behavioural disorders due to use of cannabinoids, acute intoxication"
+  },
+  {
+    "code": "F12",
+    "description": "Mental and behavioural disorders due to use of cannabinoids"
+  },
+  {
+    "code": "F11.5",
+    "description": "Mental and behavioural disorders due to use of opioids, psychotic disorder"
+  },
+  {
+    "code": "F11",
+    "description": "Mental and behavioural disorders due to use of opioids"
+  },
+  {
+    "code": "F10.5",
+    "description": "Mental and behavioural disorders due to use of alcohol, psychotic disorder"
+  },
+  {
+    "code": "F10.3",
+    "description": "Mental and behavioural disorders due to use of alcohol, withdrawal state"
+  },
+  {
+    "code": "F10.1",
+    "description": "Mental and behavioural disorders due to use of alcohol, harmful use"
+  },
+  {
+    "code": "F10",
+    "description": "Mental and behavioural disorders due to use of alcohol"
+  },
+  {
+    "code": "E65",
+    "description": "Localised adiposity"
+  },
+  {
+    "code": "E28.1",
+    "description": "Androgen excess"
+  },
+  {
+    "code": "B07",
+    "description": "Viral warts"
+  }
+]

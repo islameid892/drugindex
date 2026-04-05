@@ -1,10 +1,7 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
-import type { RateLimitRequestHandler } from "express-rate-limit";
 import { createServer } from "http";
 import net from "net";
-import compression from "compression";
-import cookieParser from "cookie-parser";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -15,7 +12,6 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import superjson from "superjson";
-import askSilaRouter from "../api/askSila";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,56 +32,21 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// Rate limiting middleware - PROFESSIONAL IMPLEMENTATION
-const globalLimiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minute window
-  max: 100, // 100 requests per 15 minutes globally
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Increased from 100 to 300 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.path === '/health' || req.path.startsWith('/public'),
-  handler: (req, res) => {
-    const rateLimit = (req as any).rateLimit;
-    res.status(429).json({
-      error: 'Too many requests',
-      message: 'You have exceeded the rate limit. Please try again later.',
-      retryAfter: rateLimit?.resetTime,
-      remaining: rateLimit?.remaining || 0,
-    });
-  },
+  standardHeaders: true, // Return rate limit info in the RateLimit-* headers
+  legacyHeaders: false, // Disable the X-RateLimit-* headers
+  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
 });
 
-const apiLimiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 300, // Increased from 60 to 300 for metrics and analytics
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.path === '/health',
-  handler: (req, res) => {
-    const rateLimit = (req as any).rateLimit;
-    res.status(429).json({
-      error: 'Too many API requests',
-      message: 'API rate limit exceeded. Please try again later.',
-      retryAfter: rateLimit?.resetTime,
-      remaining: rateLimit?.remaining || 0,
-    });
-  },
-});
-
-const searchLimiter: RateLimitRequestHandler = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 100, // Increased from 30 to 100 for search requests
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    const rateLimit = (req as any).rateLimit;
-    res.status(429).json({
-      error: 'Search rate limit exceeded',
-      message: 'Too many search requests. Please try again later.',
-      retryAfter: rateLimit?.resetTime,
-      remaining: rateLimit?.remaining || 0,
-    });
-  },
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Increased from 50 to 200 requests per windowMs
+  message: 'Too many API requests from this IP, please try again later.',
+  skip: (req) => req.method === 'GET', // Don't rate limit GET requests
 });
 
 async function startServer() {
@@ -153,32 +114,8 @@ async function startServer() {
     }
   });
 
-  // Compression middleware - gzip compression for responses
-  app.use(compression({
-    level: 6,
-    threshold: 1024,
-    filter: (req: Request, res: Response) => {
-      if (req.headers['x-no-compression']) {
-        return false;
-      }
-      return compression.filter(req, res);
-    },
-  }));
-
-  // Health check endpoint - BEFORE rate limiting
-  app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'healthy',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-    });
-  });
-
-  // Apply global rate limiting (disabled in development)
-  if (process.env.NODE_ENV === 'production') {
-    app.use(globalLimiter);
-  }
+  // Apply rate limiting
+  app.use(limiter);
 
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
@@ -190,9 +127,6 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Parse cookies
-  app.use(cookieParser());
-
   // Set server timeout to prevent premature disconnections
   server.setTimeout(120000); // 2 minutes
   server.keepAliveTimeout = 65000; // 65 seconds
@@ -200,20 +134,10 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Ask Sila API routes
-  app.use("/api/askSila", askSilaRouter);
+  // Apply stricter rate limiting to API endpoints
+  app.use('/api/', apiLimiter);
 
-  // Apply stricter rate limiting to API endpoints (disabled in development)
-  if (process.env.NODE_ENV === 'production') {
-    app.use('/api/', apiLimiter);
-  }
-
-  // Apply stricter rate limiting to search endpoints (disabled in development)
-  if (process.env.NODE_ENV === 'production') {
-    app.use('/api/trpc/data.searchGrouped', searchLimiter);
-  }
-
-  // tRPC API with response optimization
+  // tRPC API
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -223,8 +147,6 @@ async function startServer() {
         return {
           headers: {
             'content-type': 'application/json',
-            'cache-control': 'public, max-age=300',
-            'vary': 'Accept-Encoding',
           },
         };
       },
@@ -243,24 +165,6 @@ async function startServer() {
     res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     // Permissions Policy
     res.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    // Vary header for cache
-    res.header('Vary', 'Accept-Encoding');
-    next();
-  });
-
-
-
-  // 404 Error handler - return proper HTTP 404 status
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // Check if request is for API or static files that don't exist
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'API endpoint not found',
-        path: req.path,
-      });
-    }
-    // For SPA routes, let Vite/static handler deal with it
     next();
   });
 
@@ -270,39 +174,6 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
-
-  // Final 404 handler for unmatched routes (after static files)
-  app.use((req: Request, res: Response) => {
-    // Return 404 status with JSON response for API requests
-    if (req.accepts('json')) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'The requested resource was not found',
-        path: req.path,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    // For HTML requests, serve index.html (SPA routing)
-    res.status(404).sendFile(require('path').join(__dirname, '../../dist/public/index.html'));
-  });
-
-  // Error handler middleware (must be last)
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('Server error:', err);
-    
-    if (res.headersSent) {
-      return next(err);
-    }
-
-    const statusCode = err.statusCode || err.status || 500;
-    const message = err.message || 'Internal Server Error';
-
-    res.status(statusCode).json({
-      error: 'Server Error',
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    });
-  });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
@@ -316,18 +187,12 @@ async function startServer() {
     console.log('Security features enabled:');
     console.log('✅ Helmet security headers');
     console.log('✅ CORS protection');
-    console.log('✅ Rate limiting:');
-    console.log('   - Global: 100 req/15min');
-    console.log('   - API: 60 req/min');
-    console.log('   - Search: 30 req/min');
+    console.log('✅ Rate limiting (100 req/15min global, 50 req/15min API)');
     console.log('✅ XSS protection');
     console.log('✅ NoSQL injection protection');
     console.log('✅ HSTS enabled');
     console.log('✅ Input validation and sanitization');
     console.log('✅ Trust proxy enabled for accurate rate limiting');
-    console.log('✅ Response compression (gzip) enabled');
-    console.log('✅ Cache control headers configured');
-    console.log('✅ X-RateLimit headers enabled');
   });
 }
 

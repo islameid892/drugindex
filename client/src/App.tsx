@@ -8,10 +8,9 @@ import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { Suspense, lazy, useEffect } from "react";
 import Home from "./pages/Home";
 import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag } from "./lib/seoHelpers";
-// AdvancedSearchFAB is now in HeroSection
+import { AdvancedSearchFAB } from "./components/AdvancedSearchFAB";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
-
 
 // Lazy load pages for better performance (Code Splitting)
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -30,10 +29,6 @@ const ImageToPDF = lazy(() => import("./pages/ImageToPDF"));
 const MergePDF = lazy(() => import("./pages/MergePDF"));
 const Tools = lazy(() => import("./pages/Tools"));
 const BrowseByScientificName = lazy(() => import("./pages/BrowseByScientificName"));
-const DrugLens = lazy(() => import("./pages/DrugLens"));
-
-const Metrics = lazy(() => import("./pages/Metrics"));
-const PerformanceDashboard = lazy(() => import("./pages/PerformanceDashboard"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -64,18 +59,9 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/?"} component={Home} />
-      <Route path={"metrics"} component={() => (
+      <Route path={"/?"}component={Home} />
+      <Route path={"/about"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <Metrics />
-        </Suspense>
-      )} />
-      <Route path={"performance"} component={() => (
-        <Suspense fallback={<PageLoader />}>
-          <PerformanceDashboard />
-        </Suspense>
-      )} />
-      <Route path={"/about"} component={() => (        <Suspense fallback={<PageLoader />}>
           <AboutUs />
         </Suspense>
       )} />
@@ -99,7 +85,11 @@ function Router() {
           <FAQ />
         </Suspense>
       )} />
- 
+      <Route path={"/analytics"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Analytics />
+        </Suspense>
+      )} />
       <Route path={"/tools"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Tools />
@@ -118,11 +108,6 @@ function Router() {
       <Route path={"/browse/scientific-name/:scientificName"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <BrowseByScientificName />
-        </Suspense>
-      )} />
-      <Route path={"/drug-lens"} component={() => (
-        <Suspense fallback={<PageLoader />}>
-          <DrugLens />
         </Suspense>
       )} />
       <Route path={"/favorites"} component={() => (
@@ -169,18 +154,22 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" switchable={true}>
-      <FavoritesProvider>
-        <TooltipProvider>
-          <ErrorBoundary>
+    <ErrorBoundary>
+      <ThemeProvider
+        defaultTheme="light"
+        switchable
+      >
+        <FavoritesProvider>
+          <TooltipProvider>
+            <Toaster />
             <Router />
+            <AdvancedSearchFAB />
             <PWAInstallPrompt />
             <PWAUpdateNotification />
-            <Toaster />
-          </ErrorBoundary>
-        </TooltipProvider>
-      </FavoritesProvider>
-    </ThemeProvider>
+          </TooltipProvider>
+        </FavoritesProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

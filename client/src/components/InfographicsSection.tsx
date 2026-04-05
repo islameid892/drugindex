@@ -54,10 +54,6 @@ export default function InfographicsSection() {
                   <img
                     src={infographic.image}
                     alt={infographic.alt}
-                    loading="lazy"
-                    decoding="async"
-                    width="600"
-                    height="400"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -127,10 +123,6 @@ export default function InfographicsSection() {
                 <img
                   src={selected.image}
                   alt={selected.alt}
-                  loading="lazy"
-                  decoding="async"
-                  width="1200"
-                  height="800"
                   className="w-full h-auto rounded-lg"
                 />
               </div>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Search, Zap, Clock, Target, Database, Activity, BarChart3, Loader2, RefreshCw } from "lucide-react";
+import { TrendingUp, Users, Search, Zap, Clock, Target, Database, Activity, BarChart3, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 
@@ -62,41 +62,18 @@ export function AnalyticsDashboard() {
     );
   }
 
-  // Map API response fields to component variables
   const totalSearches = dashboard?.totalSearches || 0;
-  const weekSearches = dashboard?.searchesThisWeek || 0;       // API: searchesThisWeek
+  const weekSearches = dashboard?.weekSearches || 0;
   const avgResponseTime = dashboard?.avgResponseTime || 0;
   const registeredUsers = dashboard?.registeredUsers || 0;
   const topSearches = dashboard?.topSearches || [];
-  const searchTrend = dashboard?.weeklyTrends || [];            // API: weeklyTrends
-  const todayVolume = dashboard?.searchesToday || 0;            // API: searchesToday
+  const searchTrend = dashboard?.searchTrend || [];
+  const coverage = dashboard?.coverage || { covered: 0, uncovered: 0, rate: 0 };
+  const dbStats = dashboard?.dbStats || { totalCodes: 0, nonCoveredCodes: 0, totalDrugEntries: 0, uniqueIndications: 0, uniqueScientificNames: 0, uniqueTradeNames: 0, totalBranches: 0 };
+  const todayVolume = dashboard?.todayVolume || 0;
   const recentSearches = dashboard?.recentSearches || [];
-
-  // Build coverage object from API fields
-  const coverageRate = dashboard?.coverageRate || 0;
-  const coveredCount = dashboard?.coveredCount || 0;
-  const totalCount = dashboard?.totalCount || 0;
-  const uncoveredCount = Math.max(totalCount - coveredCount, 0);
-  const coverage = {
-    rate: coverageRate,
-    covered: coveredCount,
-    uncovered: uncoveredCount,
-  };
-
-  // Build dbStats from API dbSummary field
-  const dbSummary = dashboard?.dbSummary || { icd10Count: 0, medicationsCount: 0, conditionsCount: 0, coverageRate: 0 };
-  const dbStats = {
-    totalCodes: dbSummary.icd10Count || 0,
-    nonCoveredCodes: 0,
-    totalDrugEntries: dbSummary.medicationsCount || 0,
-    uniqueIndications: dbSummary.conditionsCount || 0,
-    uniqueScientificNames: 0,
-    uniqueTradeNames: 0,
-    totalBranches: 0,
-  };
-
   const maxTrend = Math.max(...searchTrend.map((d: any) => d.count || 0), 1);
-  const maxTopSearch = topSearches.length > 0 ? (topSearches[0] as any).count : 1;
+  const maxTopSearch = topSearches.length > 0 ? topSearches[0].count : 1;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -144,7 +121,7 @@ export function AnalyticsDashboard() {
           icon={Target}
           label="Coverage Rate"
           value={`${coverage.rate}%`}
-          subtitle={`${coverage.covered.toLocaleString()} covered of ${totalCount.toLocaleString()}`}
+          subtitle={`${coverage.covered.toLocaleString()} covered of ${(coverage.covered + coverage.uncovered).toLocaleString()}`}
           color="bg-gradient-to-br from-purple-500 to-purple-600"
         />
       </div>
@@ -171,28 +148,20 @@ export function AnalyticsDashboard() {
             <CardContent>
               {searchTrend.length > 0 ? (
                 <div className="space-y-4">
-                  {searchTrend.map((day: any, idx: number) => {
-                    // date may be ISO string like "2026-03-07T00:00:00.000Z"
-                    const dateLabel = day.date
-                      ? (typeof day.date === 'string'
-                          ? day.date.substring(0, 10)
-                          : new Date(day.date).toISOString().substring(0, 10))
-                      : '';
-                    return (
-                      <div key={idx} className="flex items-center justify-between gap-4">
-                        <span className="text-sm text-muted-foreground min-w-20">{dateLabel}</span>
-                        <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-sky-500 to-sky-600 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.max(((day.count || 0) / maxTrend) * 100, 2)}%` }}
-                          />
-                        </div>
-                        <span className="w-16 text-right text-sm font-semibold text-foreground">
-                          {(day.count || 0).toLocaleString()}
-                        </span>
+                  {searchTrend.map((day: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between gap-4">
+                      <span className="text-sm text-muted-foreground min-w-20">{day.date}</span>
+                      <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-sky-500 to-sky-600 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(((day.count || 0) / maxTrend) * 100, 2)}%` }}
+                        />
                       </div>
-                    );
-                  })}
+                      <span className="w-16 text-right text-sm font-semibold text-foreground">
+                        {(day.count || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
@@ -234,7 +203,7 @@ export function AnalyticsDashboard() {
                           />
                         </div>
                         <span className="w-16 text-right text-sm font-semibold text-muted-foreground">
-                          {Number(search.count).toLocaleString()}
+                          {search.count.toLocaleString()}
                         </span>
                       </div>
                     </div>
@@ -297,8 +266,8 @@ export function AnalyticsDashboard() {
                       <p className="text-xl font-bold">{dbStats.totalCodes.toLocaleString()}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Coverage Rate</p>
-                      <p className="text-xl font-bold">{coverage.rate}%</p>
+                      <p className="text-sm text-muted-foreground">Non-Covered</p>
+                      <p className="text-xl font-bold">{dbStats.nonCoveredCodes.toLocaleString()}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Medications</p>
@@ -332,23 +301,21 @@ export function AnalyticsDashboard() {
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="px-4 py-2 text-left font-semibold">Query</th>
-                        <th className="px-4 py-2 text-left font-semibold">Has Results</th>
+                        <th className="px-4 py-2 text-left font-semibold">Results</th>
+                        <th className="px-4 py-2 text-left font-semibold">Response</th>
                         <th className="px-4 py-2 text-left font-semibold">Time</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recentSearches.map((search: any, idx: number) => (
                         <tr key={idx} className="border-b border-muted hover:bg-muted/30">
-                          <td className="px-4 py-2 font-medium">{search.term || search.query || '-'}</td>
+                          <td className="px-4 py-2 font-medium">{search.query}</td>
+                          <td className="px-4 py-2">{search.resultsCount}</td>
                           <td className="px-4 py-2">
-                            {search.hasResults !== undefined
-                              ? (search.hasResults ? '✓ Yes' : '✗ No')
-                              : (search.resultsCount > 0 ? '✓ Yes' : '✗ No')}
+                            {search.responseTime > 0 ? `${search.responseTime}ms` : '-'}
                           </td>
                           <td className="px-4 py-2 text-muted-foreground text-xs">
-                            {(search.createdAt || search.timestamp)
-                              ? new Date(search.createdAt || search.timestamp).toLocaleString()
-                              : '-'}
+                            {search.timestamp ? new Date(search.timestamp).toLocaleString() : '-'}
                           </td>
                         </tr>
                       ))}

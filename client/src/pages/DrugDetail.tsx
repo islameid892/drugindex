@@ -6,74 +6,63 @@ import { useCoverageStatus } from "@/hooks/useCoverageStatus";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 import { BranchViewer } from "@/components/BranchViewer";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { updatePageSchema } from "@/lib/jsonLdSchemas";
-import { trpc } from "@/lib/trpc";
 
 export default function DrugDetail() {
   const { name } = useParams<{ name: string }>();
   const [, navigate] = useLocation();
   const decodedName = decodeURIComponent(name || "");
+  const [drugs, setDrugs] = useState<any[]>([]);
+  const [treeData, setTreeData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch medications from API
-  const { data: allMedications = [], isLoading: medicationsLoading } = trpc.data.medications.getAll.useQuery(
-    { limit: 50000, offset: 0 },
-    {
-      staleTime: 30 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
-      retry: 2,
-    }
-  );
-
-  // Fetch all codes from API
-  const { data: allCodes = [], isLoading: codesLoading } = trpc.data.codes.getAll.useQuery(
-    { limit: 50000, offset: 0 },
-    {
-      staleTime: 30 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
-      retry: 2,
-    }
-  );
-
-  const loading = medicationsLoading || codesLoading;
-
-  // Filter drugs by scientific name
-  const drugs = allMedications.filter(
-    (item: any) => item.scientificName?.toLowerCase() === decodedName.toLowerCase()
-  );
-
-  // Build tree data from codes
-  const treeData = allCodes;
-
-  // Update page schema when drug is loaded
   useEffect(() => {
-    if (drugs.length > 0) {
-      const drug = drugs[0];
-      updatePageSchema('drug', {
-        name: drug.scientificName,
-        description: drug.indication || 'Medical drug information',
-        indication: drug.indication || '',
-        activeIngredient: drug.scientificName,
-        url: `https://drugindex.click/drug/${encodeURIComponent(drug.scientificName)}`,
-      });
-
-      // Update page title
-      document.title = `${drug.scientificName} - ICD-10 Search Engine`;
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', `${drug.scientificName} - ${drug.indication || 'Medical drug information'}`);
+    const loadData = async () => {
+      try {
+        const [mainRes, treeRes] = await Promise.all([
+          fetch("/data/main_data.json"),
+          fetch("/data/tree_data.json"),
+        ]);
+        const main = await mainRes.json();
+        const tree = await treeRes.json();
+        
+        const filtered = main.filter(
+          (item: any) => item.scientificName.toLowerCase() === decodedName.toLowerCase()
+        );
+        setDrugs(filtered);
+        setTreeData(tree);
+        
+        // Add JSON-LD schema for first drug
+        if (filtered.length > 0) {
+          const drug = filtered[0];
+          updatePageSchema('drug', {
+            name: drug.scientificName,
+            description: drug.indication || 'Medical drug information',
+            indication: drug.indication || '',
+            activeIngredient: drug.scientificName,
+            url: `https://drugindex.click/drug/${encodeURIComponent(drug.scientificName)}`,
+          });
+          
+          // Update page title
+          document.title = `${drug.scientificName} - ICD-10 Search Engine`;
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', `${drug.scientificName} - ${drug.indication || 'Medical drug information'}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
       }
-    } else if (!loading) {
-      // Clear schema if drug not found
-      const existingScript = document.querySelector('script[type="application/ld+json"]');
-      if (existingScript) {
-        existingScript.remove();
-      }
-    }
-  }, [drugs, loading]);
+    };
 
-  const allCodesStr = drugs.map((d: any) => (Array.isArray(d.icdCodes) ? d.icdCodes.join(',') : '')).join(",");
-  const { isCovered } = useCoverageStatus(allCodesStr);
+    loadData();
+  }, [decodedName]);
+
+  const allCodes = drugs.map((d: any) => (Array.isArray(d.icdCodes) ? d.icdCodes.join(',') : '')).join(",");
+  const { isCovered } = useCoverageStatus(allCodes);
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   if (loading) {
@@ -85,6 +74,14 @@ export default function DrugDetail() {
   }
 
   if (drugs.length === 0) {
+    // Clear schema if drug not found
+    useEffect(() => {
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    }, []);
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4">
         <div className="max-w-4xl mx-auto">

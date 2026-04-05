@@ -166,22 +166,6 @@
     font-weight: 500;
     line-height: 1.6;
   }
-
-  /* Hero Display Font - Space Grotesk (modern, medical feel) */
-  .font-hero-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-  }
-
-  /* Hero Body Font - DM Sans (clean, readable) */
-  .font-hero-body {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 400;
-    line-height: 1.65;
-    letter-spacing: 0.01em;
-  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),

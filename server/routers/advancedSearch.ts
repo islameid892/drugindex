@@ -6,11 +6,7 @@ import {
   getTradeNameSuggestions,
   getIndicationSuggestions,
   getAllNonCoveredCodes,
-  getDb,
 } from "../db";
-import { checkCoverageMultiple } from "../coverage";
-import { drugEntries } from "../../drizzle/schema";
-import { asc } from "drizzle-orm";
 
 export const advancedSearchRouter = router({
   /**
@@ -66,7 +62,7 @@ export const advancedSearchRouter = router({
     .input(z.object({
       scientificName: z.string().default(""),
       tradeNames: z.array(z.string()).default([]),
-      indications: z.array(z.string()).default([]),
+      indications: z.array(z.string()).min(1),
     }))
     .mutation(async ({ input }) => {
       try {
@@ -78,19 +74,9 @@ export const advancedSearchRouter = router({
           limit: 500,
         });
 
-        // Collect all unique codes to check coverage
-        const allCodesToCheck = new Set<string>();
-        for (const entry of results) {
-          for (const code of entry.icdCodes) {
-            allCodesToCheck.add(code.code);
-            for (const branch of code.branches) {
-              allCodesToCheck.add(branch.branchCode);
-            }
-          }
-        }
-        
-        // Check coverage for all codes using hierarchical logic
-        const coverageMap = await checkCoverageMultiple(Array.from(allCodesToCheck));
+        // Get non-covered codes for coverage checking
+        const nonCoveredData = await getAllNonCoveredCodes();
+        const nonCoveredSet = new Set((nonCoveredData as Array<{ code: string }>).map((nc) => nc.code));
 
         // Format results: each drug entry with its codes and branches
         const drugs = results.map((entry) => ({
@@ -103,11 +89,11 @@ export const advancedSearchRouter = router({
             code: c.code,
             description: c.description,
             branchCount: c.branchCount,
-            isNonCovered: !coverageMap.get(c.code),
+            isCovered: !nonCoveredSet.has(c.code),
             branches: c.branches.map((b) => ({
               code: b.branchCode,
               description: b.branchDescription,
-              isNonCovered: !coverageMap.get(b.branchCode),
+              isCovered: !nonCoveredSet.has(b.branchCode),
             })),
           })),
         }));
@@ -116,8 +102,8 @@ export const advancedSearchRouter = router({
         const codeMap = new Map<string, {
           code: string;
           description: string;
-          isNonCovered: boolean;
-          branches: Array<{ code: string; description: string; isNonCovered: boolean }>;
+          isCovered: boolean;
+          branches: Array<{ code: string; description: string; isCovered: boolean }>;
         }>();
 
         for (const drug of drugs) {
@@ -126,7 +112,7 @@ export const advancedSearchRouter = router({
               codeMap.set(c.code, {
                 code: c.code,
                 description: c.description,
-                isNonCovered: !coverageMap.get(c.code),
+                isCovered: c.isCovered,
                 branches: c.branches,
               });
             }
@@ -135,32 +121,10 @@ export const advancedSearchRouter = router({
 
         const codes = Array.from(codeMap.values()).sort((a, b) => a.code.localeCompare(b.code));
 
-        // Build filters summary for the response
-        const filters = {
-          scientificName: input.scientificName || null,
-          tradeNames: input.tradeNames,
-          indications: input.indications,
-        };
-
-        return { drugs, codes, total, filters };
+        return { drugs, codes, total };
       } catch (error) {
         console.error("Error in advanced search:", error);
-        return { drugs: [], codes: [], total: 0, filters: { scientificName: null, tradeNames: [], indications: [] } };
+        return { drugs: [], codes: [], total: 0 };
       }
-    }),
-
-  /**
-   * Get all unique scientific names (for browsing/autocomplete)
-   */
-  getAllScientificNames: publicProcedure
-    .query(async () => {
-      const db = await getDb();
-      const rows = await db
-        .selectDistinct({ name: drugEntries.scientificName })
-        .from(drugEntries);
-      // Sort in JS using localeCompare for consistent locale-aware ordering
-      return rows
-        .map((r: { name: string }) => r.name)
-        .sort((a: string, b: string) => a.localeCompare(b));
     }),
 });

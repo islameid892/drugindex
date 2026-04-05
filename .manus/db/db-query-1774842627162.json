@@ -1,9 +1,0 @@
-{
-  "query": "\nUPDATE drug_lens SET trade_name = 'PRICK TEST - INDOOR 0 mg/mL Solution' WHERE id = 178;\nUPDATE drug_lens SET trade_name = 'PRICK TEST - FOOD 0 mg/mL Solution' WHERE id = 185;\nUPDATE drug_lens SET trade_name = 'PRICK TEST - POLLEN 0 mg/mL Solution' WHERE id = 187;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nUPDATE drug_lens SET trade_name = 'PRICK TEST - INDOOR 0 mg/mL Solution' WHERE id = 178;\nUPDATE drug_lens SET trade_name = 'PRICK TEST - FOOD 0 mg/mL Solution' WHERE id = 185;\nUPDATE drug_lens SET trade_name = 'PRICK TEST - POLLEN 0 mg/mL Solution' WHERE id = 187;\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1991
-}

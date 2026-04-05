@@ -1,9 +1,0 @@
-{
-  "query": "\nUPDATE drug_lens SET scientific_name = 'AMOXICILLIN TRIHYDRATE, CLAVULANIC ACID' WHERE id = 382;\nUPDATE drug_lens SET scientific_name = 'HYDROCORTISONE ACETATE' WHERE id = 3714;\nUPDATE drug_lens SET scientific_name = 'CHOLECALCIFEROL' WHERE id = 1873;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nUPDATE drug_lens SET scientific_name = 'AMOXICILLIN TRIHYDRATE, CLAVULANIC ACID' WHERE id = 382;\nUPDATE drug_lens SET scientific_name = 'HYDROCORTISONE ACETATE' WHERE id = 3714;\nUPDATE drug_lens SET scientific_name = 'CHOLECALCIFEROL' WHERE id = 1873;\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1955
-}

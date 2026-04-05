@@ -2,49 +2,51 @@ import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { updatePageSchema } from "@/lib/jsonLdSchemas";
-import { trpc } from "@/lib/trpc";
 
 export default function CodeDetail() {
   const { code } = useParams<{ code: string }>();
   const [, navigate] = useLocation();
   const decodedCode = decodeURIComponent(code || "");
+  const [drugs, setDrugs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch medications from API
-  const { data: allMedications = [], isLoading } = trpc.data.medications.getAll.useQuery(
-    { limit: 50000, offset: 0 },
-    {
-      staleTime: 30 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
-      retry: 2,
-    }
-  );
-
-  // Filter drugs by ICD code
-  const drugs = allMedications.filter((item: any) =>
-    Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === decodedCode)
-  );
-
-  // Update page schema when data is loaded
   useEffect(() => {
-    if (!isLoading) {
-      updatePageSchema('code', {
-        code: decodedCode,
-        description: `ICD-10 code ${decodedCode} with ${drugs.length} medication(s)`,
-        url: `https://drugindex.click/code/${encodeURIComponent(decodedCode)}`,
-      });
-
-      // Update page title
-      document.title = `ICD-10 Code ${decodedCode} - ICD-10 Search Engine`;
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', `ICD-10 code ${decodedCode} with ${drugs.length} medication(s)`);
+    const loadData = async () => {
+      try {
+        const res = await fetch("/data/main_data.json");
+        const main = await res.json();
+        
+        const filtered = main.filter((item: any) =>
+          Array.isArray(item.icdCodes) && item.icdCodes.some((c: string) => c.trim() === decodedCode)
+        );
+        setDrugs(filtered);
+        
+        // Add JSON-LD schema for ICD-10 code
+        updatePageSchema('code', {
+          code: decodedCode,
+          description: `ICD-10 code ${decodedCode} with ${filtered.length} medication(s)`,
+          url: `https://drugindex.click/code/${encodeURIComponent(decodedCode)}`,
+        });
+        
+        // Update page title
+        document.title = `ICD-10 Code ${decodedCode} - ICD-10 Search Engine`;
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', `ICD-10 code ${decodedCode} with ${filtered.length} medication(s)`);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [decodedCode, drugs.length, isLoading]);
+    };
 
-  if (isLoading) {
+    loadData();
+  }, [decodedCode]);
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50 p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-sky-600" />

@@ -1,7 +1,7 @@
+import { useState, useEffect } from 'react';
 import { DatabaseSearch } from '@/components/DatabaseSearch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Database as DatabaseIcon } from 'lucide-react';
-import { trpc } from '@/lib/trpc';
 
 interface Medication {
   tradeNames?: string[];
@@ -13,18 +13,32 @@ interface Medication {
 }
 
 export default function Database() {
-  // Use tRPC to fetch all medications from API
-  const { data: medicationsData = [], isLoading: loading, error: apiError } = trpc.data.medications.getAll.useQuery(
-    { limit: 50000, offset: 0 },
-    {
-      staleTime: 30 * 60 * 1000, // 30 minutes
-      gcTime: 60 * 60 * 1000, // 1 hour
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    }
-  );
+  const [medicationsData, setMedicationsData] = useState<Medication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const error = apiError ? 'فشل في تحميل البيانات. حاول مرة أخرى.' : null;
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/data/main_data.json');
+        if (!response.ok) {
+          throw new Error('Failed to load medications data');
+        }
+        const data = await response.json();
+        setMedicationsData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading medications data:', err);
+        setError('فشل في تحميل البيانات. حاول مرة أخرى.');
+        setMedicationsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

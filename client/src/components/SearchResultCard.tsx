@@ -1,21 +1,7 @@
 import { useState } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  ShieldCheck,
-  ShieldX,
-  ShieldAlert,
-  Copy,
-  Check,
-  Pill,
-  Tag,
-  Stethoscope,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, ShieldCheck, ShieldX, ShieldAlert, Copy, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-/* ─────────────────────────────────────────────
-   Types
-───────────────────────────────────────────── */
 interface BranchInfo {
   branchCode: string;
   branchDescription: string;
@@ -49,153 +35,92 @@ interface SearchResultCardProps {
   data: GroupedDrugResult;
 }
 
-/* ─────────────────────────────────────────────
-   Coverage config
-───────────────────────────────────────────── */
-const COVERAGE_CONFIG = {
-  COVERED: {
-    icon: ShieldCheck,
-    label: "Covered",
-    pill: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700/50",
-    headerBg: "from-emerald-50/60 via-sky-50/30 to-transparent dark:from-emerald-950/20 dark:via-sky-950/10 dark:to-transparent",
-    dot: "bg-emerald-500",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-  },
-  "NON-COVERED": {
-    icon: ShieldX,
-    label: "Non-Covered",
-    pill: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700/50",
-    headerBg: "from-red-50/50 via-orange-50/20 to-transparent dark:from-red-950/20 dark:via-orange-950/10 dark:to-transparent",
-    dot: "bg-red-500",
-    iconColor: "text-red-600 dark:text-red-400",
-  },
-  PARTIAL: {
-    icon: ShieldAlert,
-    label: "Partial",
-    pill: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
-    headerBg: "from-amber-50/50 via-yellow-50/20 to-transparent dark:from-amber-950/20 dark:via-yellow-950/10 dark:to-transparent",
-    dot: "bg-amber-500",
-    iconColor: "text-amber-600 dark:text-amber-400",
-  },
-} as const;
+function CoverageIcon({ status }: { status: "COVERED" | "NON-COVERED" | "PARTIAL" }) {
+  if (status === "COVERED") return <ShieldCheck className="h-4 w-4 text-emerald-500" />;
+  if (status === "NON-COVERED") return <ShieldX className="h-4 w-4 text-red-500" />;
+  return <ShieldAlert className="h-4 w-4 text-amber-500" />;
+}
 
-/* ─────────────────────────────────────────────
-   Coverage pill badge
-───────────────────────────────────────────── */
-function CoveragePill({ status }: { status: keyof typeof COVERAGE_CONFIG }) {
-  const cfg = COVERAGE_CONFIG[status];
-  const Icon = cfg.icon;
+function CoverageBadge({ status }: { status: "COVERED" | "NON-COVERED" | "PARTIAL" }) {
+  const styles = {
+    "COVERED": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700",
+    "NON-COVERED": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-700",
+    "PARTIAL": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-700",
+  };
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0 ${cfg.pill}`}
-    >
-      <Icon className="h-3 w-3" />
-      {cfg.label}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${styles[status]}`}>
+      <CoverageIcon status={status} />
+      {status}
     </span>
   );
 }
 
-/* ─────────────────────────────────────────────
-   Copy button
-───────────────────────────────────────────── */
-function CopyBtn({ text }: { text: string }) {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
   return (
     <button
-      onClick={(e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        });
-      }}
+      onClick={handleCopy}
+      className="ml-1 p-0.5 rounded hover:bg-muted transition-colors opacity-60 hover:opacity-100"
       title="Copy code"
-      className="p-1 rounded-md hover:bg-muted transition-colors opacity-0 group-hover/code:opacity-70 hover:!opacity-100 flex-shrink-0"
     >
-      {copied ? (
-        <Check className="h-3 w-3 text-emerald-500" />
-      ) : (
-        <Copy className="h-3 w-3 text-muted-foreground" />
-      )}
+      {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
     </button>
   );
 }
 
-/* ─────────────────────────────────────────────
-   ICD-10 Code row (with optional branches)
-───────────────────────────────────────────── */
-function CodeRow({ code }: { code: CodeInfo }) {
-  const [open, setOpen] = useState(false);
-  const hasBranches = code.branches.length > 0;
-
+function CodeBlock({ code }: { code: CodeInfo }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="rounded-lg overflow-hidden border border-border/40 group/code">
-      {/* Main code row */}
+    <div className="rounded-lg border border-border/60 overflow-hidden">
       <button
-        onClick={() => hasBranches && setOpen(!open)}
-        className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors ${
-          hasBranches ? "hover:bg-muted/60 cursor-pointer" : "cursor-default"
-        } ${code.isNonCovered ? "bg-red-50/50 dark:bg-red-950/20" : "bg-muted/20"}`}
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 hover:bg-muted/70 transition-colors text-left gap-2"
       >
-        {/* Code badge */}
-        <span
-          className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-md flex-shrink-0 tracking-wide ${
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className={`font-mono font-bold text-sm flex-shrink-0 px-2 py-0.5 rounded ${
             code.isNonCovered
-              ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-              : "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300"
-          }`}
-        >
-          {code.code}
-        </span>
-        <CopyBtn text={code.code} />
-        <span className="text-xs text-foreground/70 flex-1 text-left leading-tight line-clamp-2">
-          {code.description}
-        </span>
-        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1">
+              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+              : "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+          }`}>
+            {code.code}
+          </span>
+          <CopyButton text={code.code} />
+          <span className="text-xs text-muted-foreground truncate">{code.description}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           {code.isNonCovered && (
-            <span className="hidden sm:inline text-[10px] font-semibold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md">
-              Non-Covered
-            </span>
+            <span className="text-xs text-red-600 dark:text-red-400 font-medium">Non-Covered</span>
           )}
-          {hasBranches && (
-            <div className="flex items-center gap-0.5 text-muted-foreground">
-              <span className="text-[10px] font-medium">{code.branchCount}</span>
-              {open ? (
-                <ChevronUp className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
-            </div>
+          {code.branchCount > 0 && (
+            <span className="text-xs text-muted-foreground">{code.branchCount} branches</span>
+          )}
+          {code.branches.length > 0 && (
+            expanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           )}
         </div>
       </button>
-
-      {/* Branches */}
-      {open && (
-        <div className="divide-y divide-border/20 border-t border-border/30 bg-background/50">
-          {code.branches.map((b, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-2 px-4 py-2 text-xs group/branch ${
-                b.isNonCovered ? "bg-red-50/30 dark:bg-red-950/10" : ""
-              }`}
-            >
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40 flex-shrink-0" />
-              <span
-                className={`font-mono font-semibold text-[11px] flex-shrink-0 ${
-                  b.isNonCovered
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-sky-600 dark:text-sky-400"
-                }`}
-              >
-                {b.branchCode}
+      {expanded && code.branches.length > 0 && (
+        <div className="divide-y divide-border/40">
+          {code.branches.map((branch, i) => (
+            <div key={i} className={`flex items-center gap-2 px-4 py-1.5 text-xs ${
+              branch.isNonCovered ? "bg-red-50/50 dark:bg-red-950/20" : "bg-background"
+            }`}>
+              <span className={`font-mono font-semibold flex-shrink-0 ${
+                branch.isNonCovered ? "text-red-600 dark:text-red-400" : "text-sky-600 dark:text-sky-400"
+              }`}>
+                {branch.branchCode}
               </span>
-              <CopyBtn text={b.branchCode} />
-              <span className="text-muted-foreground leading-tight flex-1 line-clamp-2">
-                {b.branchDescription}
-              </span>
-              {b.isNonCovered && (
-                <span className="ml-auto text-red-500 text-[10px] font-bold flex-shrink-0">✗</span>
+              <CopyButton text={branch.branchCode} />
+              <span className="text-muted-foreground truncate">{branch.branchDescription}</span>
+              {branch.isNonCovered && (
+                <span className="ml-auto text-red-500 font-medium flex-shrink-0">✗</span>
               )}
             </div>
           ))}
@@ -205,57 +130,31 @@ function CodeRow({ code }: { code: CodeInfo }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   Indication accordion row
-───────────────────────────────────────────── */
-function IndicationRow({ indication }: { indication: IndicationGroup }) {
-  const [open, setOpen] = useState(false);
-  const cfg = COVERAGE_CONFIG[indication.coverageStatus];
-
+function IndicationSection({ indication }: { indication: IndicationGroup }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className={`rounded-xl border overflow-hidden transition-all duration-200 ${
-      open ? "border-border/60 shadow-sm" : "border-border/30"
-    }`}>
+    <div className="border border-border/50 rounded-xl overflow-hidden">
       <button
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
-          open ? "bg-muted/40" : "bg-muted/15 hover:bg-muted/30"
-        }`}
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors text-left gap-3"
       >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
-          <span className="text-sm font-semibold text-foreground leading-tight line-clamp-2 text-left">
-            {indication.indication}
-          </span>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-sm font-semibold text-foreground truncate">{indication.indication}</span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <CoveragePill status={indication.coverageStatus} />
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <span className="text-[11px] font-medium tabular-nums hidden sm:inline">
-              {indication.codes.length} code{indication.codes.length !== 1 ? "s" : ""}
-            </span>
-            <span className="text-[11px] font-medium tabular-nums sm:hidden">
-              {indication.codes.length}
-            </span>
-            {open ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </div>
+          <CoverageBadge status={indication.coverageStatus} />
+          <span className="text-xs text-muted-foreground">{indication.codes.length} code{indication.codes.length !== 1 ? "s" : ""}</span>
+          {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </div>
       </button>
-
-      {open && (
-        <div className="px-4 py-3 space-y-2 bg-background/50 border-t border-border/20">
+      {expanded && (
+        <div className="px-4 py-3 space-y-2 bg-background/50">
           {indication.codes.length > 0 ? (
             indication.codes.map((code, i) => (
-              <CodeRow key={i} code={code} />
+              <CodeBlock key={i} code={code} />
             ))
           ) : (
-            <p className="text-xs text-muted-foreground italic py-1">
-              No ICD-10 codes linked
-            </p>
+            <p className="text-xs text-muted-foreground italic">No ICD-10 codes linked</p>
           )}
         </div>
       )}
@@ -263,160 +162,92 @@ function IndicationRow({ indication }: { indication: IndicationGroup }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   Section header (Trade Names / Diagnoses)
-───────────────────────────────────────────── */
-function SectionHeader({
-  icon: Icon,
-  label,
-  count,
-  countColor,
-  isOpen,
-  onToggle,
-}: {
-  icon: React.ElementType;
-  label: string;
-  count: number;
-  countColor: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between gap-2 group/hdr"
-    >
-      <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-          {label}
-        </span>
-        <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold ${countColor}`}>
-          {count}
-        </span>
-      </div>
-      {isOpen ? (
-        <ChevronUp className="h-4 w-4 text-muted-foreground group-hover/hdr:text-foreground transition-colors" />
-      ) : (
-        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover/hdr:text-foreground transition-colors" />
-      )}
-    </button>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Main Card
-───────────────────────────────────────────── */
 export function SearchResultCard({ data }: SearchResultCardProps) {
-  const [tradeOpen, setTradeOpen] = useState(false);
-  const [indicationsOpen, setIndicationsOpen] = useState(false);
+  const [tradeNamesExpanded, setTradeNamesExpanded] = useState(false);
+  const [indicationsExpanded, setIndicationsExpanded] = useState(false);
 
-  const cfg = COVERAGE_CONFIG[data.overallCoverage];
-  const MAX_TRADE = 3;
-  const visibleTrade = tradeOpen ? data.tradeNames : data.tradeNames.slice(0, MAX_TRADE);
-  const hiddenTradeCount = data.tradeNames.length - MAX_TRADE;
-
-  const MAX_PREVIEW = 3;
-  const previewIndications = data.indications.slice(0, MAX_PREVIEW);
+  const visibleTradeNames = tradeNamesExpanded ? data.tradeNames : data.tradeNames.slice(0, 4);
 
   return (
-    <div className="group/card bg-card border border-border/60 rounded-2xl shadow-sm hover:shadow-md hover:border-border transition-all duration-200 overflow-hidden flex flex-col">
-
-      {/* ── HEADER ── */}
-      <div className={`px-4 sm:px-5 pt-4 sm:pt-5 pb-4 border-b border-border/30 bg-gradient-to-br ${cfg.headerBg}`}>
+    <div className="bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Card Header: Scientific Name + Coverage */}
+      <div className="px-5 py-4 border-b border-border/50 bg-gradient-to-r from-sky-50/50 to-background dark:from-sky-950/20 dark:to-background">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            {/* Drug icon */}
-            <div className={`mt-0.5 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center flex-shrink-0 shadow-sm`}>
-              <Pill className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-sky-600 dark:text-sky-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm sm:text-base font-extrabold text-foreground leading-tight tracking-tight break-words">
-                {data.scientificName}
-              </h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold uppercase tracking-widest">
-                Active Ingredient
-              </p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-foreground leading-tight">{data.scientificName}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Scientific Name (Active Ingredient)</p>
           </div>
-          <CoveragePill status={data.overallCoverage} />
+          <CoverageBadge status={data.overallCoverage} />
         </div>
       </div>
 
-      {/* ── TRADE NAMES ── */}
-      <div className="px-4 sm:px-5 py-3.5 border-b border-border/30">
-        <div className="mb-2.5">
-          <SectionHeader
-            icon={Tag}
-            label="Trade Names"
-            count={data.totalTradeNames}
-            countColor="bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
-            isOpen={tradeOpen}
-            onToggle={() => setTradeOpen(!tradeOpen)}
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {visibleTrade.map((name, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-800 dark:text-sky-200 text-xs font-medium border border-sky-200/70 dark:border-sky-700/40 leading-tight"
-            >
+      {/* Trade Names Section */}
+      <div className="px-5 py-3 border-b border-border/40">
+        <button
+          onClick={() => setTradeNamesExpanded(!tradeNamesExpanded)}
+          className="w-full flex items-center justify-between gap-2 text-left group"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trade Names</span>
+            <Badge variant="secondary" className="text-xs">{data.totalTradeNames}</Badge>
+          </div>
+          {tradeNamesExpanded
+            ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+          }
+        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {visibleTradeNames.map((name, i) => (
+            <span key={i} className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-sky-100/80 to-blue-100/60 dark:from-sky-900/40 dark:to-blue-900/30 text-sky-800 dark:text-sky-200 text-xs rounded-full border border-sky-300/60 dark:border-sky-700/50 font-semibold shadow-sm hover:shadow-md transition-all hover:border-sky-400/80 dark:hover:border-sky-600/70">
               {name}
             </span>
           ))}
-          {!tradeOpen && hiddenTradeCount > 0 && (
+          {!tradeNamesExpanded && data.tradeNames.length > 4 && (
             <button
-              onClick={() => setTradeOpen(true)}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/60 text-muted-foreground text-xs font-semibold border border-border/50 hover:bg-muted hover:text-foreground transition-colors"
+              onClick={() => setTradeNamesExpanded(true)}
+              className="inline-flex items-center px-3 py-1.5 bg-muted/70 dark:bg-muted/40 text-muted-foreground text-xs rounded-full border border-border hover:bg-muted/90 dark:hover:bg-muted/60 transition-all font-semibold"
             >
-              +{hiddenTradeCount} more
+              +{data.tradeNames.length - 4} more
             </button>
           )}
         </div>
       </div>
 
-      {/* ── DIAGNOSES & ICD-10 CODES ── */}
-      <div className="px-4 sm:px-5 py-3.5 flex-1">
-        <div className="mb-2.5">
-          <SectionHeader
-            icon={Stethoscope}
-            label="Diagnoses & ICD-10 Codes"
-            count={data.indications.length}
-            countColor="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-            isOpen={indicationsOpen}
-            onToggle={() => setIndicationsOpen(!indicationsOpen)}
-          />
-        </div>
-
-        {/* Expanded: full accordion */}
-        {indicationsOpen ? (
+      {/* Indications + Codes Section */}
+      <div className="px-5 py-3">
+        <button
+          onClick={() => setIndicationsExpanded(!indicationsExpanded)}
+          className="w-full flex items-center justify-between gap-2 text-left group mb-3"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Diagnoses & Codes</span>
+            <Badge variant="secondary" className="text-xs">{data.indications.length}</Badge>
+          </div>
+          {indicationsExpanded
+            ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+          }
+        </button>
+        {indicationsExpanded && (
           <div className="space-y-2">
             {data.indications.map((ind, i) => (
-              <IndicationRow key={i} indication={ind} />
+              <IndicationSection key={i} indication={ind} />
             ))}
           </div>
-        ) : (
-          /* Collapsed: preview chips */
+        )}
+        {!indicationsExpanded && (
           <div className="flex flex-wrap gap-1.5">
-            {previewIndications.map((ind, i) => {
-              const icfg = COVERAGE_CONFIG[ind.coverageStatus];
-              return (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/40 text-muted-foreground text-xs font-medium border border-border/40 max-w-full"
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${icfg.dot}`} />
-                  <span className="truncate max-w-[180px] sm:max-w-[220px]">{ind.indication}</span>
-                </span>
-              );
-            })}
-            {data.indications.length > MAX_PREVIEW && (
+            {data.indications.slice(0, 3).map((ind, i) => (
+              <span key={i} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md truncate max-w-[180px]">
+                {ind.indication}
+              </span>
+            ))}
+            {data.indications.length > 3 && (
               <button
-                onClick={() => setIndicationsOpen(true)}
-                className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors border border-transparent hover:border-sky-200/60 dark:hover:border-sky-700/40"
+                onClick={() => setIndicationsExpanded(true)}
+                className="text-xs text-sky-600 dark:text-sky-400 hover:underline"
               >
-                +{data.indications.length - MAX_PREVIEW} more
+                +{data.indications.length - 3} more
               </button>
             )}
           </div>

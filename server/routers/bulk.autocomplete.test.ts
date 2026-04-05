@@ -26,9 +26,8 @@ describe('Bulk Verification Autocomplete Feature', () => {
     });
 
     it('should handle query with partial code match', async () => {
-      // Search for codes starting with 'E1' (specific enough to guarantee E-code results)
-      // Note: searching 'E' alone matches descriptions containing 'E' from all code families
-      const result = await searchCodes('E1');
+      // Search for codes starting with 'E'
+      const result = await searchCodes('E');
       
       const eCodes = result.filter(c => c.code.startsWith('E'));
       expect(eCodes.length).toBeGreaterThan(0);
