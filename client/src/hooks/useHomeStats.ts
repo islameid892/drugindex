@@ -1,11 +1,11 @@
 import { trpc } from '@/lib/trpc';
 import { useState, useEffect } from 'react';
 
-// Default stats to show while loading
+// Default stats to show while loading (updated to reflect current DB)
 const DEFAULT_STATS = {
-  medications: 56388,
-  conditions: 808,
-  codes: 38853,
+  medications: 60727,
+  conditions: 818,
+  codes: 39040,
 };
 
 export function useHomeStats() {
