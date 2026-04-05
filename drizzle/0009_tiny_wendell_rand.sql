@@ -1,1 +1,0 @@
-ALTER TABLE `icd_codes` MODIFY COLUMN `code` varchar(255) NOT NULL;

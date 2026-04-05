@@ -64,13 +64,6 @@
       "when": 1775261746442,
       "tag": "0008_rainy_veda",
       "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "5",
-      "when": 1775350666255,
-      "tag": "0009_tiny_wendell_rand",
-      "breakpoints": true
     }
   ]
 }
