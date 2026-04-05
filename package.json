@@ -108,6 +108,7 @@
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
     "chrome-launcher": "^1.2.1",
+    "csv-parse": "^6.2.1",
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
     "lighthouse": "^13.0.3",
