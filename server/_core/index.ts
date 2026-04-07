@@ -16,6 +16,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import superjson from "superjson";
 import askSilaRouter from "../api/askSila";
+import { initializeJobs, shutdownJobs } from "../jobs";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -328,6 +329,19 @@ async function startServer() {
     console.log('✅ Response compression (gzip) enabled');
     console.log('✅ Cache control headers configured');
     console.log('✅ X-RateLimit headers enabled');
+    
+    // Initialize scheduled jobs
+    initializeJobs();
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('\n📋 SIGTERM received, shutting down gracefully...');
+    shutdownJobs();
+    server.close(() => {
+      console.log('✅ Server shut down');
+      process.exit(0);
+    });
   });
 }
 

@@ -91,6 +91,7 @@ export const drugLensRouter = router({
           scientificName: drugLens.scientificName,
           form: drugLens.form,
           price: drugLens.price,
+          imageUrl: drugLens.imageUrl,
           pharmacologicalAction: drugLens.pharmacologicalAction,
           blackBoxWarning: drugLens.blackBoxWarning,
           uses: drugLens.uses,

@@ -196,4 +196,4 @@ export const searchCache = new SearchCache(500, 30);
 
 // Export singleton instance for analytics data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const analyticsCache = new SearchCache<any>(100, 5); // 100 entries, 5 minutes TTL
+export const analyticsCache = new SearchCache<any>(100, 1); // 100 entries, 1 minute TTL for real-time stats

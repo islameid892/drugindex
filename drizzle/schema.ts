@@ -40,6 +40,7 @@ export const drugEntries = mysqlTable(
     indication: varchar("indication", { length: 500 }).notNull(),
     // Raw ICD codes string from Excel, e.g. "E11, E28, O24"
     icdCodesRaw: varchar("icd_codes_raw", { length: 1000 }).notNull().default(""),
+    imageUrl: varchar("image_url", { length: 1000 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => ({
@@ -265,6 +266,7 @@ export const drugLens = mysqlTable(
     majorInteractions: text("major_interactions"),
     moderateInteractions: text("moderate_interactions"),
     minorInteractions: text("minor_interactions"),
+    imageUrl: varchar("image_url", { length: 1000 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },

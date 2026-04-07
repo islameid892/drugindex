@@ -524,6 +524,17 @@ const DetailView = ({ drugId, drug, isLoading, onBack }: any) => {
           <div className="space-y-6">
             {/* Main Info Card */}
             <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-8 shadow-2xl">
+              {/* Drug Image */}
+              {drug.imageUrl && (
+                <div className="mb-6 rounded-xl overflow-hidden border border-white/20">
+                  <img
+                    src={drug.imageUrl}
+                    alt={drug.tradeName}
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+              )}
+              
               {/* Header */}
               <div className="mb-6">
                 <h2 className="text-4xl font-bold text-white mb-2">
