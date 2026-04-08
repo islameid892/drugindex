@@ -258,7 +258,57 @@ async function startServer() {
     },
   }));
 
-  // Health check endpoint - BEFORE rate limiting
+  // ====================================================
+  // SECURITY HEADERS (ALWAYS - dev & prod) - MUST BE FIRST
+  // ====================================================
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    res.header('X-Frame-Options', 'DENY');
+    res.header('X-Content-Type-Options', 'nosniff');
+    res.header('X-XSS-Protection', '1; mode=block');
+    res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
+    res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    res.removeHeader('X-Powered-By');
+    res.removeHeader('Server');
+    next();
+  });
+
+  // ====================================================
+  // BOT DETECTION - MUST BE BEFORE ALL ROUTES
+  // ====================================================
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isBot = BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot.toLowerCase()));
+    if (isBot) {
+      return res.status(403).json({
+        error: 'Access Denied',
+        message: 'Automated access is not permitted.',
+      });
+    }
+    next();
+  });
+
+  // ====================================================
+  // BLOCK SENSITIVE ENDPOINTS (ALWAYS - dev & prod)
+  // ====================================================
+  
+  // Block /metrics endpoint completely
+  app.get('/metrics', (req: Request, res: Response) => {
+    return res.status(403).json({
+      error: 'Access Denied',
+      message: 'This endpoint is not publicly accessible.',
+    });
+  });
+  
+  // Block /metrics with any trailing path
+  app.use('/metrics', (req: Request, res: Response) => {
+    return res.status(403).json({
+      error: 'Access Denied',
+      message: 'This endpoint is not publicly accessible.',
+    });
+  });
+
+  // Health check endpoint (allowed for monitoring)
   app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({
       status: 'healthy',
@@ -282,9 +332,6 @@ async function startServer() {
   if (process.env.NODE_ENV === 'production') {
     app.use(advancedRateLimiter);
   }
-  
-  // 4. Bot detection - block known scraping tools
-  app.use(botDetectionMiddleware);
   
   // 5. Daily scraping detection - block IPs with excessive requests
   app.use(scrapingDetectionMiddleware);

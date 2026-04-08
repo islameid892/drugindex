@@ -64,17 +64,7 @@ export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
               )}
               <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </Button>
-            <Link href="/metrics">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950"
-                title="Performance Metrics Dashboard"
-              >
-                <TrendingUp className="h-4 w-4" />
-                Metrics
-              </Button>
-            </Link>
+
             <Link href="/favorites">
               <Button variant="outline" size="sm" className="gap-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
                 <Heart className="h-4 w-4" />
@@ -110,16 +100,7 @@ export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
                 <Moon className="h-3 w-3" />
               )}
             </Button>
-            <Link href="/metrics">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950 h-8 px-2"
-                title="Performance Metrics"
-              >
-                <TrendingUp className="h-3 w-3" />
-              </Button>
-            </Link>
+
             <Link href="/favorites">
               <Button variant="outline" size="sm" className="gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950 h-8 px-2">
                 <Heart className="h-3 w-3" />
