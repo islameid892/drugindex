@@ -17,6 +17,8 @@ import { serveStatic, setupVite } from "./vite";
 import superjson from "superjson";
 import askSilaRouter from "../api/askSila";
 import { initializeJobs, shutdownJobs } from "../jobs";
+import { advancedRateLimiter, searchRateLimiter, getSecurityStats, getSecurityLog } from "../middleware/advancedRateLimiter";
+import { honeypotMiddleware, originValidationMiddleware, customHeaderMiddleware, strictCorsMiddleware, getHoneypotStats } from "../middleware/apiSecurity";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -245,16 +247,32 @@ async function startServer() {
     });
   });
 
-  // Apply global rate limiting (disabled in development)
+  // ====================================================
+  // ADVANCED SECURITY MIDDLEWARE STACK
+  // ====================================================
+  
+  // 1. Honeypot - ban IPs trying to access fake endpoints
+  app.use(honeypotMiddleware);
+  
+  // 2. Strict CORS - before any API processing
+  app.use(strictCorsMiddleware);
+  
+  // 3. Advanced rate limiting with progressive blocking
   if (process.env.NODE_ENV === 'production') {
-    app.use(globalLimiter);
+    app.use(advancedRateLimiter);
   }
-
-  // Bot detection - block known scraping tools
+  
+  // 4. Bot detection - block known scraping tools
   app.use(botDetectionMiddleware);
-
-  // Daily scraping detection - block IPs with excessive requests
+  
+  // 5. Daily scraping detection - block IPs with excessive requests
   app.use(scrapingDetectionMiddleware);
+  
+  // 6. Origin/Referer validation
+  app.use(originValidationMiddleware);
+  
+  // 7. Custom header validation (X-App-Version)
+  app.use(customHeaderMiddleware);
 
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
@@ -284,9 +302,11 @@ async function startServer() {
     app.use('/api/', apiLimiter);
   }
 
-  // Apply stricter rate limiting to search endpoints (disabled in development)
+  // Apply search-specific rate limiting (stricter: 10 searches/min)
   if (process.env.NODE_ENV === 'production') {
-    app.use('/api/trpc/data.searchGrouped', searchLimiter);
+    app.use('/api/trpc/data.searchGrouped', searchRateLimiter);
+    app.use('/api/trpc/data.search', searchRateLimiter);
+    app.use('/api/trpc/advancedSearch', searchRateLimiter);
   }
 
   // tRPC API with response optimization
@@ -325,6 +345,49 @@ async function startServer() {
   });
 
 
+
+  // ====================================================
+  // SECURITY MONITORING ENDPOINTS (Admin Only)
+  // ====================================================
+  
+  // Get security statistics
+  app.get('/api/security/stats', (req: Request, res: Response) => {
+    // Only allow from localhost or with special header in production
+    if (process.env.NODE_ENV === 'production') {
+      const adminToken = req.headers['x-admin-token'];
+      if (!adminToken || adminToken !== process.env.ADMIN_SECURITY_TOKEN) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+    }
+    
+    const stats = getSecurityStats();
+    const honeypotStats = getHoneypotStats();
+    
+    res.json({
+      rateLimit: stats,
+      honeypot: honeypotStats,
+      timestamp: new Date().toISOString(),
+    });
+  });
+  
+  // Get security log
+  app.get('/api/security/log', (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === 'production') {
+      const adminToken = req.headers['x-admin-token'];
+      if (!adminToken || adminToken !== process.env.ADMIN_SECURITY_TOKEN) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+    }
+    
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
+    const log = getSecurityLog(limit);
+    
+    res.json({
+      log,
+      count: log.length,
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   // 404 Error handler - return proper HTTP 404 status
   app.use((req: Request, res: Response, next: NextFunction) => {

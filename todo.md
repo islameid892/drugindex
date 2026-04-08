@@ -534,3 +534,29 @@
 - [ ] Verify coverage status in browse modals
 - [ ] Verify coverage status in search results
 - [ ] Verify coverage status in advanced search
+
+## Security Level 2 - Advanced Protection
+
+- [ ] Rate Limiting: 60 req/min per IP (global), 10 searches/min
+- [ ] Progressive Blocking: warning → temp ban → permanent ban
+- [ ] API Key system with per-key permissions
+- [ ] Origin/Referer validation - reject requests not from drugindex.click
+- [ ] Strict CORS - only allow specific domains
+- [ ] Custom required header X-App-Version
+- [ ] Honeypot endpoints - auto-block any IP that hits them
+- [ ] Security event logging (IP, user-agent, endpoint, timestamp)
+- [ ] Suspicious pattern detection and alerting
+- [ ] Cloudflare setup guide for WAF + Bot Fight Mode
+
+## Security Level 2 - Advanced Protection (COMPLETED)
+
+- [x] Rate Limiting: 60 req/min per IP (global), 10 searches/min
+- [x] Progressive Blocking: warning → temp ban → permanent ban
+- [x] Origin/Referer validation - reject requests not from drugindex.click
+- [x] Strict CORS - only allow specific domains
+- [x] Custom required header X-App-Version
+- [x] Honeypot endpoints - auto-block any IP that hits them
+- [x] Security event logging (IP, user-agent, endpoint, timestamp)
+- [x] Suspicious pattern detection and alerting
+- [x] Admin endpoints: /api/security/stats, /api/security/log
+- [x] SECURITY_IMPLEMENTATION.md documentation
