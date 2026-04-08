@@ -89,7 +89,7 @@ const DrugLens = () => {
             {/* Logo with CSS cleanup */}
             <div className="relative w-10 h-10 flex items-center justify-center">
               <img 
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/druglens_logo-nQ7M2Hr2EG4qPVSFFSFL3R.webp" 
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/druglens-logo_ca34bb24.webp" 
                 alt="DrugLens" 
                 className="w-full h-full object-contain filter drop-shadow-md"
                 style={{

@@ -15,14 +15,14 @@ const infographics: Infographic[] = [
     id: "coding",
     title: "Streamlining Healthcare: From Coding Chaos to Instant Approval",
     description: "Discover how ICD-10 Search Engine transforms manual coding processes, reduces insurance rejections by 85%, and ensures same-day approval rates.",
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/dTFqLwvEeGMiLutY.png",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/infographic1_653716ec.png",
     alt: "Healthcare coding transformation infographic"
   },
   {
     id: "approvals",
     title: "From Chaos to Clarity: Streamlining Insurance Approvals with ICD-10 Search",
     description: "Learn how our platform eliminates coding errors, prevents insurance denials, and accelerates the approval process for healthcare providers.",
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663263105436/WgiAKMaLZMibTRqa.png",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663263105436/a2JMvfTkjxD7rpSD5GgnMY/infographic2_d49cc2be.png",
     alt: "Insurance approvals streamlining infographic"
   }
 ];
