@@ -471,6 +471,56 @@ If you encounter issues:
 
 ---
 
+---
+
+## NEW RULES ADDED (April 2026)
+
+### NEW RULE: Protect /admin and /database
+```
+Name: Protect Sensitive Pages
+Expression: (http.request.uri.path eq "/admin") or 
+            (http.request.uri.path eq "/database") or
+            (http.request.uri.path eq "/metrics") or
+            (http.request.uri.path eq "/performance")
+Action: Managed Challenge (requires browser verification)
+Priority: 1
+```
+
+### NEW RULE: Protect Bulk API Endpoints
+```
+Name: Block Bulk Data Access
+Expression: (http.request.uri.path contains "/api/trpc/data.medications.getAll") or
+            (http.request.uri.path contains "/api/trpc/data.codes.getAll") or
+            (http.request.uri.path contains "/api/trpc/data.nonCoveredCodes.getAll")
+Rate: 5 requests per 1 minute per IP
+Action: Block for 30 minutes
+```
+
+### NEW RATE LIMIT: /api/trpc General
+```
+Name: API tRPC Rate Limit
+Expression: (http.request.uri.path contains "/api/trpc")
+Rate: 60 requests per 1 minute per IP
+Action: Block for 10 minutes
+```
+
+---
+
+## CURRENT SECURITY STATUS
+
+| Protection | Server-Level | Cloudflare-Level |
+|-----------|-------------|------------------|
+| Bot Detection | ✅ Active | ✅ Bot Fight Mode |
+| Rate Limiting | ✅ Active | 🔲 Deploy rules above |
+| /metrics blocked | ✅ 403 | ✅ WAF Rule |
+| /admin protected | ✅ AuthGuard | 🔲 Deploy rule above |
+| /database protected | ✅ AuthGuard | 🔲 Deploy rule above |
+| SQL Injection | ✅ xss-clean | 🔲 Deploy WAF Rule 2.2 |
+| Security Headers | ✅ 6 headers | 🔲 Deploy Transform Rules |
+| Bulk Export | ✅ 50 limit | 🔲 Deploy bulk rule above |
+
+---
+
 **Status**: ✅ Ready for Production  
 **Last Updated**: 2026-04-08  
-**Version**: 1.0
+**Version**: 2.0 (Updated with new protections)

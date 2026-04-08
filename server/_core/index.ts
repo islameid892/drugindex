@@ -328,10 +328,8 @@ async function startServer() {
   // 2. Strict CORS - before any API processing
   app.use(strictCorsMiddleware);
   
-  // 3. Advanced rate limiting with progressive blocking
-  if (process.env.NODE_ENV === 'production') {
-    app.use(advancedRateLimiter);
-  }
+  // 3. Advanced rate limiting with progressive blocking (ALL environments)
+  app.use(advancedRateLimiter);
   
   // 5. Daily scraping detection - block IPs with excessive requests
   app.use(scrapingDetectionMiddleware);
@@ -365,17 +363,18 @@ async function startServer() {
   // Ask Sila API routes
   app.use("/api/askSila", askSilaRouter);
 
-  // Apply stricter rate limiting to API endpoints (disabled in development)
-  if (process.env.NODE_ENV === 'production') {
-    app.use('/api/', apiLimiter);
-  }
+  // Apply stricter rate limiting to API endpoints (ALL environments)
+  app.use('/api/', apiLimiter);
 
   // Apply search-specific rate limiting (stricter: 10 searches/min)
-  if (process.env.NODE_ENV === 'production') {
-    app.use('/api/trpc/data.searchGrouped', searchRateLimiter);
-    app.use('/api/trpc/data.search', searchRateLimiter);
-    app.use('/api/trpc/advancedSearch', searchRateLimiter);
-  }
+  app.use('/api/trpc/data.searchGrouped', searchRateLimiter);
+  app.use('/api/trpc/data.search', searchRateLimiter);
+  app.use('/api/trpc/advancedSearch', searchRateLimiter);
+  
+  // Extra protection: block bulk data access endpoints
+  app.use('/api/trpc/data.medications.getAll', searchRateLimiter);
+  app.use('/api/trpc/data.codes.getAll', searchRateLimiter);
+  app.use('/api/trpc/data.nonCoveredCodes.getAll', searchRateLimiter);
 
   // tRPC API with response optimization
   app.use(

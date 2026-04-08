@@ -68,12 +68,16 @@ function Router() {
       <Route path={"/?"} component={Home} />
       <Route path={"metrics"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <Metrics />
+          <AuthGuard message="هذه الصفحة متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
+            <Metrics />
+          </AuthGuard>
         </Suspense>
       )} />
       <Route path={"performance"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <PerformanceDashboard />
+          <AuthGuard message="هذه الصفحة متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
+            <PerformanceDashboard />
+          </AuthGuard>
         </Suspense>
       )} />
       <Route path={"/about"} component={() => (        <Suspense fallback={<PageLoader />}>
@@ -155,7 +159,9 @@ function Router() {
       )} />
       <Route path={"/admin"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <AdminPanel />
+          <AuthGuard message="لوحة التحكم متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
+            <AdminPanel />
+          </AuthGuard>
         </Suspense>
       )} />
       <Route path={"/404"} component={NotFound} />
