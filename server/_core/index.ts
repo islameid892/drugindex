@@ -19,6 +19,9 @@ import askSilaRouter from "../api/askSila";
 import { initializeJobs, shutdownJobs } from "../jobs";
 import { advancedRateLimiter, searchRateLimiter, getSecurityStats, getSecurityLog } from "../middleware/advancedRateLimiter";
 import { honeypotMiddleware, originValidationMiddleware, customHeaderMiddleware, strictCorsMiddleware, getHoneypotStats } from "../middleware/apiSecurity";
+import { exportProtectionMiddleware, getExportStats, getUserExportQuota, getExportLog, detectSuspiciousExports } from "../middleware/exportProtection";
+import { sessionSecurityMiddleware, createSession, validateSession, invalidateSession, getSessionStats, cleanupExpiredSessions } from "../middleware/sessionSecurity";
+import { httpsEnforcementMiddleware, cspMiddleware, preventSSLDowngrade, getCertificatePinningInfo } from "../middleware/httpsEnforcement";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -167,6 +170,24 @@ async function startServer() {
   // Trust proxy - important for rate limiting behind reverse proxies
   app.set('trust proxy', 1);
 
+  // ====================================================
+  // HTTPS & SECURITY ENFORCEMENT (FIRST LAYER)
+  // ====================================================
+  
+  // HTTPS Enforcement - Redirect HTTP to HTTPS
+  app.use(httpsEnforcementMiddleware);
+  
+  // CSP Headers - Content Security Policy
+  app.use(cspMiddleware);
+  
+  // Prevent SSL downgrade attacks
+  app.use(preventSSLDowngrade);
+  
+  // Export Protection - Limit bulk data exports
+  app.use(exportProtectionMiddleware);
+  
+  // Session Security - Timeout and IP binding
+  app.use(sessionSecurityMiddleware);
   // HTTPS Enforcement Middleware - Redirect HTTP to HTTPS with 301 permanent redirect
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (process.env.NODE_ENV === 'production' && req.header('x-forwarded-proto') !== 'https') {
