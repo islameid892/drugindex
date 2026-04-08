@@ -29,20 +29,24 @@ export function BranchViewer({ mainCode, mainDescription, branches, isCovered: i
   const [branchCoverageMap, setBranchCoverageMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // تحميل حالة التغطية من ملف JSON
+    // تحميل حالة التغطية من API
     const loadCoverageStatus = async () => {
       try {
-        const response = await fetch('/data/non_covered_codes.json');
-        const nonCoveredCodes: string[] = await response.json();
+        const response = await fetch('/api/trpc/data.nonCoveredCodes.getAll', {
+          credentials: 'include',
+        });
+        const json = await response.json();
+        const data: { code: string }[] = json?.result?.data ?? [];
+        const nonCoveredSet = new Set(data.map((item) => item.code));
         
         // فحص الكود الرئيسي - مطابقة دقيقة فقط
-        const isMainCodeNonCovered = nonCoveredCodes.includes(mainCode);
+        const isMainCodeNonCovered = nonCoveredSet.has(mainCode);
         setIsCovered(!isMainCodeNonCovered);
         
         // فحص كل فرع - مطابقة دقيقة فقط
         const coverageMap: Record<string, boolean> = {};
         branches.forEach((branch) => {
-          coverageMap[branch.code] = !nonCoveredCodes.includes(branch.code);
+          coverageMap[branch.code] = !nonCoveredSet.has(branch.code);
         });
         setBranchCoverageMap(coverageMap);
       } catch (error) {

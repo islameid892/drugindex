@@ -5,8 +5,6 @@ User-agent: *
 Allow: /
 Allow: /*.js
 Allow: /*.css
-Allow: /*.json
-Allow: /data/
 Allow: /about
 Allow: /contact
 Allow: /privacy
@@ -25,7 +23,8 @@ Disallow: /*?q=
 Disallow: /*?search=
 Disallow: /*?query=
 
-# Block admin/internal pages
+# Block data files and API endpoints
+Disallow: /data/
 Disallow: /admin
 Disallow: /admin/
 Disallow: /api/

@@ -37,6 +37,75 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+// ====================================================
+// BOT DETECTION & SCRAPING PROTECTION
+// ====================================================
+
+// Known scraping/bot user agents to block
+const BLOCKED_USER_AGENTS = [
+  'python-requests', 'scrapy', 'wget', 'curl/', 'httpx',
+  'aiohttp', 'go-http-client', 'java/', 'perl/', 'ruby',
+  'php/', 'libwww-perl', 'lwp-trivial', 'urllib',
+  'mechanize', 'twisted', 'httpclient', 'apache-httpclient',
+  'okhttp', 'axios', 'node-fetch', 'got/', 'superagent',
+  'postman', 'insomnia', 'thunder client',
+];
+
+// Bot detection middleware
+const botDetectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+  
+  // Allow empty user-agent from browser (some browsers send empty)
+  // But block known scraping tools
+  const isBot = BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot));
+  
+  if (isBot && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: 'Access Denied',
+      message: 'Automated access is not permitted.',
+    });
+  }
+  
+  next();
+};
+
+// IP-based daily request tracking for scraping detection
+const dailyRequestTracker = new Map<string, { count: number; date: string }>();
+
+const scrapingDetectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (process.env.NODE_ENV !== 'production') return next();
+  if (!req.path.startsWith('/api/trpc')) return next();
+  
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 
+             req.socket.remoteAddress || 'unknown';
+  const today = new Date().toISOString().split('T')[0];
+  
+  const tracker = dailyRequestTracker.get(ip);
+  
+  if (!tracker || tracker.date !== today) {
+    dailyRequestTracker.set(ip, { count: 1, date: today });
+  } else {
+    tracker.count++;
+    
+    // Block IPs making more than 500 API requests per day (scraping behavior)
+    if (tracker.count > 500) {
+      return res.status(429).json({
+        error: 'Daily limit exceeded',
+        message: 'You have exceeded the daily request limit. Please try again tomorrow.',
+      });
+    }
+  }
+  
+  // Cleanup old entries every 1000 requests
+  if (dailyRequestTracker.size > 10000) {
+    for (const [key, value] of dailyRequestTracker.entries()) {
+      if (value.date !== today) dailyRequestTracker.delete(key);
+    }
+  }
+  
+  next();
+};
+
 // Rate limiting middleware - PROFESSIONAL IMPLEMENTATION
 const globalLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minute window
@@ -180,6 +249,12 @@ async function startServer() {
   if (process.env.NODE_ENV === 'production') {
     app.use(globalLimiter);
   }
+
+  // Bot detection - block known scraping tools
+  app.use(botDetectionMiddleware);
+
+  // Daily scraping detection - block IPs with excessive requests
+  app.use(scrapingDetectionMiddleware);
 
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
