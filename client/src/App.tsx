@@ -11,6 +11,7 @@ import { updateCanonicalTag, updateHrefLangTags, addNoIndexTag, removeNoIndexTag
 // AdvancedSearchFAB is now in HeroSection
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PWAUpdateNotification } from "./components/PWAUpdateNotification";
+import { AuthGuard } from "./components/AuthGuard";
 
 
 // Lazy load pages for better performance (Code Splitting)
@@ -132,7 +133,9 @@ function Router() {
       )} />
       <Route path={"/database"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <Database />
+          <AuthGuard>
+            <Database />
+          </AuthGuard>
         </Suspense>
       )} />
       <Route path={"/drug/:name"} component={() => (

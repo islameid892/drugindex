@@ -46,12 +46,12 @@ export const dataRouter = router({
         return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
       }),
 
-    getAll: publicProcedure
-      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
+    getAll: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).optional(), offset: z.number().optional() }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
         return db.select().from(drugEntries)
-          .limit(input?.limit ?? 2000)
+          .limit(input?.limit ?? 50)
           .offset(input?.offset ?? 0);
       }),
 
@@ -65,10 +65,10 @@ export const dataRouter = router({
 
   // Codes
   codes: router({
-    getAll: publicProcedure
-      .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
+    getAll: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).optional(), offset: z.number().optional() }).optional())
       .query(async ({ input }) => {
-        return await getAllCodes(input?.limit ?? 2100, input?.offset ?? 0);
+        return await getAllCodes(input?.limit ?? 100, input?.offset ?? 0);
       }),
 
     search: publicProcedure
@@ -86,7 +86,7 @@ export const dataRouter = router({
 
   // Non-Covered Codes
   nonCoveredCodes: router({
-    getAll: publicProcedure.query(async () => {
+    getAll: protectedProcedure.query(async () => {
       return await getAllNonCoveredCodes();
     }),
 

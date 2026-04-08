@@ -1,28 +1,27 @@
 import { DatabaseSearch } from '@/components/DatabaseSearch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Database as DatabaseIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, Database as DatabaseIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useState } from 'react';
 
-interface Medication {
-  tradeNames?: string[];
-  scientificName: string;
-  indication: string;
-  icdCodes?: string[];
-  atcCode?: string;
-  manufacturer?: string;
-}
+const PAGE_SIZE = 50;
 
 export default function Database() {
-  // Use tRPC to fetch all medications from API
+  const [offset, setOffset] = useState(0);
+
   const { data: medicationsData = [], isLoading: loading, error: apiError } = trpc.data.medications.getAll.useQuery(
-    { limit: 50000, offset: 0 },
+    { limit: PAGE_SIZE, offset },
     {
-      staleTime: 30 * 60 * 1000, // 30 minutes
-      gcTime: 60 * 60 * 1000, // 1 hour
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     }
   );
+
+  const { data: statsData } = trpc.data.stats.useQuery(undefined, { staleTime: 60 * 60 * 1000 });
+  const totalCount = (statsData as any)?.totalMedications ?? 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const error = apiError ? 'فشل في تحميل البيانات. حاول مرة أخرى.' : null;
 
@@ -75,14 +74,61 @@ export default function Database() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-slate-700">
-                  إجمالي الأدوية: <span className="font-semibold">{medicationsData.length.toLocaleString()}</span>
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-slate-700">
+                    عرض <span className="font-semibold">{offset + 1} - {Math.min(offset + PAGE_SIZE, totalCount || offset + medicationsData.length)}</span>
+                    {totalCount > 0 && <> من <span className="font-semibold">{totalCount.toLocaleString()}</span></>}
+                  </p>
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+                        disabled={offset === 0}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm text-slate-600">صفحة {currentPage}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOffset(offset + PAGE_SIZE)}
+                        disabled={medicationsData.length < PAGE_SIZE}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
             {/* Search Component */}
             <DatabaseSearch data={medicationsData} />
+
+            {/* Bottom Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+                  disabled={offset === 0}
+                >
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                  السابق
+                </Button>
+                <span className="text-sm text-slate-600 px-4">صفحة {currentPage}</span>
+                <Button
+                  variant="outline"
+                  onClick={() => setOffset(offset + PAGE_SIZE)}
+                  disabled={medicationsData.length < PAGE_SIZE}
+                >
+                  التالي
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
