@@ -141,12 +141,17 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col bg-background">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // فقط أغلق عند الضغط على زرار الـ close، لا تغلق عند الـ scroll
+      if (!open) {
+        handleClose();
+      }
+    }}>
+      <DialogContent className="w-[95vw] h-[95vh] max-w-none overflow-hidden flex flex-col bg-background" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={handleClose}>
         {/* Header */}
         <div className="border-b border-border/50 px-8 py-8 bg-gradient-to-r from-sky-50/50 to-blue-50/30 dark:from-sky-950/30 dark:to-blue-950/20">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1">
               {step === 2 && (
                 <button 
                   onClick={() => {
@@ -164,7 +169,15 @@ export function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProp
               </div>
               <h1 className="text-3xl font-bold text-foreground">Advanced Search</h1>
             </div>
-
+            
+            {/* Close Button */}
+            <button
+              onClick={handleClose}
+              className="flex-shrink-0 p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+              title="Close search"
+            >
+              <X className="h-6 w-6" />
+            </button>
           </div>
         </div>
 
