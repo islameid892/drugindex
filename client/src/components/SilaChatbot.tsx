@@ -122,11 +122,11 @@ export default function SilaChatbot() {
     <>
       {/* Floating Action Button - Simple Text Label */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => isOpen ? handleClose() : setIsOpen(true)}
         className="fixed bottom-6 right-6 z-40 px-4 py-3 rounded-full bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group text-white font-bold text-sm hover:scale-110"
         title="سيلا - مساعدتك الافتراضية"
       >
-        {isOpen ? "✕" : "💬 سيلا"}
+        {isOpen ? "✕ إغلاق" : "💬 سيلا"}
       </button>
 
       {/* Chatbot Window */}
