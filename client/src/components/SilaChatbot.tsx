@@ -13,6 +13,13 @@ interface Message {
 
 export default function SilaChatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosed, setIsClosed] = useState(() => {
+    // Check localStorage to see if user closed the chatbot
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('silaChatbotClosed') === 'true';
+    }
+    return false;
+  });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -31,6 +38,11 @@ export default function SilaChatbot() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleClose = () => {
+    setIsClosed(true);
+    localStorage.setItem('silaChatbotClosed', 'true');
   };
 
   useEffect(() => {
@@ -101,6 +113,11 @@ export default function SilaChatbot() {
     }
   };
 
+  // Don't render if user closed the chatbot
+  if (isClosed) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating Action Button - Simple Text Label */}
@@ -126,12 +143,22 @@ export default function SilaChatbot() {
                 <p className="text-xs text-sky-100">مساعدتك الافتراضية</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/20 p-1 rounded-lg transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white/20 p-1 rounded-lg transition-colors"
+                title="تصغير الشات"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleClose}
+                className="text-white hover:bg-red-500/30 p-1 rounded-lg transition-colors"
+                title="إغلاق نهائياً (اضغط Reload لإعادة الفتح)"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Container */}
@@ -182,6 +209,16 @@ export default function SilaChatbot() {
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Close Permanently Button */}
+          <div className="px-4 py-2 bg-slate-100 dark:bg-slate-700 border-t border-sky-100 dark:border-sky-800 text-center">
+            <button
+              onClick={handleClose}
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold"
+            >
+              ✕ إغلاق نهائياً (حتى إعادة تحميل الموقع)
+            </button>
           </div>
 
           {/* Input Area */}
