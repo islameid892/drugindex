@@ -35,6 +35,7 @@ const DrugLens = lazy(() => import("./pages/DrugLens"));
 
 const Metrics = lazy(() => import("./pages/Metrics"));
 const PerformanceDashboard = lazy(() => import("./pages/PerformanceDashboard"));
+const DuplicateFinder = lazy(() => import("./pages/DuplicateFinder"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -161,6 +162,13 @@ function Router() {
         <Suspense fallback={<PageLoader />}>
           <AuthGuard message="لوحة التحكم متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
             <AdminPanel />
+          </AuthGuard>
+        </Suspense>
+      )} />
+      <Route path={"/admin/duplicates"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <AuthGuard message="هذه الصفحة متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
+            <DuplicateFinder />
           </AuthGuard>
         </Suspense>
       )} />
