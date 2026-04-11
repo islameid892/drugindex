@@ -670,17 +670,13 @@
   function closeFab() {
     const fab = document.getElementById("sila-fab");
     fab.classList.add("closed");
-    fab.style.pointerEvents = "none";
-    fab.style.opacity = "0.4";
-    setTimeout(() => {
-      fab.style.pointerEvents = "auto";
-    }, 300);
+    fab.style.display = "none";  // اختفي تماماً
   }
 
   function reopenFab() {
     const fab = document.getElementById("sila-fab");
     fab.classList.remove("closed");
-    fab.style.opacity = "1";
+    fab.style.display = "flex";  // ظهر مرة أخرى
   }
 
   function detectDir(text) {
