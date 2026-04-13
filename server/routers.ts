@@ -13,7 +13,6 @@ import { advancedCachingRouter } from "./routers/advancedCaching";
 import { askSilaRouter } from "./routers/askSila";
 import { drugLensRouter } from "./routers/drugLens";
 import { drugImagesRouter } from "./routers/drugImages";
-import { customAuthRouter } from "./routers/customAuth";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -57,7 +56,6 @@ export const appRouter = router({
   askSila: askSilaRouter,
   drugLens: drugLensRouter,
   drugImages: drugImagesRouter,
-  customAuth: customAuthRouter,
   
   dbUtils: router({
     findDuplicates: publicProcedure.query(async () => {

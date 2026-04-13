@@ -36,7 +36,6 @@ const DrugLens = lazy(() => import("./pages/DrugLens"));
 const Metrics = lazy(() => import("./pages/Metrics"));
 const PerformanceDashboard = lazy(() => import("./pages/PerformanceDashboard"));
 const DuplicateFinder = lazy(() => import("./pages/DuplicateFinder"));
-const Auth = lazy(() => import("./pages/Auth"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -67,12 +66,7 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/auth"} component={() => (
-        <Suspense fallback={<PageLoader />}>
-          <Auth />
-        </Suspense>
-      )} />
-      <Route path={"/?"}component={Home} />
+      <Route path={"/?"} component={Home} />
       <Route path={"metrics"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <AuthGuard message="هذه الصفحة متاحة للمشرفين فقط. يرجى تسجيل الدخول.">

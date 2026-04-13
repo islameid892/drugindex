@@ -49,7 +49,6 @@
     "@trpc/server": "^11.6.0",
     "@types/compression": "^1.8.1",
     "axios": "^1.12.0",
-    "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -113,13 +113,6 @@
       "when": 1775544657696,
       "tag": "0015_mysterious_karma",
       "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "5",
-      "when": 1776063725284,
-      "tag": "0016_moaning_alice",
-      "breakpoints": true
     }
   ]
 }
