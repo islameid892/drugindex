@@ -58,11 +58,11 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
       retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
-        // Retry up to 3 times for other errors
+        // Don't retry on 401 (unauthorized) - let it redirect
+        if (error?.status === 401) return false;
+        // Don't retry on 403 (forbidden)
+        if (error?.status === 403) return false;
+        // Retry up to 3 times for other errors (network, 5xx, etc)
         return failureCount < 3;
       },
       retryDelay: (attemptIndex) => {
@@ -71,15 +71,15 @@ const queryClient = new QueryClient({
       },
       refetchOnWindowFocus: false,
       refetchOnReconnect: true, // Refetch when connection restored
-      refetchOnMount: true, // Refetch if data is stale on mount
+      refetchOnMount: false, // Don't auto-refetch on mount to reduce requests
     },
     mutations: {
       retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
-        // Retry up to 2 times for mutations
+        // Don't retry on 401 (unauthorized)
+        if (error?.status === 401) return false;
+        // Don't retry on 403 (forbidden)
+        if (error?.status === 403) return false;
+        // Retry up to 2 times for other errors
         return failureCount < 2;
       },
       retryDelay: (attemptIndex) => {
@@ -89,6 +89,10 @@ const queryClient = new QueryClient({
   },
 });
 
+// Track logout attempts to prevent spam
+let lastLogoutAttempt = 0;
+const LOGOUT_COOLDOWN = 5000; // 5 seconds between logout attempts
+
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
@@ -97,6 +101,15 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
+  // Prevent logout spam
+  const now = Date.now();
+  if (now - lastLogoutAttempt < LOGOUT_COOLDOWN) {
+    console.warn('[Auth] Logout attempt blocked (cooldown active)');
+    return;
+  }
+
+  lastLogoutAttempt = now;
+  console.warn('[Auth] Redirecting to login due to unauthorized error');
   window.location.href = getLoginUrl();
 };
 
@@ -104,43 +117,56 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     console.log('[Network] Connection restored');
-    queryClient.refetchQueries();
+    // Only refetch queries that are not stale
+    queryClient.refetchQueries({ type: 'active' });
   });
   window.addEventListener('offline', () => {
     console.log('[Network] Connection lost');
   });
 }
 
-// Error handling with optimized logging
+// Error handling with improved logic
+const handleQueryError = (error: any) => {
+  // Only redirect on actual unauthorized errors (401)
+  // Ignore other errors like network timeouts, CORS, etc.
+  if (error?.status === 401 || error?.message === UNAUTHED_ERR_MSG) {
+    redirectToLoginIfUnauthorized(error);
+  } else if (error?.status >= 500) {
+    // Server errors - log but don't logout
+    console.error('[API] Server error:', error);
+  } else if (error?.status >= 400) {
+    // Client errors - log but don't logout
+    console.warn('[API] Client error:', error?.status, error?.message);
+  }
+};
+
 if (process.env.NODE_ENV !== 'production') {
   queryClient.getQueryCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
       const error = event.query.state.error;
-      redirectToLoginIfUnauthorized(error);
-      console.error("[API Query Error]", error);
+      handleQueryError(error);
     }
   });
 
   queryClient.getMutationCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
       const error = event.mutation.state.error;
-      redirectToLoginIfUnauthorized(error);
-      console.error("[API Mutation Error]", error);
+      handleQueryError(error);
     }
   });
 } else {
-  // Production: Only handle unauthorized errors
+  // Production: Only handle actual unauthorized errors
   queryClient.getQueryCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
       const error = event.query.state.error;
-      redirectToLoginIfUnauthorized(error);
+      handleQueryError(error);
     }
   });
 
   queryClient.getMutationCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
       const error = event.mutation.state.error;
-      redirectToLoginIfUnauthorized(error);
+      handleQueryError(error);
     }
   });
 }
