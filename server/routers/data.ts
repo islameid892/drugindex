@@ -46,7 +46,7 @@ export const dataRouter = router({
         return await searchMedications(input.query, input.limit ?? 50, input.offset ?? 0);
       }),
 
-    getAll: protectedProcedure
+    getAll: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(50).optional(), offset: z.number().optional() }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
@@ -65,7 +65,7 @@ export const dataRouter = router({
 
   // Codes
   codes: router({
-    getAll: protectedProcedure
+    getAll: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(100).optional(), offset: z.number().optional() }).optional())
       .query(async ({ input }) => {
         return await getAllCodes(input?.limit ?? 100, input?.offset ?? 0);
@@ -86,7 +86,7 @@ export const dataRouter = router({
 
   // Non-Covered Codes
   nonCoveredCodes: router({
-    getAll: protectedProcedure.query(async () => {
+    getAll: publicProcedure.query(async () => {
       return await getAllNonCoveredCodes();
     }),
 
@@ -197,8 +197,8 @@ export const dataRouter = router({
   }),
 
 
-  // Dashboard stats (protected, with caching and rate limiting)
-  dashboardStats: protectedProcedure.query(async ({ ctx }) => {
+  // Dashboard stats (public, with caching and rate limiting)
+  dashboardStats: publicProcedure.query(async ({ ctx }) => {
     const cacheKey = 'stats:dashboard';
     
     // Check cache first
