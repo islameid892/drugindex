@@ -13,6 +13,8 @@ import { advancedCachingRouter } from "./routers/advancedCaching";
 import { askSilaRouter } from "./routers/askSila";
 import { drugLensRouter } from "./routers/drugLens";
 import { drugImagesRouter } from "./routers/drugImages";
+import { sitemapRouter } from "./routers/sitemap";
+import { sqlQueryRouter } from "./routers/sqlQuery";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -56,6 +58,8 @@ export const appRouter = router({
   askSila: askSilaRouter,
   drugLens: drugLensRouter,
   drugImages: drugImagesRouter,
+  sitemap: sitemapRouter,
+  sqlQuery: sqlQueryRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

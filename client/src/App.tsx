@@ -22,7 +22,8 @@ const ConditionDetail = lazy(() => import("./pages/ConditionDetail"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const Database = lazy(() => import("./pages/Database"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
-const ContactUs = lazy(() => import("./pages/ContactUs"));
+const Contact = lazy(() => import("./pages/ContactUs"));
+const SqlQuery = lazy(() => import("./pages/SqlQuery"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
@@ -86,7 +87,7 @@ function Router() {
       )} />
       <Route path={"/contact"} component={() => (
         <Suspense fallback={<PageLoader />}>
-          <ContactUs />
+          <Contact />
         </Suspense>
       )} />
       <Route path={"/privacy"} component={() => (
@@ -161,6 +162,13 @@ function Router() {
         <Suspense fallback={<PageLoader />}>
           <AuthGuard message="لوحة التحكم متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
             <AdminPanel />
+          </AuthGuard>
+        </Suspense>
+      )} />
+      <Route path={"/admin/sql-query"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <AuthGuard message="هذه الأداة متاحة للمشرفين فقط. يرجى تسجيل الدخول.">
+            <SqlQuery />
           </AuthGuard>
         </Suspense>
       )} />

@@ -470,6 +470,61 @@ async function startServer() {
     next();
   });
 
+  // Sitemap and robots.txt routes
+  app.get('/sitemap.xml', async (req: Request, res: Response) => {
+    try {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { generateXmlSitemap } = await import('../sitemapGenerator');
+      const xmlContent = await generateXmlSitemap(baseUrl);
+      
+      res.type('application/xml');
+      res.header('Cache-Control', 'public, max-age=86400');
+      res.send(xmlContent);
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
+
+  app.get('/sitemap.html', async (req: Request, res: Response) => {
+    try {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      const baseUrl = `${protocol}://${host}`;
+      
+      const { generateHtmlSitemap } = await import('../sitemapGenerator');
+      const htmlContent = await generateHtmlSitemap(baseUrl);
+      
+      res.type('text/html');
+      res.header('Cache-Control', 'public, max-age=86400');
+      res.send(htmlContent);
+    } catch (error) {
+      console.error('Error generating HTML sitemap:', error);
+      res.status(500).send('Error generating HTML sitemap');
+    }
+  });
+
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    try {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      const sitemapUrl = `${protocol}://${host}/sitemap.xml`;
+      
+      const { generateRobotsTxt } = require('../sitemapGenerator');
+      const robotsContent = generateRobotsTxt(sitemapUrl);
+      
+      res.type('text/plain');
+      res.header('Cache-Control', 'public, max-age=86400');
+      res.send(robotsContent);
+    } catch (error) {
+      console.error('Error generating robots.txt:', error);
+      res.status(500).send('Error generating robots.txt');
+    }
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
