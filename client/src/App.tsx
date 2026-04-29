@@ -24,6 +24,7 @@ const Database = lazy(() => import("./pages/Database"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Contact = lazy(() => import("./pages/ContactUs"));
 const SqlQuery = lazy(() => import("./pages/SqlQuery"));
+const Files = lazy(() => import("./pages/Files"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
@@ -88,6 +89,11 @@ function Router() {
       <Route path={"/contact"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Contact />
+        </Suspense>
+      )} />
+      <Route path={"/files"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <Files />
         </Suspense>
       )} />
       <Route path={"/privacy"} component={() => (
