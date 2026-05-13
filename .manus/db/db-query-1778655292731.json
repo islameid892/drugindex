@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as total FROM bupa_prerequisites; SELECT service_name, icd_codes FROM bupa_prerequisites ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total FROM bupa_prerequisites; SELECT service_name, icd_codes FROM bupa_prerequisites ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "total": "144"
+    },
+    {
+      "total": "service_name\ticd_codes"
+    },
+    {
+      "total": "Cardiology - EPS and Cardiac Ablation\tR00.2, I48"
+    },
+    {
+      "total": "Cardiology - CRT Device\tZ95"
+    },
+    {
+      "total": "Cardiology - ICD Device\tZ95.810"
+    },
+    {
+      "total": "Cardiology - Ambulatory Blood Pressure Monitor\tI10, I11, R03.0"
+    },
+    {
+      "total": "Cardiology - Holter Monitor\tR00.2, I48"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n144\nservice_name\ticd_codes\nCardiology - EPS and Cardiac Ablation\tR00.2, I48\nCardiology - CRT Device\tZ95\nCardiology - ICD Device\tZ95.810\nCardiology - Ambulatory Blood Pressure Monitor\tI10, I11, R03.0\nCardiology - Holter Monitor\tR00.2, I48\n",
+  "stderr": "",
+  "execution_time_ms": 2059
+}
