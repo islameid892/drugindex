@@ -25,6 +25,7 @@ const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Contact = lazy(() => import("./pages/ContactUs"));
 const SqlQuery = lazy(() => import("./pages/SqlQuery"));
 const Files = lazy(() => import("./pages/Files"));
+const BupaPrerequisites = lazy(() => import("./pages/BupaPrerequisites"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
@@ -94,6 +95,11 @@ function Router() {
       <Route path={"/files"} component={() => (
         <Suspense fallback={<PageLoader />}>
           <Files />
+        </Suspense>
+      )} />
+      <Route path={"/bupa-prerequisites"} component={() => (
+        <Suspense fallback={<PageLoader />}>
+          <BupaPrerequisites />
         </Suspense>
       )} />
       <Route path={"/privacy"} component={() => (

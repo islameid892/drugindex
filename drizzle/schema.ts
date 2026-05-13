@@ -304,3 +304,25 @@ export const featureUsageTracking = mysqlTable(
 
 export type FeatureUsageTracking = typeof featureUsageTracking.$inferSelect;
 export type InsertFeatureUsageTracking = typeof featureUsageTracking.$inferInsert;
+
+// ─── Bupa Prerequisites ────────────────────────────────────────────────────────
+// Medical services and their prerequisites for Bupa insurance coverage
+
+export const bupaPrerequisites = mysqlTable(
+  "bupa_prerequisites",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    serviceName: varchar("service_name", { length: 255 }).notNull(),
+    icdCodes: varchar("icd_codes", { length: 500 }).notNull(), // Comma-separated ICD-10 codes
+    requirements: text("requirements").notNull(), // Detailed requirements/prerequisites
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    serviceNameIdx: index("idx_bupa_service_name").on(t.serviceName),
+    icdCodesIdx: index("idx_bupa_icd_codes").on(t.icdCodes),
+  })
+);
+
+export type BupaPrerequisite = typeof bupaPrerequisites.$inferSelect;
+export type InsertBupaPrerequisite = typeof bupaPrerequisites.$inferInsert;

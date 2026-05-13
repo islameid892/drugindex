@@ -15,6 +15,7 @@ import { drugLensRouter } from "./routers/drugLens";
 import { drugImagesRouter } from "./routers/drugImages";
 import { sitemapRouter } from "./routers/sitemap";
 import { sqlQueryRouter } from "./routers/sqlQuery";
+import { bupaRouter } from "./routers/bupa";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -60,6 +61,7 @@ export const appRouter = router({
   drugImages: drugImagesRouter,
   sitemap: sitemapRouter,
   sqlQuery: sqlQueryRouter,
+  bupa: bupaRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -1,0 +1,722 @@
+[
+  {
+    "serviceName": "MRI",
+    "icdCodes": "M23, M51, M75, M17, R51, R22, G43, C71, M54",
+    "requirements": "1- Comprehensive Medical History and physical examination findings, highlighting the indication for the MRI scan and relevant past medical and surgical history.\n2- Details of the trauma history relevant to the current complaint, if found.\n3- Clear provisional diagnosis.\n4- Related lab results support the suspected diagnosis, if found.\n5- Initial or previous relevant imaging studies (e.g. US / X-ray), if found."
+  },
+  {
+    "serviceName": "CT",
+    "icdCodes": "R55, R51, I61.9, I63.9, C71.9, R10, K35",
+    "requirements": "1- Comprehensive Medical History and physical examination findings, highlighting the indication for the CT scan and relevant past medical and surgical history.\n2- Details of the trauma history relevant to the current complaint, if found.\n3- Clear provisional diagnosis.\n4- Related lab results support the suspected diagnosis, if found.\n5- Initial or previous relevant imaging studies (e.g. US/ X-ray), if found."
+  },
+  {
+    "serviceName": "Most Frequent Lab Needed",
+    "icdCodes": "E11, R53, E55, E03, E05, D50",
+    "requirements": "1- HbA1c: History of relevant Present illness or medication history &/or RBS or FBS Reports if available.\n2- Vit D: The medical indication for vitamin D testing. Please mention or submit the relevant evidence, if applicable.\n3- FSH and LH: Initial Prolactin and TSH lab reports, clinical examination (specify if relevant to irregular menstruation, infertility, PCOS, Premature Ovarian Failure, menopause or others).\n4- T4, T3: TSH lab report (in suspected cases of primary hypothyroidism).\n5- Ferritin and iron: CBC lab report, detailed history of PHI, Medication history, relevant physical examination findings (not applied in cases of iron overload)."
+  },
+  {
+    "serviceName": "Physiotherapy",
+    "icdCodes": "M54, M23, M17, M75, M25, M77, M76, G83.4, G35, R26.89, R39.81, M40",
+    "requirements": "1- A detailed medical history, highlighting the duration of illness, the primary cause of patient's complaint and the initial management provided.\n2- Physical examination findings (e.g. range of motion, reflexes, strength, ...etc).\n3- Radiology report (e.g. Xray or CT or MRI).\n4- A detailed proposed treatment plan (the physical therapy modalities will be followed, the number of required sessions and the Goals of treatment) along with follow-up assessment report."
+  },
+  {
+    "serviceName": "Medical Equipment - Glucometer",
+    "icdCodes": "E11, E10",
+    "requirements": "RBS or FBS or HbA1C or Medication history."
+  },
+  {
+    "serviceName": "Medical Equipment - BP Machine",
+    "icdCodes": "I10, I11",
+    "requirements": "3 BP readings at different occasions."
+  },
+  {
+    "serviceName": "Medical Equipment - Nebulizer",
+    "icdCodes": "J45, J40",
+    "requirements": "Clinical findings and diagnosis."
+  },
+  {
+    "serviceName": "Medical Equipment - Hearing Aid",
+    "icdCodes": "H90, H91",
+    "requirements": "Audiometry and Tympanometry if applicable."
+  },
+  {
+    "serviceName": "Medical Equipment - CPAP for OSA",
+    "icdCodes": "G47.33, G47.20",
+    "requirements": "Sleep Study Report."
+  },
+  {
+    "serviceName": "Medical Equipment - Insulin Pump",
+    "icdCodes": "E10, E11",
+    "requirements": "A- Documented report demonstrating treatment attempts with multiple daily injections for at least 6 months, including drug prescriptions.\nB- Documented blood glucose readings for the last two months.\nC- Documented medical visit reports highlighting attempts to adjust insulin administration and self-management during the visits.\nD- A documented report confirming that the patient has completed a diabetes education training program satisfactorily, including self-care processes and follow-up procedures.\nE- A minimum of two HbA1c lab results, each taken recently (within the last 3 months) and spaced at least 3 months apart."
+  },
+  {
+    "serviceName": "Surgery/Procedure - General",
+    "icdCodes": "K40, K80, K82.8, K64, K61, C18.9, D17.1, C44.319, K56.6, E04.2, C73",
+    "requirements": "1- Imaging report (US, CT, MRI).\n2- Clinical examination.\n3- Relevant lab tests or tumor markers results, if available."
+  },
+  {
+    "serviceName": "Surgery/Procedure - Ophtha",
+    "icdCodes": "H25, H40, H26.9, H43.1",
+    "requirements": "1- A detailed Medical History outlining the etiology, the previous management along with the Examination findings.\n2- OCT Report (In cases of Glaucoma, but not mandatory)."
+  },
+  {
+    "serviceName": "Surgery/Procedure - Ortho",
+    "icdCodes": "M23, M51, M75, M17, M54",
+    "requirements": "1- Clinical History, duration, primary cause and initial management if done.\n2- Physical examination findings (e.g. range of motion, reflexes, strength, deformities ..etc).\n3- Radiology report (e.g. Xray or CT or MRI)."
+  },
+  {
+    "serviceName": "Endoscopy / Gastroscopy",
+    "icdCodes": "K29, K21, K25.9, R11, D13.1, R12, C16.9, R10",
+    "requirements": "1- Detailed medical history, highlighting the indication, including any alarm symptoms, alongside relevant examination findings.\n2- Lab reports (CBC, H. pylori, stool occult blood, and Celiac diseases antibodies), if relevant.\n3- Initial radiology (barium swallow, US) if done."
+  },
+  {
+    "serviceName": "Surgery/Procedure - Abdominal Area",
+    "icdCodes": "K35, K36, K80, K40.20, K42.9, K57.3, C18.9, K66.1, K65, R18.8, K63.89, D13.4, D17.5, R19, K66",
+    "requirements": "1- Imaging report (US, CT, MRI).\n2- Clinical examination.\n3- Supportive lab reports or tumor markers, if relevant."
+  },
+  {
+    "serviceName": "CS Delivery",
+    "icdCodes": "O82, O34.21, O68.0",
+    "requirements": "1- CTG +/- US (In cases of Fetal distress).\n2- Partogram report (For emergency CSD due to failure to progress).\n3- Detailed medical history that include information on the current and previous ANC, labor and PNC, and the indication of CSD."
+  },
+  {
+    "serviceName": "Colonoscopy",
+    "icdCodes": "R10, K57.3, D12.6, K52.9, K51.9, R19.7, K50.9",
+    "requirements": "1- Relevant laboratory and imaging tests support the indication (e.g. FOBT, calprotectin, CT, barium enema ...etc).\n2- A detailed medical history and examination, highlighting the presence of any Alarming clinical symptoms or signs and the indication for colonoscopy in the given case."
+  },
+  {
+    "serviceName": "Surgery/Procedure - Renal",
+    "icdCodes": "N18.1, N18.2, N17, N04.9, N20, N23, N39",
+    "requirements": "1- Detailed medical history outlining the duration of complaint, the previous relevant medical and surgical history.\n2- Imaging Report (CT KUB)."
+  },
+  {
+    "serviceName": "Tonsillectomy",
+    "icdCodes": "J03.9, J03, J35.1, J35.02, J35.2, J36",
+    "requirements": "1- Initial radiology (e.g. lateral neck Xray), if relevant (e.g., if adenoidectomy was requested).\n2- Detailed medical history and examination, outlining the indication for surgery.\n3- Initial management."
+  },
+  {
+    "serviceName": "Admission",
+    "icdCodes": "R10, J18.9, K35.8, R07, I16, A09, I63",
+    "requirements": "1- Vital signs chart.\n2- Lab reports.\n3- Radiology report.\n4- A detailed medical history and examination outlining the indication for admission."
+  },
+  {
+    "serviceName": "Extension",
+    "icdCodes": "R50, R07, A09, R10, I63",
+    "requirements": "1- Vital signs chart.\n2- Lab reports.\n3- Radiology report.\n4- Progress notes and medication sheet."
+  },
+  {
+    "serviceName": "Milk Products - Cow Milk Protein Allergy",
+    "icdCodes": "Z91.011",
+    "requirements": "Medical report with full HX and examination."
+  },
+  {
+    "serviceName": "Milk Products - Lactose Intolerance",
+    "icdCodes": "E73.9",
+    "requirements": "Medical report with full HX and examination.\nStool analysis.\nHydrogen breath testing (HBT or Stool pH +/- osmolarity tests)."
+  },
+  {
+    "serviceName": "Milk Products - Prematurity",
+    "icdCodes": "P07.3",
+    "requirements": "Medical report including gestational age of the child and current body weight."
+  },
+  {
+    "serviceName": "Milk Products - Failure to Thrive",
+    "icdCodes": "R62.51",
+    "requirements": "Medical report with full HX and examination including growth chart.\nAnthropometric measures and current body weight."
+  },
+  {
+    "serviceName": "Milk Products - Galactosemia",
+    "icdCodes": "E74.21",
+    "requirements": "Newborn neonatal screen.\nEnzyme assay."
+  },
+  {
+    "serviceName": "Milk Products - Phenylketonuria",
+    "icdCodes": "E70.0",
+    "requirements": "Newborn screening.\nPhenylalanine/tyrosine ratio in blood.\nOrganic acids in urine."
+  },
+  {
+    "serviceName": "Milk Products - Maple Syrup Urine Disease",
+    "icdCodes": "E71.0",
+    "requirements": "Newborn screening.\nPlasma levels of amino acids (leucine, isoleucine, valine).\nOrganic acids in urine."
+  },
+  {
+    "serviceName": "Milk Products - Tyrosinemia",
+    "icdCodes": "E70.21",
+    "requirements": "Newborn screening.\nPlasma levels of amino acids (tyrosine).\nOrganic acids in urine."
+  },
+  {
+    "serviceName": "Milk Products - Urea Cycle Defect",
+    "icdCodes": "E72.2",
+    "requirements": "Ammonia level in blood.\nABG.\nPlasma amino acid analysis (glutamine, citrulline, arginine).\nOrotic acid in urine (in OTC deficiency)."
+  },
+  {
+    "serviceName": "Pediatric - DKA (Diabetic Ketoacidosis)",
+    "icdCodes": "E10.10",
+    "requirements": "RBS.\nABG.\nUrine analysis.\nElectrolytes."
+  },
+  {
+    "serviceName": "Pediatric - Growth Hormone Deficiency",
+    "icdCodes": "E23.0",
+    "requirements": "Medical report including both parents' height.\nGrowth chart.\nXRAY LT hand or Xray Bone Age.\nBasic labs (CBC, thyroid profile).\nIGF1 and growth hormone level by growth hormone stimulation test."
+  },
+  {
+    "serviceName": "Pediatric - Congenital Hypothyroidism",
+    "icdCodes": "E03.1",
+    "requirements": "TSH.\nT4.\nThyroid ultrasound (if agenesis suspected)."
+  },
+  {
+    "serviceName": "Pediatric - Congenital Adrenal Hyperplasia",
+    "icdCodes": "E25",
+    "requirements": "Serum electrolytes.\nSerum 17-hydroxyprogesterone.\nRenin level.\nCortisol level."
+  },
+  {
+    "serviceName": "Pediatric - Rickets",
+    "icdCodes": "E55",
+    "requirements": "XRAY.\nCBC.\nSerum Ca (total and ionized).\nSerum phosphate.\nALP.\nPTH.\nVitamin D level."
+  },
+  {
+    "serviceName": "Pediatric - UTI",
+    "icdCodes": "N39",
+    "requirements": "CBC (if available).\nCRP (if available).\nUrine analysis."
+  },
+  {
+    "serviceName": "Pediatric - Glomerulonephritis",
+    "icdCodes": "N00, N01, N02, N03, N04",
+    "requirements": "Post-streptococcal glomerulonephritis.\nCBC.\nCRP.\nUrine analysis.\nC3 level.\nThroat swab or skin culture or ASO or streptozyme test."
+  },
+  {
+    "serviceName": "Pediatric - Nephrotic Syndrome",
+    "icdCodes": "N05, N06, N07, N08",
+    "requirements": "CBC.\nCRP.\nUrine analysis.\nKidney function (24-hour urine protein or protein-to-creatinine ratio).\nAlbumin level.\nLipid profile."
+  },
+  {
+    "serviceName": "Pediatric - Urinary Stone",
+    "icdCodes": "N20, N21, N22, N23",
+    "requirements": "CT KUB or Ultrasound.\nUrine analysis."
+  },
+  {
+    "serviceName": "Pediatric - Acute Renal Failure",
+    "icdCodes": "N17, N18, N19",
+    "requirements": "Creatinine.\nABG.\nElectrolyte.\nUrine analysis.\nCBC.\nCRP."
+  },
+  {
+    "serviceName": "Pediatric - Posterior Urethral Valve",
+    "icdCodes": "Q64.2",
+    "requirements": "Kidney function tests.\nUltrasound.\nVoiding cystourethrogram."
+  },
+  {
+    "serviceName": "Pediatric - Asthma",
+    "icdCodes": "J45.909",
+    "requirements": "Medical history, examination findings, vitals, and initial ER management.\nSpirometry if child above 5 years."
+  },
+  {
+    "serviceName": "Pediatric - Acute Bronchitis / Acute Bronchiolitis",
+    "icdCodes": "J00, J20, J21",
+    "requirements": "Bedside evaluation, including medical history and examination.\nXray or CT report."
+  },
+  {
+    "serviceName": "Pediatric - Pneumonia",
+    "icdCodes": "J01-J99, J09, J10-J18",
+    "requirements": "Bedside evaluation (H&E), vital signs.\nCBC.\nCRP.\nBUN, Creatinine, electrolytes.\nBlood culture.\nCXR or CT chest."
+  },
+  {
+    "serviceName": "GIT - Cystic Fibrosis (IP)",
+    "icdCodes": "E84",
+    "requirements": "FOR IP:\nSweat chloride test.\nGenetic testing.\nFOR OP:\nClinical examination and history."
+  },
+  {
+    "serviceName": "GIT - Acute Viral Hepatitis",
+    "icdCodes": "B15, B16, B17, B18, B19",
+    "requirements": "CBC.\nCRP.\nLiver function test.\nViral serology."
+  },
+  {
+    "serviceName": "GIT - Wilson Disease",
+    "icdCodes": "E83",
+    "requirements": "CBC.\nLiver function.\nCeruloplasmin level in serum.\n24h urinary copper excretion."
+  },
+  {
+    "serviceName": "GIT - Gastroenteritis",
+    "icdCodes": "K52.9, K50, K51, K00-K95",
+    "requirements": "CBC.\nCRP.\nElectrolyte.\nStool analysis.\nABG (if available)."
+  },
+  {
+    "serviceName": "GIT - Inflammatory Bowel Disease",
+    "icdCodes": "K52.9, K56",
+    "requirements": "CBC, CRP or ESR, albumin.\nStool analysis.\nFecal calprotectin.\nAbdominal ultrasound or Xray.\nColonoscopy or upper endoscopy with biopsy if available."
+  },
+  {
+    "serviceName": "GIT - Nausea and Vomiting",
+    "icdCodes": "R11",
+    "requirements": "Bedside evaluation (H&E).\nNumber of attacks, suspected meal, skin turgor.\nNA, K creatinine, BUN, ABG if available or urine analysis.\nU/S.\nVitals."
+  },
+  {
+    "serviceName": "GIT - Abdominal and Pelvic Pain",
+    "icdCodes": "R12, K92, R10, R13, R14, R19, K58",
+    "requirements": "Lab reports (CBC, CRP, stool analysis).\nU/S or CT, MRI.\nVitals, past history, clinical examination."
+  },
+  {
+    "serviceName": "GIT - Disorders of Esophagus",
+    "icdCodes": "R12, K20, K21, K22, K23",
+    "requirements": "Lab reports (CBC, H.pylori st.ag, stool analysis).\nU/S.\nVitals, duration, medical history, medication history.\nThe presence of any alarm symptoms."
+  },
+  {
+    "serviceName": "GIT - Diseases of Stomach and Duodenum",
+    "icdCodes": "K25, K26, K27, K28, K29, K30, K31, K92",
+    "requirements": "Patient's medical history.\nLab reports (CBC, H.pylori st.ag, stool analysis, FOBT test).\nU/S.\nVitals, duration, medication history."
+  },
+  {
+    "serviceName": "GIT - Appendicitis",
+    "icdCodes": "K35, K36, K37, K38",
+    "requirements": "CBC, CRP.\nUS or CT.\nClinical examination."
+  },
+  {
+    "serviceName": "GIT - Hematemesis",
+    "icdCodes": "K92.0",
+    "requirements": "Lab reports (CBC, INR, stool analysis).\nVITALS, drug history, Similar attacks.\nUS or CT.\nDigital rectal exam (DRE)."
+  },
+  {
+    "serviceName": "GIT - Melena",
+    "icdCodes": "K92.1",
+    "requirements": "Lab reports (CBC, INR, stool analysis).\nVITALS, drug history, Similar attacks.\nUS or CT.\nDigital rectal exam (DRE)."
+  },
+  {
+    "serviceName": "GIT - Gastrointestinal Hemorrhage (Unspecified)",
+    "icdCodes": "K92.2",
+    "requirements": "Lab reports (CBC, INR, stool analysis).\nVITALS, drug history, Similar attacks.\nUS or CT.\nDigital rectal exam (DRE)."
+  },
+  {
+    "serviceName": "GIT - Other Specified Diseases of Digestive System",
+    "icdCodes": "K92.8, K92.89",
+    "requirements": "Lab reports (CBC, INR, stool analysis).\nVITALS, drug history, Similar attacks.\nUS or CT.\nDigital rectal exam (DRE)."
+  },
+  {
+    "serviceName": "GIT - Disease of Digestive System (Unspecified)",
+    "icdCodes": "K92.9",
+    "requirements": "Lab reports (CBC, INR, stool analysis).\nVITALS, drug history, Similar attacks.\nUS or CT.\nDigital rectal exam (DRE)."
+  },
+  {
+    "serviceName": "GIT - Gastrointestinal Mucositis (Ulcerative)",
+    "icdCodes": "K92.81",
+    "requirements": "Lab reports (Fecal calprotectin, CBC, ESR, albumin).\nClinical examination, previous past history.\nDigital rectal exam (DRE).\nRadiology report if available."
+  },
+  {
+    "serviceName": "GIT - Crohn's Disease (Regional Enteritis)",
+    "icdCodes": "K50",
+    "requirements": "Lab reports (Fecal calprotectin, CBC, ESR, albumin).\nClinical examination, previous past history.\nDigital rectal exam (DRE).\nRadiology report if available."
+  },
+  {
+    "serviceName": "GIT - Ulcerative Colitis",
+    "icdCodes": "K51",
+    "requirements": "Lab reports (Fecal calprotectin, CBC, ESR, albumin).\nClinical examination, previous past history.\nDigital rectal exam (DRE).\nRadiology report if available."
+  },
+  {
+    "serviceName": "GIT - Other/Unspecified Noninfective Gastroenteritis and Colitis",
+    "icdCodes": "K52",
+    "requirements": "Lab reports (Fecal calprotectin, CBC, ESR, albumin).\nClinical examination, previous past history.\nDigital rectal exam (DRE).\nRadiology report if available."
+  },
+  {
+    "serviceName": "GIT - Fecal Incontinence",
+    "icdCodes": "R15",
+    "requirements": "Recent spine or anal surgeries.\nDRE."
+  },
+  {
+    "serviceName": "Internal Medicine - Essential Hypertension (OP)",
+    "icdCodes": "I10, I11, I12, I13, I14, I15",
+    "requirements": "BP chart (first request) or medical report if the patient is on medications (UCAF)."
+  },
+  {
+    "serviceName": "Internal Medicine - Essential Hypertension (IP)",
+    "icdCodes": "I10, I11, I12, I13, I14, I15",
+    "requirements": "BP reading at ER & neurological examination.\nOptional: CT brain."
+  },
+  {
+    "serviceName": "Internal Medicine - Hypertensive Urgency",
+    "icdCodes": "I16.0, I16.1",
+    "requirements": "BP reading at ER & neurological examination.\nOptional: CT brain."
+  },
+  {
+    "serviceName": "Internal Medicine - Secondary Hypertension (OP)",
+    "icdCodes": "I15.9",
+    "requirements": "Medical history report.\nPhysical examination findings, a series of blood pressure readings (BP chart), and other vital signs."
+  },
+  {
+    "serviceName": "Internal Medicine - Type 2 Diabetes Mellitus (OP)",
+    "icdCodes": "E11",
+    "requirements": "Clinical examination (signs, symptoms).\nFBS or HBA1c or RBS lab reports."
+  },
+  {
+    "serviceName": "Internal Medicine - Type 1 Diabetes Mellitus (OP)",
+    "icdCodes": "E10",
+    "requirements": "Clinical examination (signs, symptoms).\nFBS or HBA1c or RBS lab reports."
+  },
+  {
+    "serviceName": "Internal Medicine - Hypoglycemia",
+    "icdCodes": "E16.1, E16.2, E15, E13.649, E09.641, E16.0",
+    "requirements": "Medical History.\nClinical examination (signs, symptoms).\nLab: RBS report."
+  },
+  {
+    "serviceName": "Internal Medicine - Cerebrovascular Diseases (OP)",
+    "icdCodes": "I60, I61, I62, I63, I64, I65, I66, I67, I68, I69",
+    "requirements": "Clinical examination (signs, symptoms & full neurological examination)."
+  },
+  {
+    "serviceName": "Internal Medicine - Cerebrovascular Diseases (IP)",
+    "icdCodes": "I60, I61, I62, I63, I64, I65, I66, I67, I68, I69",
+    "requirements": "Clinical examination (signs, symptoms & full neurological examination).\nOne of those: CT Brain / MRI Brain.\nOptional: MRA/CTA."
+  },
+  {
+    "serviceName": "Internal Medicine - COPD",
+    "icdCodes": "J44",
+    "requirements": "Detailed Medical report & VSC.\nHome medication.\nBlood gases & sepsis markers.\nSpirometry and chest Xray may be useful."
+  },
+  {
+    "serviceName": "Internal Medicine - Pulmonary Edema",
+    "icdCodes": "J80, J81",
+    "requirements": "Detailed Medical report & VSC.\nImaging report e.g. Xray if available.\nEchocardiogram, renal function test, etc., based on the primary etiology of Pulmonary Edema."
+  },
+  {
+    "serviceName": "Internal Medicine - Sarcoidosis",
+    "icdCodes": "J86",
+    "requirements": "Imaging report: CT chest or XRAY.\nLabs: ACE level / electrolytes / urine analysis / LFT."
+  },
+  {
+    "serviceName": "Internal Medicine - Tuberculosis",
+    "icdCodes": "A15",
+    "requirements": "Sputum staining for acid-fast bacilli, sputum culture, or PCR test.\nTB Skin testing.\nPPD test or a QuantiFERON (latent TB).\nImaging report e.g. Xray or CT chest.\nSputum culture if available."
+  },
+  {
+    "serviceName": "Internal Medicine - Pneumonia",
+    "icdCodes": "J13, J15, J18",
+    "requirements": "Medical Report & VSC.\nSepsis workup: e.g. CRP / CBC, BUN, Creatinine and electrolytes.\nClinical assessment scores similar to CURB-65 and Pneumonia Severity.\nImaging: e.g. Xray or CT chest."
+  },
+  {
+    "serviceName": "Internal Medicine - Pleural Effusion",
+    "icdCodes": "J90, J91",
+    "requirements": "Detailed Medical report & VSC.\nImaging report: e.g. Xray / CT chest."
+  },
+  {
+    "serviceName": "Internal Medicine - Cystic Fibrosis",
+    "icdCodes": "E84",
+    "requirements": "Detailed Medical report & VSC.\nSweat Chloride test."
+  },
+  {
+    "serviceName": "Internal Medicine - Pneumothorax",
+    "icdCodes": "J93",
+    "requirements": "Vital signs Chart.\nMedical report clarifies primary cause.\nImaging report e.g. Xray or CT chest."
+  },
+  {
+    "serviceName": "Internal Medicine - Pulmonary Embolism",
+    "icdCodes": "J81",
+    "requirements": "Full physical Examination report and Wells score & Pulmonary Embolism Rule-out Criteria (PERC) for suspected case of PE.\nImaging Reports (CT pulmonary Angio, V/Q scan).\nD-dimer."
+  },
+  {
+    "serviceName": "Orthopedics - Pelvic Ring Fractures",
+    "icdCodes": "S32.0, S32.9",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Acetabular Fractures",
+    "icdCodes": "S32.3",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Femoral Head Fractures",
+    "icdCodes": "S72.0",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification: Pipkin I–IV.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Intertrochanteric Femur Fractures",
+    "icdCodes": "S72.1",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification: Evans (stable vs. unstable).\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Femoral Shaft Fractures",
+    "icdCodes": "S72.3",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification: AO: 32-A/B/C (simple to complex).\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Tibial Plateau Fractures",
+    "icdCodes": "S82.1",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification: Schatzker I–VI.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Tibia Shaft Fractures",
+    "icdCodes": "S82.2, S92.0-S92.2, S52.2, S42.2",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Ankle Fractures",
+    "icdCodes": "S82.2, S92.0-S92.2, S52.2, S42.2",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Calcaneus Fractures",
+    "icdCodes": "S82.2, S92.0-S92.2, S52.2, S42.2",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Talus Fractures",
+    "icdCodes": "S82.2, S92.0-S92.2, S52.2, S42.2",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Proximal Humerus Fractures",
+    "icdCodes": "S82.2, S92.0-S92.2, S52.2, S42.2",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination.\nClassification.\nRadiology Report.\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Arthroscopy (Shoulder/Wrist/Hip/Knee/Ankle)",
+    "icdCodes": "S43.0, S43.5, S46.0, M75.1, S63.5, S66.2, S61.4, S73.1, M25.8, S83.5, S83.2, M93.2, S86.0, S93.0, M03.2, S93.4",
+    "requirements": "Scenario of trauma.\nHx & clinical Examination, Initial lines of management.\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Cervical Disc Degeneration",
+    "icdCodes": "M50.2, M51.2, M43.16, M47.2",
+    "requirements": "Hx & Exam (Neurological exam), duration of complaint, Initial lines of management.\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Lumbar Disc Degeneration",
+    "icdCodes": "M50.2, M51.2, M43.16, M47.2",
+    "requirements": "Hx & Exam (Neurological exam), duration of complaint, Initial lines of management.\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Spondylolisthesis",
+    "icdCodes": "M50.2, M51.2, M43.16, M47.2",
+    "requirements": "Hx & Exam (Neurological exam), duration of complaint, Initial lines of management.\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Spinal Stenosis",
+    "icdCodes": "M50.2, M51.2, M43.16, M47.2",
+    "requirements": "Hx & Exam (Neurological exam), duration of complaint, Initial lines of management.\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Thoracic Wedge Fracture",
+    "icdCodes": "S22.0, S22.1, S11.0, S32.0",
+    "requirements": "Scenario of trauma.\nHx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Thoracic Burst Fracture",
+    "icdCodes": "S22.0, S22.1, S11.0, S32.0",
+    "requirements": "Scenario of trauma.\nHx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Cervical Spine Fracture",
+    "icdCodes": "S22.0, S22.1, S11.0, S32.0",
+    "requirements": "Scenario of trauma.\nHx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Lumbar Burst Fracture",
+    "icdCodes": "S22.0, S22.1, S11.0, S32.0",
+    "requirements": "Scenario of trauma.\nHx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Idiopathic Scoliosis",
+    "icdCodes": "M41.0, M46.1, M84.5",
+    "requirements": "Hx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Spinal Infection (Discitis)",
+    "icdCodes": "M41.0, M46.1, M84.5",
+    "requirements": "Hx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Pathological Fracture",
+    "icdCodes": "M41.0, M46.1, M84.5",
+    "requirements": "Hx & Exam (Neurological exam).\nClassification.\nRadiology Report (MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Osteoarthritis of the Hip",
+    "icdCodes": "M16.0, M16.10, M16.4, M17.0, M17.2, M17.9",
+    "requirements": "Hx & clinical Examination.\nPast history and previous lines of management.\nRadiology Report (Xray or MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Orthopedics - Osteoarthritis of the Knee",
+    "icdCodes": "M16.0, M16.10, M16.4, M17.0, M17.2, M17.9",
+    "requirements": "Hx & clinical Examination.\nPast history and previous lines of management.\nRadiology Report (Xray or MRI OR CT).\nManagement plan details."
+  },
+  {
+    "serviceName": "Gynecology - Puerperal Psychiatry",
+    "icdCodes": "F53.0, F53.1",
+    "requirements": "Medical report."
+  },
+  {
+    "serviceName": "Gynecology - Ectopic Pregnancy",
+    "icdCodes": "O00.00, O00.91",
+    "requirements": "TVUS.\nCBC, Quantitative BhCG.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Gestational Trophoblastic Diseases",
+    "icdCodes": "O01.0, O02.0",
+    "requirements": "TVUS.\nCBC, Quantitative BhCG.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Abortion and TOP",
+    "icdCodes": "O02.1, O07.4",
+    "requirements": "TVUS.\nCBC, Quantitative BhCG.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Ectopic and Molar Pregnancy",
+    "icdCodes": "O08.0, O08.9",
+    "requirements": "TVUS.\nCBC, Quantitative BhCG.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Hypertension with Pregnancy",
+    "icdCodes": "O10.011, O16.9",
+    "requirements": "US.\nCBC, KFT (urine analysis and protein/creatinine ratio), LFT.\nMedical report (BP readings)."
+  },
+  {
+    "serviceName": "Gynecology - Hemorrhage in Early Pregnancy",
+    "icdCodes": "O20.0, O20.9",
+    "requirements": "US.\nCBC, KFT, LFT (optional).\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Vomiting with Pregnancy",
+    "icdCodes": "O21.0, O21.9",
+    "requirements": "US.\nCBC, electrolyte lab reports, urine analysis, RBG, Quantitative beta hCG.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Infections with Pregnancy",
+    "icdCodes": "O23.00, O23.93",
+    "requirements": "Depends on the type and site of the infection.\nUS.\nCBC, CRP, Urine, ESR.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Diabetes with Pregnancy",
+    "icdCodes": "O24.011, O24.93",
+    "requirements": "US.\nCBC, RBS, ABG (emergency), Urine analysis.\nGTT if available.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Liver Disease with Pregnancy",
+    "icdCodes": "O26.611",
+    "requirements": "US.\nCBC, KFT, LFT, Bilirubin.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Cervical Shortening",
+    "icdCodes": "O26.872, O26.879",
+    "requirements": "TVUS.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Decreased Fetal Movement",
+    "icdCodes": "O36.8120, O36.8199",
+    "requirements": "US and CTG.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Preterm Premature Rupture of Membranes",
+    "icdCodes": "O42.00, O42.92",
+    "requirements": "US and CTG.\nMedical report, VSC.\nManagement plan."
+  },
+  {
+    "serviceName": "Gynecology - Placental Disorders",
+    "icdCodes": "O43.011, O45.93",
+    "requirements": "US.\nMedical report, VSC.\nManagement plan."
+  },
+  {
+    "serviceName": "Gynecology - Preterm Labor",
+    "icdCodes": "O47.00",
+    "requirements": "US and CTG.\nCBC, KFT, report, VSC (if available).\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Failed Induction of Labor",
+    "icdCodes": "O61.0, O61.9",
+    "requirements": "US and CTG, Partogram.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Cesarean Delivery",
+    "icdCodes": "O82",
+    "requirements": "Indication of CS.\nUS report, CTG AND Partogram."
+  },
+  {
+    "serviceName": "Gynecology - Puerperium",
+    "icdCodes": "O85",
+    "requirements": "US.\nCBC, KFT, LFT, Bilirubin.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Endometriosis",
+    "icdCodes": "N80",
+    "requirements": "US OR MRI.\nMedical report, VSC."
+  },
+  {
+    "serviceName": "Gynecology - Female Genitals Prolapse",
+    "icdCodes": "N81",
+    "requirements": "Medical report, VSC.\nPast history and initial lines of management."
+  },
+  {
+    "serviceName": "Gynecology - Polyp of Female Genital Tract",
+    "icdCodes": "N84",
+    "requirements": "US.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Noninflammatory Disorders of Vulva and Perineum",
+    "icdCodes": "N90",
+    "requirements": "Medical report."
+  },
+  {
+    "serviceName": "Gynecology - Absent, Scanty and Rare Menstruation",
+    "icdCodes": "N91",
+    "requirements": "US.\nCBC, TSH.\nMedical report."
+  },
+  {
+    "serviceName": "Gynecology - Excessive, Frequent and Irregular Menstruation",
+    "icdCodes": "N92, N93, N94, N95, N96",
+    "requirements": "US.\nCBC, TSH, Coagulation profile.\nMedical report."
+  },
+  {
+    "serviceName": "Cardiology - Stress ECG",
+    "icdCodes": "R94.31",
+    "requirements": "Full past history and when first diagnosed.\nResting ECG.\nRF-CL pretest probability Model.\nClinical history."
+  },
+  {
+    "serviceName": "Cardiology - CT Coronary Angiography (CTCA)",
+    "icdCodes": "I21, I20",
+    "requirements": "Full past history and when first diagnosed and indication vs other modalities.\nResting ECG.\nRF-CL pretest probability Model.\nClinical history."
+  },
+  {
+    "serviceName": "Cardiology - Dobutamine Stress Echocardiography",
+    "icdCodes": "R07, I21",
+    "requirements": "Full past history and when first diagnosed and indication vs other modalities.\nResting ECG.\nRF-CL pretest probability Model.\nClinical history."
+  },
+  {
+    "serviceName": "Cardiology - Invasive Coronary Angiography",
+    "icdCodes": "I21, I20",
+    "requirements": "Full past history and when first diagnosed.\nResting ECG and cardiac enzymes.\nOther imaging report (Echo, CT angio).\nRF-CL pretest probability Model.\nClinical history."
+  },
+  {
+    "serviceName": "Cardiology - PCI",
+    "icdCodes": "I21, I20",
+    "requirements": "ECG.\nTroponin hs.\nAngiography report.\nSYNTAX score 2 (not applied in acute MI).\nGrace risk score in unstable angina.\nClinical history and full past history."
+  },
+  {
+    "serviceName": "Cardiology - CABG",
+    "icdCodes": "I21, I20",
+    "requirements": "ECG.\nTroponin hs.\nAngiography report.\nSYNTAX score 2 (not applied in acute MI).\nGrace risk score in unstable angina.\nClinical history and full past history."
+  },
+  {
+    "serviceName": "Cardiology - Permanent Pacemaker",
+    "icdCodes": "Z95.0, R00.2, I48",
+    "requirements": "Clinical history and past medical history and primary etiology.\nVital signs.\nECG and holter if available.\nInitial lines of management."
+  },
+  {
+    "serviceName": "Cardiology - Holter Monitor",
+    "icdCodes": "R00.2, I48",
+    "requirements": "Clinical history including frequency of palpitations.\nResting ECG."
+  },
+  {
+    "serviceName": "Cardiology - Ambulatory Blood Pressure Monitor",
+    "icdCodes": "I10, I11, R03.0",
+    "requirements": "Clinical history.\nOffice BP readings.\nHome BP readings."
+  },
+  {
+    "serviceName": "Cardiology - ICD Device",
+    "icdCodes": "Z95.810",
+    "requirements": "Clinical history and full past history.\nComplete medications history.\nEcho.\nECG or holter report.\nER notes."
+  },
+  {
+    "serviceName": "Cardiology - CRT Device",
+    "icdCodes": "Z95",
+    "requirements": "Clinical history and full past history.\nComplete medications history.\nEcho.\nECG or holter report.\nER notes."
+  },
+  {
+    "serviceName": "Cardiology - EPS and Cardiac Ablation",
+    "icdCodes": "R00.2, I48",
+    "requirements": "Past Medical History (HF, structural heart disease, previous admission).\nPrevious management and duration.\nPresenting Symptoms / Clinical Status (Documented tachycardia episodes and frequency, syncope, palpitations, tachycardia).\nArrhythmia documentation: ECGs, Holter / event monitor findings and Echo findings (structure + function)."
+  }
+]
