@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS bupa_prerequisites (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  service_name VARCHAR(255) NOT NULL,\n  icd_codes TEXT NOT NULL,\n  requirements LONGTEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_service_name (service_name),\n  INDEX idx_icd_codes (icd_codes(100))\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute CREATE TABLE IF NOT EXISTS bupa_prerequisites (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  service_name VARCHAR(255) NOT NULL,\n  icd_codes TEXT NOT NULL,\n  requirements LONGTEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_service_name (service_name),\n  INDEX idx_icd_codes (icd_codes(100))\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1789
+}
