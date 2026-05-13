@@ -88,5 +88,39 @@ export const bupaRouter = router({
       .select({ count: db.count() })
       .from(bupaPrerequisites);
     return result[0]?.count || 0;
-  })
+  }),
+
+  // Bulk insert prerequisites (admin only for security)
+  bulkInsert: publicProcedure
+    .input(
+      z.object({
+        prerequisites: z.array(
+          z.object({
+            serviceName: z.string(),
+            icdCodes: z.string(),
+            requirements: z.string(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      const { prerequisites } = input;
+
+      try {
+        const result = await db.insert(bupaPrerequisites).values(prerequisites);
+        return {
+          success: true,
+          inserted: prerequisites.length,
+          message: `Successfully inserted ${prerequisites.length} prerequisites`,
+        };
+      } catch (error) {
+        console.error("Bulk insert error:", error);
+        return {
+          success: false,
+          inserted: 0,
+          message: "Failed to insert prerequisites",
+        };
+      }
+    }),
 });
