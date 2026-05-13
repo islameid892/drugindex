@@ -1,5 +1,4 @@
-import { Pill, Activity, Database, Upload, Search, ChevronRight, FileText } from "lucide-react";
-import { Link } from "wouter";
+import { Pill, Activity, Database, Upload, Search, ChevronRight } from "lucide-react";
 
 interface CategoryBrowseCardsProps {
   onBrowseDrugs: () => void;
@@ -23,7 +22,7 @@ export function CategoryBrowseCards({
         <p className="text-muted-foreground">Quick access to drugs, conditions, and codes</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 max-w-7xl mx-auto auto-rows-fr">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto auto-rows-fr">
         {/* Search Drugs Card */}
         <button
           onClick={onBrowseDrugs}
@@ -138,28 +137,6 @@ export function CategoryBrowseCards({
             </div>
           </div>
         </button>
-
-        {/* Bupa Prerequisites Card */}
-        <Link href="/bupa-prerequisites">
-          <button className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 border border-indigo-200 dark:border-indigo-800 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-indigo-300 dark:hover:border-indigo-700 h-full flex flex-col w-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            
-            <div className="relative space-y-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                <FileText className="h-7 w-7 text-white" />
-              </div>
-              
-              <div className="text-left">
-                <h4 className="text-lg font-bold text-foreground group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors">Bupa Prerequisites</h4>
-                <p className="text-sm text-muted-foreground mt-1">Insurance coverage requirements</p>
-              </div>
-              
-              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                View <ChevronRight className="h-4 w-4" />
-              </div>
-            </div>
-          </button>
-        </Link>
       </div>
     </div>
   );
