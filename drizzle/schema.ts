@@ -326,3 +326,82 @@ export const bupaPrerequisites = mysqlTable(
 
 export type BupaPrerequisite = typeof bupaPrerequisites.$inferSelect;
 export type InsertBupaPrerequisite = typeof bupaPrerequisites.$inferInsert;
+
+// ─── Bupa Prerequisites ICD Code Linking ────────────────────────────────────
+// Junction table linking bupa_prerequisites to icd_codes (Many-to-Many)
+// Each Bupa service can have multiple ICD codes
+
+export const bupaPrerequisiteCodes = mysqlTable(
+  "bupa_prerequisite_codes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    bupaPrerequisiteId: int("bupa_prerequisite_id")
+      .notNull()
+      .references(() => bupaPrerequisites.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    icdCodeId: int("icd_code_id")
+      .notNull()
+      .references(() => icdCodes.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    bupaPrereqIdx: index("idx_bupa_prereq_id").on(t.bupaPrerequisiteId),
+    icdCodeIdx: index("idx_bupa_icd_code_id").on(t.icdCodeId),
+  })
+);
+
+export type BupaPrerequisiteCode = typeof bupaPrerequisiteCodes.$inferSelect;
+export type InsertBupaPrerequisiteCode = typeof bupaPrerequisiteCodes.$inferInsert;
+
+// ─── Bupa Code Branches ────────────────────────────────────────────────────
+// Links bupa_prerequisite_codes to icd_branches for detailed branch information
+// Allows showing all sub-codes/branches for each ICD code in a Bupa service
+
+export const bupaCodeBranches = mysqlTable(
+  "bupa_code_branches",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    bupaCodeId: int("bupa_code_id")
+      .notNull()
+      .references(() => bupaPrerequisiteCodes.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    icdBranchId: int("icd_branch_id")
+      .notNull()
+      .references(() => icdBranches.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    bupaCodeIdx: index("idx_bupa_code_branch_bupa_code").on(t.bupaCodeId),
+    icdBranchIdx: index("idx_bupa_code_branch_icd_branch").on(t.icdBranchId),
+  })
+);
+
+export type BupaCodeBranch = typeof bupaCodeBranches.$inferSelect;
+export type InsertBupaCodeBranch = typeof bupaCodeBranches.$inferInsert;
+
+// ─── Relations for Bupa Prerequisites ───────────────────────────────────────
+
+export const bupaPrerequisitesRelations = relations(bupaPrerequisites, ({ many }) => ({
+  codes: many(bupaPrerequisiteCodes),
+}));
+
+export const bupaPrerequisiteCodesRelations = relations(bupaPrerequisiteCodes, ({ one, many }) => ({
+  bupaPrerequisite: one(bupaPrerequisites, {
+    fields: [bupaPrerequisiteCodes.bupaPrerequisiteId],
+    references: [bupaPrerequisites.id],
+  }),
+  icdCode: one(icdCodes, {
+    fields: [bupaPrerequisiteCodes.icdCodeId],
+    references: [icdCodes.id],
+  }),
+  branches: many(bupaCodeBranches),
+}));
+
+export const bupaCodeBranchesRelations = relations(bupaCodeBranches, ({ one }) => ({
+  bupaCode: one(bupaPrerequisiteCodes, {
+    fields: [bupaCodeBranches.bupaCodeId],
+    references: [bupaPrerequisiteCodes.id],
+  }),
+  icdBranch: one(icdBranches, {
+    fields: [bupaCodeBranches.icdBranchId],
+    references: [icdBranches.id],
+  }),
+}));

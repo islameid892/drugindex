@@ -1,0 +1,110 @@
+{
+  "query": "\nSELECT id, service_name, icd_codes FROM bupa_prerequisites LIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nSELECT id, service_name, icd_codes FROM bupa_prerequisites LIMIT 20;\n",
+  "rows": [
+    {
+      "id": "30015",
+      "service_name": "MRI",
+      "icd_codes": "M23, M51, M75, M17, R51, R22, G43, C71, M54"
+    },
+    {
+      "id": "30016",
+      "service_name": "CT",
+      "icd_codes": "R55, R51, I61.9, I63.9, C71.9, R10, K35"
+    },
+    {
+      "id": "30017",
+      "service_name": "Most Frequent Lab Needed",
+      "icd_codes": "E11, R53, E55, E03, E05, D50"
+    },
+    {
+      "id": "30018",
+      "service_name": "Physiotherapy",
+      "icd_codes": "M54, M23, M17, M75, M25, M77, M76, G83.4, G35, R26.89, R39.81, M40"
+    },
+    {
+      "id": "30019",
+      "service_name": "Medical Equipment - Glucometer",
+      "icd_codes": "E11, E10"
+    },
+    {
+      "id": "30020",
+      "service_name": "Medical Equipment - BP Machine",
+      "icd_codes": "I10, I11"
+    },
+    {
+      "id": "30021",
+      "service_name": "Medical Equipment - Nebulizer",
+      "icd_codes": "J45, J40"
+    },
+    {
+      "id": "30022",
+      "service_name": "Medical Equipment - Hearing Aid",
+      "icd_codes": "H90, H91"
+    },
+    {
+      "id": "30023",
+      "service_name": "Medical Equipment - CPAP for OSA",
+      "icd_codes": "G47.33, G47.20"
+    },
+    {
+      "id": "30024",
+      "service_name": "Medical Equipment - Insulin Pump",
+      "icd_codes": "E10, E11"
+    },
+    {
+      "id": "30025",
+      "service_name": "Surgery/Procedure - General",
+      "icd_codes": "K40, K80, K82.8, K64, K61, C18.9, D17.1, C44.319, K56.6, E04.2, C73"
+    },
+    {
+      "id": "30026",
+      "service_name": "Surgery/Procedure - Ophtha",
+      "icd_codes": "H25, H40, H26.9, H43.1"
+    },
+    {
+      "id": "30027",
+      "service_name": "Surgery/Procedure - Ortho",
+      "icd_codes": "M23, M51, M75, M17, M54"
+    },
+    {
+      "id": "30028",
+      "service_name": "Endoscopy / Gastroscopy",
+      "icd_codes": "K29, K21, K25.9, R11, D13.1, R12, C16.9, R10"
+    },
+    {
+      "id": "30029",
+      "service_name": "Surgery/Procedure - Abdominal Area",
+      "icd_codes": "K35, K36, K80, K40.20, K42.9, K57.3, C18.9, K66.1, K65, R18.8, K63.89, D13.4, D17.5, R19, K66"
+    },
+    {
+      "id": "30030",
+      "service_name": "CS Delivery",
+      "icd_codes": "O82, O34.21, O68.0"
+    },
+    {
+      "id": "30031",
+      "service_name": "Colonoscopy",
+      "icd_codes": "R10, K57.3, D12.6, K52.9, K51.9, R19.7, K50.9"
+    },
+    {
+      "id": "30032",
+      "service_name": "Surgery/Procedure - Renal",
+      "icd_codes": "N18.1, N18.2, N17, N04.9, N20, N23, N39"
+    },
+    {
+      "id": "30033",
+      "service_name": "Tonsillectomy",
+      "icd_codes": "J03.9, J03, J35.1, J35.02, J35.2, J36"
+    },
+    {
+      "id": "30034",
+      "service_name": "Admission",
+      "icd_codes": "R10, J18.9, K35.8, R07, I16, A09, I63"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tservice_name\ticd_codes\n30015\tMRI\tM23, M51, M75, M17, R51, R22, G43, C71, M54\n30016\tCT\tR55, R51, I61.9, I63.9, C71.9, R10, K35\n30017\tMost Frequent Lab Needed\tE11, R53, E55, E03, E05, D50\n30018\tPhysiotherapy\tM54, M23, M17, M75, M25, M77, M76, G83.4, G35, R26.89, R39.81, M40\n30019\tMedical Equipment - Glucometer\tE11, E10\n30020\tMedical Equipment - BP Machine\tI10, I11\n30021\tMedical Equipment - Nebulizer\tJ45, J40\n30022\tMedical Equipment - Hearing Aid\tH90, H91\n30023\tMedical Equipment - CPAP for OSA\tG47.33, G47.20\n30024\tMedical Equipment - Insulin Pump\tE10, E11\n30025\tSurgery/Procedure - General\tK40, K80, K82.8, K64, K61, C18.9, D17.1, C44.319, K56.6, E04.2, C73\n30026\tSurgery/Procedure - Ophtha\tH25, H40, H26.9, H43.1\n30027\tSurgery/Procedure - Ortho\tM23, M51, M75, M17, M54\n30028\tEndoscopy / Gastroscopy\tK29, K21, K25.9, R11, D13.1, R12, C16.9, R10\n30029\tSurgery/Procedure - Abdominal Area\tK35, K36, K80, K40.20, K42.9, K57.3, C18.9, K66.1, K65, R18.8, K63.89, D13.4, D17.5, R19, K66\n30030\tCS Delivery\tO82, O34.21, O68.0\n30031\tColonoscopy\tR10, K57.3, D12.6, K52.9, K51.9, R19.7, K50.9\n30032\tSurgery/Procedure - Renal\tN18.1, N18.2, N17, N04.9, N20, N23, N39\n30033\tTonsillectomy\tJ03.9, J03, J35.1, J35.02, J35.2, J36\n30034\tAdmission\tR10, J18.9, K35.8, R07, I16, A09, I63\n",
+  "stderr": "",
+  "execution_time_ms": 1794
+}

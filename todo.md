@@ -577,3 +577,12 @@
 - [x] SECURITY_COMPLETE.md - Comprehensive documentation
 - [x] Admin monitoring endpoints for exports
 - [x] Suspicious pattern detection
+
+
+## Phase 31: Bupa Prerequisites ICD Code Linking
+- [ ] Create junction table: bupa_prerequisite_codes linking bupa_prerequisites ↔ icd_codes
+- [ ] Create junction table: bupa_code_branches linking bupa_prerequisite_codes ↔ icd_branches
+- [ ] Populate junction tables by parsing Bupa icdCodes strings and matching to icd_codes table
+- [ ] Update backend router to return enriched data with code names and branches
+- [ ] Update frontend to display linked code names and branch navigation
+- [ ] Test ICD code linking and branch retrieval

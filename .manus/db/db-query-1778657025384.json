@@ -1,0 +1,60 @@
+{
+  "query": "\nSELECT id, code, description FROM icd_codes WHERE code IN ('M23','M51','M75','M17','R51','E11','E10','I10','G47.33','K40','H25') ORDER BY code LIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \nSELECT id, code, description FROM icd_codes WHERE code IN ('M23','M51','M75','M17','R51','E11','E10','I10','G47.33','K40','H25') ORDER BY code LIMIT 20;\n",
+  "rows": [
+    {
+      "id": "4375",
+      "code": "E10",
+      "description": "Type 1 diabetes mellitus"
+    },
+    {
+      "id": "4376",
+      "code": "E11",
+      "description": "Type 2 diabetes mellitus"
+    },
+    {
+      "id": "4574",
+      "code": "H25",
+      "description": "Senile cataract"
+    },
+    {
+      "id": "4623",
+      "code": "I10",
+      "description": "Essential (primary) hypertension"
+    },
+    {
+      "id": "4772",
+      "code": "K40",
+      "description": "Inguinal hernia"
+    },
+    {
+      "id": "4886",
+      "code": "M17",
+      "description": "Gonarthrosis [arthrosisof knee]"
+    },
+    {
+      "id": "4892",
+      "code": "M23",
+      "description": "Internal derangementof knee"
+    },
+    {
+      "id": "4910",
+      "code": "M51",
+      "description": "Other intervertebral disc disorders"
+    },
+    {
+      "id": "4922",
+      "code": "M75",
+      "description": "Shoulder lesions"
+    },
+    {
+      "id": "5274",
+      "code": "R51",
+      "description": "Headache"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tdescription\n4375\tE10\tType 1 diabetes mellitus\n4376\tE11\tType 2 diabetes mellitus\n4574\tH25\tSenile cataract\n4623\tI10\tEssential (primary) hypertension\n4772\tK40\tInguinal hernia\n4886\tM17\tGonarthrosis [arthrosisof knee]\n4892\tM23\tInternal derangementof knee\n4910\tM51\tOther intervertebral disc disorders\n4922\tM75\tShoulder lesions\n5274\tR51\tHeadache\n",
+  "stderr": "",
+  "execution_time_ms": 1805
+}
