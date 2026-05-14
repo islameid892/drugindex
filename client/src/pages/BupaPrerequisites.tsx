@@ -31,10 +31,12 @@ interface BupaPrerequisiteEnriched {
   id: number;
   serviceName: string;
   icdCodes: string;
-  icdCodesEnriched?: EnrichedIcdCode[];
+  enrichedCodes?: EnrichedIcdCode[];
   requirements: string;
   createdAt: Date;
   updatedAt: Date;
+  totalCodes?: number;
+  foundCodes?: number;
 }
 
 export default function BupaPrerequisites() {
@@ -54,7 +56,7 @@ export default function BupaPrerequisites() {
       (item: BupaPrerequisiteEnriched) =>
         item.serviceName.toLowerCase().includes(q) ||
         item.icdCodes.toLowerCase().includes(q) ||
-        (item.icdCodesEnriched?.some(ic => ic.description.toLowerCase().includes(q)) ?? false)
+        (item.enrichedCodes?.some(ic => ic.description?.toLowerCase().includes(q)) ?? false)
     );
   }, [allPrerequisites, searchQuery]);
 
@@ -63,8 +65,8 @@ export default function BupaPrerequisites() {
 
   const handleCopy = () => {
     if (!selectedPrerequisite) return;
-    const codesText = selectedPrerequisite.icdCodesEnriched
-      ?.map(ic => `${ic.code} - ${ic.description}`)
+    const codesText = selectedPrerequisite.enrichedCodes
+      ?.map((ic: EnrichedIcdCode) => `${ic.code} - ${ic.description || 'No description'}`)
       .join("\n") || selectedPrerequisite.icdCodes;
     const text = `${selectedPrerequisite.serviceName}\n\nICD Codes:\n${codesText}\n\nRequirements:\n${selectedPrerequisite.requirements}`;
     navigator.clipboard.writeText(text);
@@ -144,7 +146,7 @@ export default function BupaPrerequisites() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredPrerequisites.map((item: BupaPrerequisiteEnriched) => {
-              const codes = item.icdCodesEnriched || [];
+              const codes = item.enrichedCodes || [];
               const reqCount = parseRequirements(item.requirements).length;
 
               return (
@@ -169,11 +171,13 @@ export default function BupaPrerequisites() {
                         className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-1.5 rounded"
                       >
                         <span className="font-mono font-semibold">{icdCode.code}</span>
-                        <span className="text-indigo-600 dark:text-indigo-400 ml-1">
-                          {icdCode.description.length > 40
-                            ? icdCode.description.substring(0, 40) + "..."
-                            : icdCode.description}
-                        </span>
+                        {icdCode.description && (
+                          <span className="text-indigo-600 dark:text-indigo-400 ml-1">
+                            {icdCode.description.length > 40
+                              ? icdCode.description.substring(0, 40) + "..."
+                              : icdCode.description}
+                          </span>
+                        )}
                       </div>
                     ))}
                     {codes.length > 3 && (
@@ -219,7 +223,7 @@ export default function BupaPrerequisites() {
                   ICD-10 Codes
                 </p>
                 <div className="space-y-2">
-                  {selectedPrerequisite.icdCodesEnriched?.map((icdCode, idx) => (
+                  {selectedPrerequisite.enrichedCodes?.map((icdCode, idx) => (
                     <Link key={idx} href={`/code/${encodeURIComponent(icdCode.code)}`}>
                       <button
                         onClick={() => setSelectedPrerequisite(null)}
@@ -227,7 +231,9 @@ export default function BupaPrerequisites() {
                         title={`View ${icdCode.code} branches`}
                       >
                         <span className="font-mono font-semibold flex-shrink-0">{icdCode.code}</span>
-                        <span className="flex-1 text-indigo-600 dark:text-indigo-400">{icdCode.description}</span>
+                        {icdCode.description && (
+                          <span className="flex-1 text-indigo-600 dark:text-indigo-400">{icdCode.description}</span>
+                        )}
                         <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100 flex-shrink-0" />
                       </button>
                     </Link>
