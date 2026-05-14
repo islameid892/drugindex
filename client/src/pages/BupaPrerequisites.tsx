@@ -22,10 +22,16 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
-interface BupaPrerequisite {
+interface EnrichedIcdCode {
+  code: string;
+  description: string;
+}
+
+interface BupaPrerequisiteEnriched {
   id: number;
   serviceName: string;
   icdCodes: string;
+  icdCodesEnriched?: EnrichedIcdCode[];
   requirements: string;
   createdAt: Date;
   updatedAt: Date;
@@ -34,19 +40,21 @@ interface BupaPrerequisite {
 export default function BupaPrerequisites() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPrerequisite, setSelectedPrerequisite] =
-    useState<BupaPrerequisite | null>(null);
+    useState<BupaPrerequisiteEnriched | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const { data: allPrerequisites, isLoading } = trpc.bupa.getAll.useQuery();
+  // Use enhanced router to get data with enriched ICD codes
+  const { data: allPrerequisites, isLoading } = trpc.bupaEnhanced.getAllWithCodes.useQuery();
 
   const filteredPrerequisites = useMemo(() => {
     if (!allPrerequisites) return [];
     if (!searchQuery.trim()) return allPrerequisites;
     const q = searchQuery.toLowerCase().trim();
     return allPrerequisites.filter(
-      (item: BupaPrerequisite) =>
+      (item: BupaPrerequisiteEnriched) =>
         item.serviceName.toLowerCase().includes(q) ||
-        item.icdCodes.toLowerCase().includes(q)
+        item.icdCodes.toLowerCase().includes(q) ||
+        (item.icdCodesEnriched?.some(ic => ic.description.toLowerCase().includes(q)) ?? false)
     );
   }, [allPrerequisites, searchQuery]);
 
@@ -55,7 +63,10 @@ export default function BupaPrerequisites() {
 
   const handleCopy = () => {
     if (!selectedPrerequisite) return;
-    const text = `${selectedPrerequisite.serviceName}\n\nICD Codes: ${selectedPrerequisite.icdCodes}\n\nRequirements:\n${selectedPrerequisite.requirements}`;
+    const codesText = selectedPrerequisite.icdCodesEnriched
+      ?.map(ic => `${ic.code} - ${ic.description}`)
+      .join("\n") || selectedPrerequisite.icdCodes;
+    const text = `${selectedPrerequisite.serviceName}\n\nICD Codes:\n${codesText}\n\nRequirements:\n${selectedPrerequisite.requirements}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -92,7 +103,7 @@ export default function BupaPrerequisites() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
-            placeholder="Search by service name or ICD code..."
+            placeholder="Search by service name, ICD code, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-10 h-11 text-sm"
@@ -132,11 +143,8 @@ export default function BupaPrerequisites() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filteredPrerequisites.map((item: BupaPrerequisite) => {
-              const codes = item.icdCodes
-                .split(",")
-                .map((c) => c.trim())
-                .filter(Boolean);
+            {filteredPrerequisites.map((item: BupaPrerequisiteEnriched) => {
+              const codes = item.icdCodesEnriched || [];
               const reqCount = parseRequirements(item.requirements).length;
 
               return (
@@ -153,19 +161,24 @@ export default function BupaPrerequisites() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-indigo-500 flex-shrink-0 mt-0.5 transition-colors" />
                   </div>
 
-                  {/* ICD Codes */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {codes.slice(0, 6).map((code, idx) => (
-                      <span
+                  {/* ICD Codes with Descriptions */}
+                  <div className="mb-4 space-y-2">
+                    {codes.slice(0, 3).map((icdCode, idx) => (
+                      <div
                         key={idx}
-                        className="inline-flex items-center text-xs font-mono font-medium bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded"
+                        className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-1.5 rounded"
                       >
-                        {code}
-                      </span>
+                        <span className="font-mono font-semibold">{icdCode.code}</span>
+                        <span className="text-indigo-600 dark:text-indigo-400 ml-1">
+                          {icdCode.description.length > 40
+                            ? icdCode.description.substring(0, 40) + "..."
+                            : icdCode.description}
+                        </span>
+                      </div>
                     ))}
-                    {codes.length > 6 && (
-                      <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
-                        +{codes.length - 6} more
+                    {codes.length > 3 && (
+                      <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded block">
+                        +{codes.length - 3} more code{codes.length - 3 !== 1 ? "s" : ""}
                       </span>
                     )}
                   </div>
@@ -200,28 +213,25 @@ export default function BupaPrerequisites() {
 
           {selectedPrerequisite && (
             <div className="space-y-6 pt-2">
-              {/* ICD Codes Section */}
+              {/* ICD Codes Section with Full Details */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   ICD-10 Codes
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedPrerequisite.icdCodes
-                    .split(",")
-                    .map((c) => c.trim())
-                    .filter(Boolean)
-                    .map((code, idx) => (
-                      <Link key={idx} href={`/code/${encodeURIComponent(code)}`}>
-                        <button
-                          onClick={() => setSelectedPrerequisite(null)}
-                          className="inline-flex items-center gap-1 text-sm font-mono font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 hover:border-indigo-400 transition-all"
-                          title={`View ${code} branches`}
-                        >
-                          {code}
-                          <ExternalLink className="h-3 w-3 opacity-60" />
-                        </button>
-                      </Link>
-                    ))}
+                <div className="space-y-2">
+                  {selectedPrerequisite.icdCodesEnriched?.map((icdCode, idx) => (
+                    <Link key={idx} href={`/code/${encodeURIComponent(icdCode.code)}`}>
+                      <button
+                        onClick={() => setSelectedPrerequisite(null)}
+                        className="w-full text-left inline-flex items-start gap-2 text-sm bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-3 py-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 hover:border-indigo-400 transition-all group"
+                        title={`View ${icdCode.code} branches`}
+                      >
+                        <span className="font-mono font-semibold flex-shrink-0">{icdCode.code}</span>
+                        <span className="flex-1 text-indigo-600 dark:text-indigo-400">{icdCode.description}</span>
+                        <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100 flex-shrink-0" />
+                      </button>
+                    </Link>
+                  ))}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Click any code to view its ICD-10 branches
@@ -250,32 +260,26 @@ export default function BupaPrerequisites() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setSelectedPrerequisite(null)}
-                >
-                  Close
-                </Button>
-                <Button
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 gap-2"
-                  onClick={handleCopy}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      Copy Details
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* Divider */}
+              <div className="border-t border-border" />
+
+              {/* Copy Button */}
+              <button
+                onClick={handleCopy}
+                className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy Details
+                  </>
+                )}
+              </button>
             </div>
           )}
         </DialogContent>
