@@ -405,3 +405,27 @@ export const bupaCodeBranchesRelations = relations(bupaCodeBranches, ({ one }) =
     references: [icdBranches.id],
   }),
 }));
+
+// ─── Uploaded Files ────────────────────────────────────────────────────────────
+// User-uploaded files stored in S3 with metadata tracking
+
+export const uploadedFiles = mysqlTable(
+  "uploaded_files",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    fileSize: int("file_size").notNull(), // in bytes
+    fileType: varchar("file_type", { length: 50 }).notNull(), // e.g., 'pdf', 'xlsx', 'docx'
+    s3Key: text("s3_key").notNull(), // S3 storage key
+    s3Url: text("s3_url").notNull(), // Public S3 URL
+    uploadedBy: varchar("uploaded_by", { length: 255 }), // User email or ID
+    uploadedAt: timestamp("uploaded_at").defaultNow(),
+    downloads: int("downloads").default(0),
+    description: text("description"), // Optional file description
+  },
+  (table) => ({
+    uploadedAtIdx: index("idx_uploaded_files_uploaded_at").on(table.uploadedAt),
+    uploadedByIdx: index("idx_uploaded_files_uploaded_by").on(table.uploadedBy),
+    fileTypeIdx: index("idx_uploaded_files_file_type").on(table.fileType),
+  })
+);

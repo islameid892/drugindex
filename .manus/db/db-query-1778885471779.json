@@ -1,0 +1,13 @@
+{
+  "query": "SHOW TABLES LIKE 'uploaded_files';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SHOW TABLES LIKE 'uploaded_files';",
+  "rows": [
+    {
+      "Tables_in_a2JMvfTkjxD7rpSD5GgnMY (uploaded_files)": "uploaded_files"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_a2JMvfTkjxD7rpSD5GgnMY (uploaded_files)\nuploaded_files\n",
+  "stderr": "",
+  "execution_time_ms": 1703
+}

@@ -1,5 +1,5 @@
-import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "@shared/const";
+import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { dataRouter } from "./routers/data";
@@ -18,6 +18,7 @@ import { sqlQueryRouter } from "./routers/sqlQuery";
 import { bupaRouter } from "./routers/bupa";
 import { bupaEnhancedRouter } from "./routers/bupa-enhanced";
 import { chatRouter } from "./routers/chat";
+import { filesRouter } from "./routers/files";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -66,6 +67,7 @@ export const appRouter = router({
   bupa: bupaRouter,
   bupaEnhanced: bupaEnhancedRouter,
   chat: chatRouter,
+  files: router(filesRouter),
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -17,7 +17,6 @@ const sidebarLinks = [
   { href: "/bupa-prerequisites", label: "Bupa Prerequisites", icon: FileText, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950" },
   { href: "/favorites", label: "Favorites", icon: Heart, color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950" },
   { href: "/tools", label: "Tools", icon: Wrench, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950" },
-  { href: "/files", label: "Files", icon: FolderOpen, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-950" },
   { href: "/about", label: "About Us", icon: Info, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-950" },
   { href: "/contact", label: "Contact", icon: Mail, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950" },
 ];

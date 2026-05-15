@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `uploaded_files` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `file_name` varchar(255) NOT NULL,\n  `file_size` int NOT NULL,\n  `file_type` varchar(50) NOT NULL,\n  `s3_key` text NOT NULL,\n  `s3_url` text NOT NULL,\n  `uploaded_by` varchar(255),\n  `uploaded_at` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `downloads` int DEFAULT 0,\n  `description` text,\n  PRIMARY KEY (`id`),\n  INDEX `idx_uploaded_files_uploaded_at` (`uploaded_at`),\n  INDEX `idx_uploaded_files_uploaded_by` (`uploaded_by`),\n  INDEX `idx_uploaded_files_file_type` (`file_type`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute CREATE TABLE IF NOT EXISTS `uploaded_files` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `file_name` varchar(255) NOT NULL,\n  `file_size` int NOT NULL,\n  `file_type` varchar(50) NOT NULL,\n  `s3_key` text NOT NULL,\n  `s3_url` text NOT NULL,\n  `uploaded_by` varchar(255),\n  `uploaded_at` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `downloads` int DEFAULT 0,\n  `description` text,\n  PRIMARY KEY (`id`),\n  INDEX `idx_uploaded_files_uploaded_at` (`uploaded_at`),\n  INDEX `idx_uploaded_files_uploaded_by` (`uploaded_by`),\n  INDEX `idx_uploaded_files_file_type` (`file_type`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1805
+}

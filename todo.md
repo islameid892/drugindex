@@ -586,3 +586,23 @@
 - [ ] Update backend router to return enriched data with code names and branches
 - [ ] Update frontend to display linked code names and branch navigation
 - [ ] Test ICD code linking and branch retrieval
+
+
+## File Upload Feature
+- [x] Create uploaded_files database table
+- [x] Build backend router for file upload/download (50MB limit)
+- [x] Create drag-and-drop upload component
+- [x] Update Files page to display and manage uploaded files
+- [ ] Test file upload and download functionality
+
+
+## Phase 50: Files Page Upload Feature & Sidebar Removal
+- [x] Create uploaded_files database table with S3 storage integration
+- [x] Implement files router with upload/download/delete endpoints
+- [x] Update Files.tsx with drag-and-drop upload interface
+- [x] Support file uploads up to 50MB with progress tracking
+- [x] Display uploaded files with download tracking
+- [x] Remove Files link from sidebar navigation
+- [ ] Fix files router to accept base64 encoded file data
+- [ ] Test file upload with various file types
+- [ ] Test file download and delete functionality
