@@ -17,6 +17,7 @@ import { sitemapRouter } from "./routers/sitemap";
 import { sqlQueryRouter } from "./routers/sqlQuery";
 import { bupaRouter } from "./routers/bupa";
 import { bupaEnhancedRouter } from "./routers/bupa-enhanced";
+import { chatRouter } from "./routers/chat";
 import {
   getTotalSearches,
   getTotalSearchesSince,
@@ -64,6 +65,7 @@ export const appRouter = router({
   sqlQuery: sqlQueryRouter,
   bupa: bupaRouter,
   bupaEnhanced: bupaEnhancedRouter,
+  chat: chatRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
