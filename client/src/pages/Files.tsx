@@ -52,7 +52,7 @@ const STATIC_FILES = [
 ];
 
 export default function Files() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
@@ -201,6 +201,15 @@ export default function Files() {
       uploadedAt: f.uploadedAt,
     })),
   ];
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-sky-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50">
