@@ -16,40 +16,7 @@ interface UploadedFile {
   description: string | null;
 }
 
-const STATIC_FILES = [
-  {
-    id: "static-1",
-    name: "Category Management Combined Guide",
-    description: "Comprehensive guide covering category management strategies and best practices",
-    url: "/manus-storage/Category_Management_Combined_Guide_7e0afd63.pdf",
-    size: "168 KB",
-    isStatic: true,
-  },
-  {
-    id: "static-2",
-    name: "Consumer Centric Category Management Summary",
-    description: "Summary of consumer-centric approaches to category management",
-    url: "/manus-storage/Consumer_Centric_Category_Management_Summary(1)_fa960fd4.pdf",
-    size: "477 KB",
-    isStatic: true,
-  },
-  {
-    id: "static-3",
-    name: "Consumer Centric Category Management FINAL",
-    description: "Final version of consumer-centric category management documentation",
-    url: "/manus-storage/Consumer_Centric_Category_Management_FINAL_49deee4c.pdf",
-    size: "198 KB",
-    isStatic: true,
-  },
-  {
-    id: "static-4",
-    name: "Consumer Centric Category Management Expanded",
-    description: "Expanded English version with detailed explanations and examples",
-    url: "/manus-storage/Consumer_Centric_Category_Management_Expanded_English_f894616c.pdf",
-    size: "22 KB",
-    isStatic: true,
-  },
-];
+const STATIC_FILES: UploadedFile[] = [];
 
 export default function Files() {
   const { user, loading } = useAuth();
@@ -185,25 +152,17 @@ export default function Files() {
     document.body.removeChild(link);
   };
 
-  const allFiles = [
-    ...STATIC_FILES.map((f) => ({
-      ...f,
-      downloads: 0,
-      fileId: undefined,
-      uploadedAt: null,
-    })),
-    ...uploadedFiles.map((f) => ({
-      id: `uploaded-${f.id}`,
-      name: f.fileName,
-      description: f.description || "User uploaded file",
-      url: f.s3Url,
-      size: formatFileSize(f.fileSize),
-      fileId: f.id,
-      isStatic: false,
-      downloads: f.downloads,
-      uploadedAt: f.uploadedAt,
-    })),
-  ];
+  const allFiles = uploadedFiles.map((f) => ({
+    id: `uploaded-${f.id}`,
+    name: f.fileName,
+    description: f.description || "User uploaded file",
+    url: f.s3Url,
+    size: formatFileSize(f.fileSize),
+    fileId: f.id,
+    isStatic: false,
+    downloads: f.downloads,
+    uploadedAt: f.uploadedAt,
+  }));
 
   // Show loading state while checking auth
   if (loading) {
