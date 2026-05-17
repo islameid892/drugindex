@@ -244,8 +244,43 @@ export default function BupaPrerequisites() {
                 </p>
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-border" />
+              {/* Branches Section */}
+              {selectedPrerequisite.enrichedCodes?.some((code: any) => code.branches?.length > 0) && (
+                <>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                      ICD-10 Branches (Subcodes)
+                    </p>
+                    <div className="space-y-3">
+                      {selectedPrerequisite.enrichedCodes?.map((icdCode: any, idx: number) => (
+                        icdCode.branches && icdCode.branches.length > 0 && (
+                          <div key={idx} className="bg-muted/50 rounded-lg p-3 border border-border">
+                            <p className="text-xs font-semibold text-foreground mb-2">
+                              Branches for {icdCode.code}:
+                            </p>
+                            <div className="space-y-1.5">
+                              {icdCode.branches.map((branch: any, bidx: number) => (
+                                <div
+                                  key={bidx}
+                                  className="text-xs bg-background text-foreground border border-border px-2.5 py-1.5 rounded flex items-start gap-2"
+                                >
+                                  <span className="font-mono font-semibold flex-shrink-0 text-emerald-600 dark:text-emerald-400">
+                                    {branch.code}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {branch.description || 'No description'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                  <div className="border-t border-border" />
+                </>
+              )}
 
               {/* Requirements Section */}
               <div>
