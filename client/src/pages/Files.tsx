@@ -255,7 +255,7 @@ export default function Files() {
             Download Files
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Access our collection of guides and documentation. {user ? "Upload your own files up to 50MB." : "Sign in to upload files."}
+            Access our collection of guides and documentation. Upload your own files up to 50MB.
           </p>
         </section>
 
@@ -402,7 +402,7 @@ export default function Files() {
         <section className="bg-emerald-50 rounded-xl border border-emerald-200 p-8 space-y-4">
           <h2 className="text-2xl font-bold text-slate-900">About These Files</h2>
           <p className="text-slate-700">
-            This page provides access to medical documentation, guides, and resources. {user ? "You can also upload your own files for sharing with other users." : "Sign in to upload your own files."}
+            This page provides access to medical documentation, guides, and resources. You can upload your own files for sharing with other users.
           </p>
           <ul className="space-y-2 text-slate-700">
             <li className="flex items-start gap-3">

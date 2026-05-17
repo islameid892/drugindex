@@ -94,13 +94,14 @@ export const filesRouter = {
           s3Url: s3Url,
         };
       } catch (error) {
-        console.error("Error uploading file:", error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error("Error uploading file:", errorMsg);
         if (error instanceof TRPCError) {
           throw error;
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to upload file",
+          message: `Failed to upload file: ${errorMsg}`,
         });
       }
     }),
