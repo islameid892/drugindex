@@ -126,7 +126,10 @@ export default function Files() {
       reader.onload = async (e) => {
         try {
           const base64String = (e.target?.result as string).split(",")[1] || "";
-          const fileType = file.type.split("/")[1] || file.name.split(".").pop() || "bin";
+          // Get file extension from filename
+          const fileExtension = file.name.split(".").pop()?.toLowerCase() || "bin";
+          // Use file extension as fileType
+          const fileType = fileExtension;
 
           await uploadMutation.mutateAsync({
             fileName: file.name,
@@ -382,7 +385,7 @@ export default function Files() {
                       <Download className="h-4 w-4" />
                       Download
                     </Button>
-                    {!file.isStatic && user && file.fileId && (
+                    {!file.isStatic && file.fileId && (
                       <Button
                         onClick={() => handleDelete(file.fileId!)}
                         variant="outline"

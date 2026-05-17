@@ -71,8 +71,20 @@ export const filesRouter = {
         const userId = ctx.user?.id || 'anonymous';
         const s3Key = `uploaded-files/${userId}/${timestamp}-${randomSuffix}-${input.fileName}`;
 
-        // Upload to S3
-        const { url: s3Url } = await storagePut(s3Key, buffer, `application/${input.fileType}`);
+        // Upload to S3 with correct MIME type
+        let mimeType = `application/${input.fileType}`;
+        if (input.fileType === 'pdf') {
+          mimeType = 'application/pdf';
+        } else if (input.fileType === 'vnd.openxmlformats-officedocument.spreadsheetml.sheet' || input.fileType === 'xlsx') {
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        } else if (input.fileType === 'vnd.ms-excel' || input.fileType === 'xls') {
+          mimeType = 'application/vnd.ms-excel';
+        } else if (input.fileType === 'msword' || input.fileType === 'doc') {
+          mimeType = 'application/msword';
+        } else if (input.fileType === 'vnd.openxmlformats-officedocument.wordprocessingml.document' || input.fileType === 'docx') {
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        }
+        const { url: s3Url } = await storagePut(s3Key, buffer, mimeType);
 
         // Save metadata to database
         const db = await getDb();
