@@ -56,23 +56,8 @@ const BLOCKED_USER_AGENTS = [
   'postman', 'insomnia', 'thunder client',
 ];
 
-// Bot detection middleware
-const botDetectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-  
-  // Allow empty user-agent from browser (some browsers send empty)
-  // But block known scraping tools
-  const isBot = BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot));
-  
-  if (isBot && process.env.NODE_ENV === 'production') {
-    return res.status(403).json({
-      error: 'Access Denied',
-      message: 'Automated access is not permitted.',
-    });
-  }
-  
-  next();
-};
+// Bot detection middleware is implemented inline below (line ~279)
+// This ensures consistent behavior across all routes
 
 // IP-based daily request tracking for scraping detection
 const dailyRequestTracker = new Map<string, { count: number; date: string }>();
@@ -276,6 +261,7 @@ async function startServer() {
   // ====================================================
   // BOT DETECTION - MUST BE BEFORE ALL ROUTES
   // ====================================================
+  // Unified bot detection middleware (previously had duplicate in botDetectionMiddleware function)
   app.use((req: Request, res: Response, next: NextFunction) => {
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
     const isBot = BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot.toLowerCase()));
@@ -507,13 +493,13 @@ async function startServer() {
     }
   });
 
-  app.get('/robots.txt', (req: Request, res: Response) => {
+  app.get('/robots.txt', async (req: Request, res: Response) => {
     try {
       const protocol = req.headers['x-forwarded-proto'] || 'https';
       const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
       const sitemapUrl = `${protocol}://${host}/sitemap.xml`;
       
-      const { generateRobotsTxt } = require('../sitemapGenerator');
+      const { generateRobotsTxt } = await import('../sitemapGenerator');
       const robotsContent = generateRobotsTxt(sitemapUrl);
       
       res.type('text/plain');
