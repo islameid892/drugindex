@@ -119,7 +119,7 @@ export const filesRouter = {
     }),
 
   /**
-   * Delete a file (protected - admin or uploader only)
+   * Delete a file (hard delete - removes from database and S3)
    */
   delete: publicProcedure
     .input(z.object({ fileId: z.number() }))
@@ -140,11 +140,10 @@ export const filesRouter = {
           });
         }
 
-        // Soft delete: mark as deleted instead of removing from database
-        // No authorization check - anyone can mark files as deleted from UI
+        // Hard delete: remove from database and S3
+        // Delete from database
         await db
-          .update(uploadedFiles)
-          .set({ isDeleted: true })
+          .delete(uploadedFiles)
           .where(eq(uploadedFiles.id, input.fileId));
 
         return { success: true, fileId: input.fileId };
