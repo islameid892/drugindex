@@ -162,6 +162,13 @@
       "when": 1778885040119,
       "tag": "0022_common_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1778977520344,
+      "tag": "0023_freezing_abomination",
+      "breakpoints": true
     }
   ]
 }

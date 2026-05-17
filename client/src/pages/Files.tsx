@@ -270,8 +270,7 @@ export default function Files() {
           </div>
         )}
 
-        {/* Upload Section (if authenticated) */}
-        {user && (
+        {/* Upload Section */}
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-slate-900">Upload Files</h2>
             <div
@@ -325,7 +324,6 @@ export default function Files() {
               </div>
             )}
           </section>
-        )}
 
         {/* Files Grid */}
         <section className="space-y-4">

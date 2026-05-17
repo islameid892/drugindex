@@ -1,0 +1,1 @@
+ALTER TABLE `uploaded_files` ADD `is_deleted` boolean DEFAULT false NOT NULL;

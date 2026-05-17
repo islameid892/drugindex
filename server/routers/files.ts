@@ -2,7 +2,7 @@ import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { uploadedFiles } from "../../drizzle/schema";
 import { getDb } from "../db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { TRPCError } from "@trpc/server";
 
@@ -19,6 +19,7 @@ export const filesRouter = {
       const files = await db
         .select()
         .from(uploadedFiles)
+        .where(eq(uploadedFiles.isDeleted, false))
         .orderBy(desc(uploadedFiles.uploadedAt));
 
       return files.map((file: any) => ({
@@ -43,7 +44,7 @@ export const filesRouter = {
   /**
    * Upload a new file (protected - authenticated users only)
    */
-  upload: protectedProcedure
+  upload: publicProcedure
     .input(
       z.object({
         fileName: z.string().min(1).max(255),
@@ -67,7 +68,8 @@ export const filesRouter = {
         // Generate unique S3 key
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const s3Key = `uploaded-files/${ctx.user.id}/${timestamp}-${randomSuffix}-${input.fileName}`;
+        const userId = ctx.user?.id || 'anonymous';
+        const s3Key = `uploaded-files/${userId}/${timestamp}-${randomSuffix}-${input.fileName}`;
 
         // Upload to S3
         const { url: s3Url } = await storagePut(s3Key, buffer, `application/${input.fileType}`);
@@ -80,7 +82,7 @@ export const filesRouter = {
           fileType: input.fileType,
           s3Key: s3Key,
           s3Url: s3Url,
-          uploadedBy: ctx.user.email || ctx.user.id.toString(),
+          uploadedBy: ctx.user?.email || ctx.user?.id.toString() || 'anonymous',
           description: input.description,
         });
 
@@ -106,7 +108,7 @@ export const filesRouter = {
   /**
    * Delete a file (protected - admin or uploader only)
    */
-  delete: protectedProcedure
+  delete: publicProcedure
     .input(z.object({ fileId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       try {
@@ -125,19 +127,12 @@ export const filesRouter = {
           });
         }
 
-        // Check authorization (admin or uploader)
-        const isAdmin = ctx.user.role === "admin";
-        const isUploader = file[0].uploadedBy === ctx.user.email || file[0].uploadedBy === ctx.user.id.toString();
-
-        if (!isAdmin && !isUploader) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You do not have permission to delete this file",
-          });
-        }
-
-        // Delete from database
-        await db.delete(uploadedFiles).where(eq(uploadedFiles.id, input.fileId));
+        // Soft delete: mark as deleted instead of removing from database
+        // No authorization check - anyone can mark files as deleted from UI
+        await db
+          .update(uploadedFiles)
+          .set({ isDeleted: true })
+          .where(eq(uploadedFiles.id, input.fileId));
 
         return { success: true, fileId: input.fileId };
       } catch (error) {

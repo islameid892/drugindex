@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, file_name, is_deleted FROM uploaded_files WHERE file_name = 'test-file.txt'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT id, file_name, is_deleted FROM uploaded_files WHERE file_name = 'test-file.txt'",
+  "rows": [
+    {
+      "id": "1",
+      "file_name": "test-file.txt",
+      "is_deleted": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfile_name\tis_deleted\n1\ttest-file.txt\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1721
+}

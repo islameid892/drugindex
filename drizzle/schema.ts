@@ -422,6 +422,7 @@ export const uploadedFiles = mysqlTable(
     uploadedAt: timestamp("uploaded_at").defaultNow(),
     downloads: int("downloads").default(0),
     description: text("description"), // Optional file description
+    isDeleted: boolean("is_deleted").default(false).notNull(), // Soft delete flag
   },
   (table) => ({
     uploadedAtIdx: index("idx_uploaded_files_uploaded_at").on(table.uploadedAt),
