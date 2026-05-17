@@ -1,0 +1,14 @@
+{
+  "query": "SELECT ic.id, ic.code FROM icd_codes ic WHERE ic.code = 'L71'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT ic.id, ic.code FROM icd_codes ic WHERE ic.code = 'L71'",
+  "rows": [
+    {
+      "id": "4853",
+      "code": "L71"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\n4853\tL71\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

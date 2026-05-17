@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM drug_entry_codes WHERE drug_entry_id IN (SELECT id FROM drug_entries WHERE trade_name LIKE '%SYSTANE%') AND code_id = (SELECT id FROM icd_codes WHERE code = 'L71')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute DELETE FROM drug_entry_codes WHERE drug_entry_id IN (SELECT id FROM drug_entries WHERE trade_name LIKE '%SYSTANE%') AND code_id = (SELECT id FROM icd_codes WHERE code = 'L71')",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1548
+}

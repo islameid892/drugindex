@@ -1,0 +1,1 @@
+ALTER TABLE `drug_entries` ADD `image_url` varchar(1000);

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage - Highest Priority -->
+  <url>
+    <loc>https://drugindex.click/</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Database/Browse - High Priority -->
+  <url>
+    <loc>https://drugindex.click/database</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  
+  <!-- About Us -->
+  <url>
+    <loc>https://drugindex.click/about</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Contact Us -->
+  <url>
+    <loc>https://drugindex.click/contact</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- FAQ -->
+  <url>
+    <loc>https://drugindex.click/faq</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Tools Section -->
+  <url>
+    <loc>https://drugindex.click/tools</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Image to PDF Tool -->
+  <url>
+    <loc>https://drugindex.click/tools/image-to-pdf</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Merge PDF Tool -->
+  <url>
+    <loc>https://drugindex.click/tools/merge-pdf</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://drugindex.click/privacy</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://drugindex.click/terms</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Browse by Scientific Name -->
+  <url>
+    <loc>https://drugindex.click/browse-scientific</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  
+  <!-- Arabic Homepage -->
+  <url>
+    <loc>https://drugindex.click/ar/</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Arabic Database -->
+  <url>
+    <loc>https://drugindex.click/ar/database</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Arabic About -->
+  <url>
+    <loc>https://drugindex.click/ar/about</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Arabic Privacy -->
+  <url>
+    <loc>https://drugindex.click/ar/privacy</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Arabic Terms -->
+  <url>
+    <loc>https://drugindex.click/ar/terms</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ❌ DO NOT INCLUDE: /favorites (noindex page) -->
+  <!-- ❌ DO NOT INCLUDE: /admin (admin only) -->
+  <!-- ❌ DO NOT INCLUDE: Query string URLs (?q=) -->
+  <!-- ❌ DO NOT INCLUDE: /ar/favorites (noindex page) -->
+  
+</urlset>

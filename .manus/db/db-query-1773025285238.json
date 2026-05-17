@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Composite index for analytics queries (date + query)\nCREATE INDEX IF NOT EXISTS idx_search_analytics_date_query \n  ON search_analytics(createdAt, query);\n\n-- Index for ICD description search\nCREATE INDEX IF NOT EXISTS idx_icd_codes_description \n  ON icd_codes(description(100));\n\n-- Composite index for drug entry search (scientific + indication)\nCREATE INDEX IF NOT EXISTS idx_drug_entries_sci_indication \n  ON drug_entries(scientific_name, indication);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \n-- Composite index for analytics queries (date + query)\nCREATE INDEX IF NOT EXISTS idx_search_analytics_date_query \n  ON search_analytics(createdAt, query);\n\n-- Index for ICD description search\nCREATE INDEX IF NOT EXISTS idx_icd_codes_description \n  ON icd_codes(description(100));\n\n-- Composite index for drug entry search (scientific + indication)\nCREATE INDEX IF NOT EXISTS idx_drug_entries_sci_indication \n  ON drug_entries(scientific_name, indication);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 38358
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT DISTINCT de.indication, COUNT(de.id) as medication_count\nFROM drug_entries de\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND (de.icd_codes_raw IS NULL \n    OR de.icd_codes_raw = '' \n    OR de.icd_codes_raw = '[]'\n    OR JSON_LENGTH(de.icd_codes_raw) = 0)\nGROUP BY de.indication\nORDER BY de.indication\nLIMIT 100",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT de.indication, COUNT(de.id) as medication_count\nFROM drug_entries de\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND (de.icd_codes_raw IS NULL \n    OR de.icd_codes_raw = '' \n    OR de.icd_codes_raw = '[]'\n    OR JSON_LENGTH(de.icd_codes_raw) = 0)\nGROUP BY de.indication\nORDER BY de.indication\nLIMIT 100",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1105 (HY000) at line 1: invalid data type: Illegal Json text: Error(\"expected value\", line: 1, column: 1)"
+  ]
+}

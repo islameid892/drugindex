@@ -1,0 +1,150 @@
+{
+  "query": "SELECT id, indication, icd_codes_raw, scientific_name, trade_name\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''\nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT id, indication, icd_codes_raw, scientific_name, trade_name\nFROM drug_entries\nWHERE indication IS NOT NULL AND indication != ''\nLIMIT 20",
+  "rows": [
+    {
+      "id": "1",
+      "indication": "HUMAN IMMUNODEFICIENCY VIRUS",
+      "icd_codes_raw": "B20",
+      "scientific_name": "ABACAVIR",
+      "trade_name": "ZIAGEN 300 mg FC Tab"
+    },
+    {
+      "id": "2",
+      "indication": "HUMAN IMMUNODEFICIENCY VIRUS",
+      "icd_codes_raw": "B20",
+      "scientific_name": "ABACAVIR,LAMIVUDINE",
+      "trade_name": "KIVEXA 600/300 mg,mg FC Tab"
+    },
+    {
+      "id": "3",
+      "indication": "OSTEOPOROSIS",
+      "icd_codes_raw": "M80, M81, M82",
+      "scientific_name": "ABALOPARATIDE",
+      "trade_name": "TYMLOS 2 mg/ml Soln Inj PFP"
+    },
+    {
+      "id": "4",
+      "indication": "NON-INFECTIOUS UVEITIS",
+      "icd_codes_raw": "H20, H30, H44.1, M05.2, M08.2, M35.2, M45.6",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "5",
+      "indication": "SJOGREN'S SYNDROME",
+      "icd_codes_raw": "M35.0",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "6",
+      "indication": "RHEUMATOID ARITHRITIS",
+      "icd_codes_raw": "M05, M06",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "7",
+      "indication": "PSORIATIC ARTHRITIS",
+      "icd_codes_raw": "M07, L40.5",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "8",
+      "indication": "JUVENILE POLYARTHRITIS",
+      "icd_codes_raw": "M08.3",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "9",
+      "indication": "SYSTEMIC JUVENILE IDIOPATHIC ARTHRITIS",
+      "icd_codes_raw": "M08.2",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 125 mg Soln Inj"
+    },
+    {
+      "id": "10",
+      "indication": "NON-INFECTIOUS UVEITIS",
+      "icd_codes_raw": "H20, H30, H44.1, M05.2, M08.2, M35.2, M45.6",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "11",
+      "indication": "SJOGREN'S SYNDROME",
+      "icd_codes_raw": "M35.0",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "12",
+      "indication": "RHEUMATOID ARITHRITIS",
+      "icd_codes_raw": "M05, M06",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "13",
+      "indication": "PSORIATIC ARTHRITIS",
+      "icd_codes_raw": "M07, L40.5",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "14",
+      "indication": "JUVENILE POLYARTHRITIS",
+      "icd_codes_raw": "M08.3",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "15",
+      "indication": "SYSTEMIC JUVENILE IDIOPATHIC ARTHRITIS",
+      "icd_codes_raw": "M08.2",
+      "scientific_name": "ABATACEPT",
+      "trade_name": "ORENCIA 250 mg Pwd Soln Inf"
+    },
+    {
+      "id": "16",
+      "indication": "BREAST CANCER MET.HORMONAL",
+      "icd_codes_raw": "C50, C79.81, D05",
+      "scientific_name": "ABEMACICLIB",
+      "trade_name": "VERZENIO 150 mg FC Tab"
+    },
+    {
+      "id": "17",
+      "indication": "BREAST CANCER MET.HORMONAL",
+      "icd_codes_raw": "C50, C79.81, D05",
+      "scientific_name": "ABEMACICLIB",
+      "trade_name": "VERZENIO 100 mg FC Tab"
+    },
+    {
+      "id": "18",
+      "indication": "BREAST CANCER MET.HORMONAL",
+      "icd_codes_raw": "C50, C79.81, D05",
+      "scientific_name": "ABEMACICLIB",
+      "trade_name": "VERZENIO 200 mg FC Tab"
+    },
+    {
+      "id": "19",
+      "indication": "BREAST CANCER MET.HORMONAL",
+      "icd_codes_raw": "C50, C79.81, D05",
+      "scientific_name": "ABEMACICLIB",
+      "trade_name": "VERZENIO 50 mg FC Tab"
+    },
+    {
+      "id": "20",
+      "indication": "PROSTATE CANCER",
+      "icd_codes_raw": "C61, D07.5",
+      "scientific_name": "ABIRATERONE ACETATE",
+      "trade_name": "VELOMAXTO 250 mg Tab"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tindication\ticd_codes_raw\tscientific_name\ttrade_name\n1\tHUMAN IMMUNODEFICIENCY VIRUS\tB20\tABACAVIR\tZIAGEN 300 mg FC Tab\n2\tHUMAN IMMUNODEFICIENCY VIRUS\tB20\tABACAVIR,LAMIVUDINE\tKIVEXA 600/300 mg,mg FC Tab\n3\tOSTEOPOROSIS\tM80, M81, M82\tABALOPARATIDE\tTYMLOS 2 mg/ml Soln Inj PFP\n4\tNON-INFECTIOUS UVEITIS\tH20, H30, H44.1, M05.2, M08.2, M35.2, M45.6\tABATACEPT\tORENCIA 125 mg Soln Inj\n5\tSJOGREN'S SYNDROME\tM35.0\tABATACEPT\tORENCIA 125 mg Soln Inj\n6\tRHEUMATOID ARITHRITIS\tM05, M06\tABATACEPT\tORENCIA 125 mg Soln Inj\n7\tPSORIATIC ARTHRITIS\tM07, L40.5\tABATACEPT\tORENCIA 125 mg Soln Inj\n8\tJUVENILE POLYARTHRITIS\tM08.3\tABATACEPT\tORENCIA 125 mg Soln Inj\n9\tSYSTEMIC JUVENILE IDIOPATHIC ARTHRITIS\tM08.2\tABATACEPT\tORENCIA 125 mg Soln Inj\n10\tNON-INFECTIOUS UVEITIS\tH20, H30, H44.1, M05.2, M08.2, M35.2, M45.6\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n11\tSJOGREN'S SYNDROME\tM35.0\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n12\tRHEUMATOID ARITHRITIS\tM05, M06\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n13\tPSORIATIC ARTHRITIS\tM07, L40.5\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n14\tJUVENILE POLYARTHRITIS\tM08.3\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n15\tSYSTEMIC JUVENILE IDIOPATHIC ARTHRITIS\tM08.2\tABATACEPT\tORENCIA 250 mg Pwd Soln Inf\n16\tBREAST CANCER MET.HORMONAL\tC50, C79.81, D05\tABEMACICLIB\tVERZENIO 150 mg FC Tab\n17\tBREAST CANCER MET.HORMONAL\tC50, C79.81, D05\tABEMACICLIB\tVERZENIO 100 mg FC Tab\n18\tBREAST CANCER MET.HORMONAL\tC50, C79.81, D05\tABEMACICLIB\tVERZENIO 200 mg FC Tab\n19\tBREAST CANCER MET.HORMONAL\tC50, C79.81, D05\tABEMACICLIB\tVERZENIO 50 mg FC Tab\n20\tPROSTATE CANCER\tC61, D07.5\tABIRATERONE ACETATE\tVELOMAXTO 250 mg Tab\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}

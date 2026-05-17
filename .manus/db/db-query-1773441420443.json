@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM search_analytics LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT * FROM search_analytics LIMIT 1;",
+  "rows": [
+    {
+      "id": "2",
+      "query": "Panadol",
+      "results_count": "0",
+      "search_type": "general",
+      "response_time_ms": "0",
+      "user_id": "NULL",
+      "ip_address": "NULL",
+      "createdAt": "2026-02-28 13:47:48"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tquery\tresults_count\tsearch_type\tresponse_time_ms\tuser_id\tip_address\tcreatedAt\n2\tPanadol\t0\tgeneral\t0\tNULL\tNULL\t2026-02-28 13:47:48\n",
+  "stderr": "",
+  "execution_time_ms": 1600
+}

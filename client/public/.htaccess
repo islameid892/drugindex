@@ -1,0 +1,88 @@
+# .htaccess Configuration for ICD-10 Medical Search Engine
+# This file handles redirects and SEO optimization
+
+# Enable mod_rewrite
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Remove www from URL (redirect www.drugindex.click to drugindex.click)
+  RewriteCond %{HTTP_HOST} ^www\.drugindex\.click$ [NC]
+  RewriteRule ^(.*)$ https://drugindex.click/$1 [R=301,L]
+  
+  # Force HTTPS for all traffic
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+  
+  # Remove trailing slashes (optional, but recommended for consistency)
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ /$1 [R=301,L]
+  
+  # Rewrite all requests to index.html for SPA routing
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# Cache Control Headers
+<IfModule mod_expires.c>
+  ExpiresActive On
+  
+  # Cache HTML files for 1 hour
+  ExpiresByType text/html "access plus 1 hour"
+  
+  # Cache CSS and JS for 1 year
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType application/x-javascript "access plus 1 year"
+  
+  # Cache images for 1 year
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  
+  # Cache JSON files for 24 hours
+  ExpiresByType application/json "access plus 24 hours"
+</IfModule>
+
+# Gzip Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/x-javascript
+  AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+  # Prevent clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+  
+  # Prevent MIME type sniffing
+  Header set X-Content-Type-Options "nosniff"
+  
+  # Enable XSS protection
+  Header set X-XSS-Protection "1; mode=block"
+  
+  # Referrer Policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(env|config|sql|log)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>

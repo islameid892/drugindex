@@ -1,0 +1,90 @@
+{
+  "query": "SELECT * FROM search_analytics LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT * FROM search_analytics LIMIT 10;",
+  "rows": [
+    {
+      "id": "2",
+      "query": "Panadol",
+      "results_count": "0",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:47:48"
+    },
+    {
+      "id": "3",
+      "query": "Panadol",
+      "results_count": "0",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:50:07"
+    },
+    {
+      "id": "4",
+      "query": "Panad",
+      "results_count": "0",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:54:26"
+    },
+    {
+      "id": "5",
+      "query": "Hypertension",
+      "results_count": "0",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:54:32"
+    },
+    {
+      "id": "6",
+      "query": "Mou",
+      "results_count": "5",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:55:48"
+    },
+    {
+      "id": "7",
+      "query": "Mounj",
+      "results_count": "1",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 13:55:53"
+    },
+    {
+      "id": "8",
+      "query": "mounjaro",
+      "results_count": "0",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 14:08:29"
+    },
+    {
+      "id": "9",
+      "query": "Insom",
+      "results_count": "33",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 14:16:01"
+    },
+    {
+      "id": "10",
+      "query": "Insomnia",
+      "results_count": "33",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 14:16:08"
+    },
+    {
+      "id": "11",
+      "query": "Panadol",
+      "results_count": "71",
+      "search_type": "general",
+      "user_id": "NULL",
+      "createdAt": "2026-02-28 14:16:30"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tquery\tresults_count\tsearch_type\tuser_id\tcreatedAt\n2\tPanadol\t0\tgeneral\tNULL\t2026-02-28 13:47:48\n3\tPanadol\t0\tgeneral\tNULL\t2026-02-28 13:50:07\n4\tPanad\t0\tgeneral\tNULL\t2026-02-28 13:54:26\n5\tHypertension\t0\tgeneral\tNULL\t2026-02-28 13:54:32\n6\tMou\t5\tgeneral\tNULL\t2026-02-28 13:55:48\n7\tMounj\t1\tgeneral\tNULL\t2026-02-28 13:55:53\n8\tmounjaro\t0\tgeneral\tNULL\t2026-02-28 14:08:29\n9\tInsom\t33\tgeneral\tNULL\t2026-02-28 14:16:01\n10\tInsomnia\t33\tgeneral\tNULL\t2026-02-28 14:16:08\n11\tPanadol\t71\tgeneral\tNULL\t2026-02-28 14:16:30\n",
+  "stderr": "",
+  "execution_time_ms": 1566
+}

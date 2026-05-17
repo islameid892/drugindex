@@ -1,0 +1,16 @@
+{
+  "query": "SELECT DISTINCT \n  m.indication,\n  COUNT(DISTINCT m.id) as medication_count,\n  GROUP_CONCAT(DISTINCT m.trade_name LIMIT 10) as sample_medications\nFROM medications m\nWHERE m.indication IS NOT NULL \n  AND m.indication != ''\n  AND m.id NOT IN (\n    SELECT DISTINCT medication_id FROM medication_icd_mapping WHERE medication_id IS NOT NULL\n  )\nGROUP BY m.indication\nORDER BY medication_count DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT \n  m.indication,\n  COUNT(DISTINCT m.id) as medication_count,\n  GROUP_CONCAT(DISTINCT m.trade_name LIMIT 10) as sample_medications\nFROM medications m\nWHERE m.indication IS NOT NULL \n  AND m.indication != ''\n  AND m.id NOT IN (\n    SELECT DISTINCT medication_id FROM medication_icd_mapping WHERE medication_id IS NOT NULL\n  )\nGROUP BY m.indication\nORDER BY medication_count DESC",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 4 column 43 near \"LIMIT 10) as sample_medications",
+    "FROM medications m",
+    "WHERE m.indication IS NOT NULL ",
+    "  AND m.indication != ''",
+    "  AND m.id NOT IN (",
+    "    SELECT DISTINCT medication_id FROM medication_icd_mapping WHERE medication_id IS NOT NULL",
+    "  )",
+    "GROUP BY m.indication",
+    "ORDER BY medication_count DESC\""
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_drugs FROM drug_lens",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total_drugs FROM drug_lens",
+  "rows": [
+    {
+      "total_drugs": "8141"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_drugs\n8141\n",
+  "stderr": "",
+  "execution_time_ms": 354
+}

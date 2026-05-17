@@ -1,0 +1,50 @@
+{
+  "query": "SELECT code, description, relatedMedications FROM codes WHERE code = 'D07.28' OR code LIKE 'D07%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT code, description, relatedMedications FROM codes WHERE code = 'D07.28' OR code LIKE 'D07%' LIMIT 10;",
+  "rows": [
+    {
+      "code": "D07",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.0",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.1",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.2",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.3",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.4",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.5",
+      "description": "",
+      "relatedMedications": "[]"
+    },
+    {
+      "code": "D07.6",
+      "description": "",
+      "relatedMedications": "[]"
+    }
+  ],
+  "messages": [],
+  "stdout": "code\tdescription\trelatedMedications\nD07\t\t[]\nD07.0\t\t[]\nD07.1\t\t[]\nD07.2\t\t[]\nD07.3\t\t[]\nD07.4\t\t[]\nD07.5\t\t[]\nD07.6\t\t[]\n",
+  "stderr": "",
+  "execution_time_ms": 2452
+}

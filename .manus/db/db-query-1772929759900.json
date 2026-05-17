@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, indication, icd_codes_raw, scientific_name, trade_name\nFROM drug_entries\nWHERE indication LIKE '%cirrhosis%' OR indication LIKE '%CIRRHOSIS%'\nLIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT id, indication, icd_codes_raw, scientific_name, trade_name\nFROM drug_entries\nWHERE indication LIKE '%cirrhosis%' OR indication LIKE '%CIRRHOSIS%'\nLIMIT 10",
+  "rows": [
+    {
+      "id": "777",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "ALBUMIN SK 20 g/l Soln Inj"
+    },
+    {
+      "id": "785",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "FLEXBUMIN 200 g/l Soln Inf"
+    },
+    {
+      "id": "792",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "ALBUREX 200 % Soln"
+    },
+    {
+      "id": "796",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "ALBUREX 200 g/l Soln"
+    },
+    {
+      "id": "805",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "ALBUMIN SK 20 % Soln Inj"
+    },
+    {
+      "id": "809",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "PLASBUMIN 20 % Susp Inj"
+    },
+    {
+      "id": "822",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "HUMAN ALBUMIN 5 % Soln"
+    },
+    {
+      "id": "824",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "HUMAN ALBUMIN 20 % Soln"
+    },
+    {
+      "id": "828",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "HUMAN ALBUMIN 20 g/l Soln"
+    },
+    {
+      "id": "831",
+      "indication": "LIVER CIRRHOSIS",
+      "icd_codes_raw": "K74",
+      "scientific_name": "ALBUMIN HUMAN",
+      "trade_name": "PLASBUMIN 20 g/l Susp Inj"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tindication\ticd_codes_raw\tscientific_name\ttrade_name\n777\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tALBUMIN SK 20 g/l Soln Inj\n785\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tFLEXBUMIN 200 g/l Soln Inf\n792\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tALBUREX 200 % Soln\n796\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tALBUREX 200 g/l Soln\n805\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tALBUMIN SK 20 % Soln Inj\n809\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tPLASBUMIN 20 % Susp Inj\n822\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tHUMAN ALBUMIN 5 % Soln\n824\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tHUMAN ALBUMIN 20 % Soln\n828\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tHUMAN ALBUMIN 20 g/l Soln\n831\tLIVER CIRRHOSIS\tK74\tALBUMIN HUMAN\tPLASBUMIN 20 g/l Susp Inj\n",
+  "stderr": "",
+  "execution_time_ms": 1502
+}

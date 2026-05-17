@@ -1,0 +1,26 @@
+{
+  "query": "\n-- Check if prices were updated\nSELECT trade_name, price FROM drug_lens WHERE trade_name IN (\n  'ZIAGEN 300 mg Film-Coated Tablet',\n  'KIVEXA 600/300 mg Film-Coated Tablet',\n  'TYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)',\n  'VERZENIO 150 mg Film-Coated Tablet'\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute \n-- Check if prices were updated\nSELECT trade_name, price FROM drug_lens WHERE trade_name IN (\n  'ZIAGEN 300 mg Film-Coated Tablet',\n  'KIVEXA 600/300 mg Film-Coated Tablet',\n  'TYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)',\n  'VERZENIO 150 mg Film-Coated Tablet'\n);\n",
+  "rows": [
+    {
+      "trade_name": "ZIAGEN 300 mg Film-Coated Tablet",
+      "price": "944.75"
+    },
+    {
+      "trade_name": "KIVEXA 600/300 mg Film-Coated Tablet",
+      "price": "1676.80"
+    },
+    {
+      "trade_name": "TYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)",
+      "price": "1564.15"
+    },
+    {
+      "trade_name": "VERZENIO 150 mg Film-Coated Tablet",
+      "price": "3117.80"
+    }
+  ],
+  "messages": [],
+  "stdout": "trade_name\tprice\nZIAGEN 300 mg Film-Coated Tablet\t944.75\nKIVEXA 600/300 mg Film-Coated Tablet\t1676.80\nTYMLOS 2 mg/mL Solution for Injection (Pre-filled Pen)\t1564.15\nVERZENIO 150 mg Film-Coated Tablet\t3117.80\n",
+  "stderr": "",
+  "execution_time_ms": 1523
+}

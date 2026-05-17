@@ -1,0 +1,22 @@
+{
+  "query": "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE()",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE()",
+  "rows": [
+    {
+      "CONSTRAINT_NAME": "fk_1"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_1"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_dec_drug_entry"
+    },
+    {
+      "CONSTRAINT_NAME": "fk_dec_code"
+    }
+  ],
+  "messages": [],
+  "stdout": "CONSTRAINT_NAME\nfk_1\nfk_1\nfk_dec_drug_entry\nfk_dec_code\n",
+  "stderr": "",
+  "execution_time_ms": 1597
+}

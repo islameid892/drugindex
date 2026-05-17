@@ -1,0 +1,9 @@
+{
+  "query": "SELECT de.id, de.trade_name, de.icd_codes_raw FROM drug_entries de WHERE de.trade_name LIKE '%SYSTANE%' AND de.icd_codes_raw LIKE '%L71%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT de.id, de.trade_name, de.icd_codes_raw FROM drug_entries de WHERE de.trade_name LIKE '%SYSTANE%' AND de.icd_codes_raw LIKE '%L71%'",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1604
+}

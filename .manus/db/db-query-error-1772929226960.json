@@ -1,0 +1,12 @@
+{
+  "query": "SELECT DISTINCT de.indication\nFROM drug_entries de\nLEFT JOIN drug_entry_codes dec ON de.id = dec.drug_entry_id\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND dec.drug_entry_id IS NULL\nORDER BY de.indication",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT DISTINCT de.indication\nFROM drug_entries de\nLEFT JOIN drug_entry_codes dec ON de.id = dec.drug_entry_id\nWHERE de.indication IS NOT NULL \n  AND de.indication != ''\n  AND dec.drug_entry_id IS NULL\nORDER BY de.indication",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 3 column 31 near \"dec ON de.id = dec.drug_entry_id",
+    "WHERE de.indication IS NOT NULL ",
+    "  AND de.indication != ''",
+    "  AND dec.drug_entry_id IS NULL",
+    "ORDER BY de.indication\""
+  ]
+}

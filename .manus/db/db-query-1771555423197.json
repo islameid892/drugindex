@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as count FROM codes; SELECT code, description FROM codes LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as count FROM codes; SELECT code, description FROM codes LIMIT 5;",
+  "rows": [
+    {
+      "count": "40316"
+    },
+    {
+      "count": "code\tdescription"
+    },
+    {
+      "count": "A00\t"
+    },
+    {
+      "count": "A00.0\t"
+    },
+    {
+      "count": "A00.1\t"
+    },
+    {
+      "count": "A00.9\t"
+    },
+    {
+      "count": "A01\t"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\n40316\ncode\tdescription\nA00\t\nA00.0\t\nA00.1\t\nA00.9\t\nA01\t\n",
+  "stderr": "",
+  "execution_time_ms": 1876
+}

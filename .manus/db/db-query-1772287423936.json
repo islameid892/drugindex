@@ -1,0 +1,46 @@
+{
+  "query": "SELECT m.id, m.scientific_name, mt.trade_name, mi.indication FROM medications m JOIN medication_trade_names mt ON mt.medication_id = m.id LEFT JOIN medication_indications mi ON mi.medication_id = m.id WHERE LOWER(mt.trade_name) LIKE '%mounjaro%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT m.id, m.scientific_name, mt.trade_name, mi.indication FROM medications m JOIN medication_trade_names mt ON mt.medication_id = m.id LEFT JOIN medication_indications mi ON mi.medication_id = m.id WHERE LOWER(mt.trade_name) LIKE '%mounjaro%' LIMIT 20;",
+  "rows": [
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 7.5 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    },
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 15 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    },
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 2.5 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    },
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 5 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    },
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 10 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    },
+    {
+      "id": "1634",
+      "scientific_name": "TIRZEPATIDE",
+      "trade_name": "MOUNJARO KWIKPEN 12.5 mg Soln Inj PFP",
+      "indication": "DIABETES MELLITUS TYPE 2"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tscientific_name\ttrade_name\tindication\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 7.5 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 15 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 2.5 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 5 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 10 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n1634\tTIRZEPATIDE\tMOUNJARO KWIKPEN 12.5 mg Soln Inj PFP\tDIABETES MELLITUS TYPE 2\n",
+  "stderr": "",
+  "execution_time_ms": 1553
+}

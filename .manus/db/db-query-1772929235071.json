@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_entries, COUNT(DISTINCT indication) as unique_indications FROM drug_entries",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute SELECT COUNT(*) as total_entries, COUNT(DISTINCT indication) as unique_indications FROM drug_entries",
+  "rows": [
+    {
+      "total_entries": "56377",
+      "unique_indications": "810"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_entries\tunique_indications\n56377\t810\n",
+  "stderr": "",
+  "execution_time_ms": 1665
+}

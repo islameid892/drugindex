@@ -1,0 +1,353 @@
+================================================================================
+CLOUDFLARE WAF RULES & CONFIGURATION
+drugindex.click - Security Hardening
+================================================================================
+
+STEP-BY-STEP CLOUDFLARE SETUP GUIDE
+================================================================================
+
+1. LOGIN TO CLOUDFLARE DASHBOARD
+   - Go to: https://dash.cloudflare.com
+   - Select domain: drugindex.click
+   - Navigate to: Security → WAF
+
+2. CREATE CUSTOM WAF RULES
+   - Click: "Create rule"
+   - Select: "Custom expression"
+   - Copy each rule below into the expression editor
+   - Set action to: "Block"
+   - Save each rule
+
+================================================================================
+RULE 1: BLOCK SQL INJECTION ATTEMPTS
+================================================================================
+
+Expression:
+(http.request.uri.query contains "' OR" or 
+ http.request.uri.query contains "\" OR" or 
+ http.request.uri.query contains "1=1" or
+ http.request.uri.query contains "union select" or
+ http.request.uri.query contains "drop table" or
+ http.request.uri.query contains "exec(" or
+ http.request.uri.query contains "execute(")
+
+Action: Block
+Name: SQL Injection Protection
+Priority: 1
+
+================================================================================
+RULE 2: BLOCK XSS ATTEMPTS
+================================================================================
+
+Expression:
+(http.request.uri.query contains "<script" or
+ http.request.uri.query contains "javascript:" or
+ http.request.uri.query contains "onerror=" or
+ http.request.uri.query contains "onload=" or
+ http.request.uri.query contains "<iframe" or
+ http.request.uri.query contains "<svg" or
+ http.request.uri.query contains "alert(")
+
+Action: Block
+Name: XSS Protection
+Priority: 2
+
+================================================================================
+RULE 3: BLOCK PATH TRAVERSAL
+================================================================================
+
+Expression:
+(http.request.uri.path contains ".." or
+ http.request.uri.path contains "../" or
+ http.request.uri.path contains "..\\")
+
+Action: Block
+Name: Path Traversal Protection
+Priority: 3
+
+================================================================================
+RULE 4: BLOCK SUSPICIOUS BOT USER AGENTS
+================================================================================
+
+Expression:
+(http.user_agent contains "python" or
+ http.user_agent contains "curl" or
+ http.user_agent contains "wget" or
+ http.user_agent contains "scrapy" or
+ http.user_agent contains "mechanize" or
+ http.user_agent contains "sqlmap" or
+ http.user_agent contains "nikto" or
+ http.user_agent contains "nmap" or
+ http.user_agent contains "masscan" or
+ http.user_agent contains "masscan" or
+ http.user_agent contains "nessus" or
+ http.user_agent contains "qualys" or
+ http.user_agent contains "acunetix" or
+ http.user_agent contains "burp" or
+ http.user_agent contains "zap" or
+ cf.bot_management.score < 30)
+
+Action: Block
+Name: Bot & Scanner Detection
+Priority: 4
+
+================================================================================
+RULE 5: BLOCK /METRICS ENDPOINT FROM PUBLIC ACCESS
+================================================================================
+
+Expression:
+(http.request.uri.path == "/metrics" and 
+ not cf.verified_bot_category == "Search Engine Crawler")
+
+Action: Block
+Name: Block Public /metrics Access
+Priority: 5
+
+================================================================================
+RATE LIMITING CONFIGURATION
+================================================================================
+
+Navigate to: Security → Rate limiting
+
+Create these rate limiting rules:
+
+RULE A: GENERAL API RATE LIMIT
+────────────────────────────────
+Path: /api/*
+Threshold: 60 requests per minute
+Action: Block
+Duration: 1 minute
+Name: General API Rate Limit
+
+RULE B: SEARCH ENDPOINT RATE LIMIT
+────────────────────────────────────
+Path: /api/trpc/data.search*
+Threshold: 10 requests per minute
+Action: Block
+Duration: 1 minute
+Name: Search Rate Limit
+
+RULE C: SILA AI CHAT RATE LIMIT
+────────────────────────────────────
+Path: /api/sila*
+Threshold: 5 requests per minute
+Action: Block
+Duration: 1 minute
+Name: Sila AI Rate Limit
+
+RULE D: EXPORT ENDPOINT RATE LIMIT
+────────────────────────────────────
+Path: /api/export*
+Threshold: 3 requests per minute
+Action: Block
+Duration: 1 minute
+Name: Export Rate Limit
+
+================================================================================
+BOT FIGHT MODE CONFIGURATION
+================================================================================
+
+Navigate to: Security → Bot Management
+
+1. ENABLE BOT FIGHT MODE
+   - Toggle: ON
+   - Definitely Automated: Block
+   - Likely Automated: Challenge
+   - Verified Bots: Allow
+   - Challenge Solver: Managed Challenge (not CAPTCHA)
+
+2. SENSITIVITY LEVEL
+   - Recommended: Medium
+   - This will block obvious bots while allowing legitimate traffic
+
+3. SUPER BOT FIGHT MODE (Optional Premium)
+   - If available, enable for additional protection
+   - Provides ML-based bot detection
+
+================================================================================
+TURNSTILE CAPTCHA SETUP
+================================================================================
+
+Navigate to: Security → Turnstile
+
+1. CREATE TURNSTILE WIDGET
+   - Click: "Create widget"
+   - Name: drugindex-search-captcha
+   - Domains: drugindex.click, www.drugindex.click
+   - Mode: Managed
+   - Save
+
+2. IMPLEMENT IN FRONTEND
+   Add to your HTML:
+   
+   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+   
+   <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY"></div>
+   
+   <script>
+   // On form submit, verify token
+   const token = document.querySelector('[name=cf-turnstile-response]').value;
+   // Send to backend for verification
+   </script>
+
+3. BACKEND VERIFICATION
+   POST https://challenges.cloudflare.com/turnstile/v0/siteverify
+   {
+     "secret": "YOUR_SECRET_KEY",
+     "response": "TOKEN_FROM_FRONTEND"
+   }
+
+4. PLACEMENT RECOMMENDATION
+   - Show after 5 failed rate limit attempts
+   - Show on bulk export requests
+   - Show on Sila AI chat after 3 failed prompts
+
+================================================================================
+PAGE RULES CONFIGURATION
+================================================================================
+
+Navigate to: Rules → Page Rules
+
+1. BYPASS CACHE ON API PATHS
+   URL: drugindex.click/api/*
+   Action: Cache Level = Bypass
+   Priority: 1
+
+2. DISABLE CLOUDFLARE APPS ON ADMIN
+   URL: drugindex.click/admin/*
+   Action: Disable Performance
+   Priority: 2
+
+================================================================================
+CLOUDFLARE ACCESS SETUP (Block /metrics)
+================================================================================
+
+Navigate to: Access → Applications
+
+1. CREATE NEW APPLICATION
+   - Name: Block Metrics
+   - Application type: Self-hosted
+   - Subdomain: drugindex.click
+   - Domain: drugindex.click
+   - Application path: /metrics
+
+2. ADD POLICY
+   - Name: Require Authentication
+   - Action: Block
+   - Require: Everyone
+   - Save
+
+3. RESULT
+   - /metrics now requires Cloudflare login
+   - Public access blocked
+
+================================================================================
+FIREWALL RULES - REQUIRE X-APP-VERSION HEADER
+================================================================================
+
+Navigate to: Security → Firewall Rules
+
+Expression:
+(http.request.uri.path contains "/api/" and 
+ not http.request.headers["x-app-version"] exists)
+
+Action: Block
+Name: Require X-App-Version Header on API
+Priority: 1
+
+================================================================================
+MONITORING & LOGGING
+================================================================================
+
+1. ENABLE SECURITY EVENT LOGGING
+   Navigate to: Analytics & Logs → Security
+   - View: Threats blocked
+   - View: Rate limit hits
+   - View: Bot management blocks
+
+2. SET UP NOTIFICATIONS
+   Navigate to: Notifications
+   - Create: Alert for high threat score
+   - Create: Alert for rate limit threshold
+   - Create: Alert for DDoS detection
+
+3. EXPORT LOGS
+   Navigate to: Logs
+   - Download: Security events (daily)
+   - Download: Rate limit events (daily)
+   - Download: Bot management events (daily)
+
+================================================================================
+TESTING CLOUDFLARE RULES
+================================================================================
+
+1. TEST SQL INJECTION BLOCKING
+   curl "https://drugindex.click/api/search?query=test' OR '1'='1"
+   Expected: 403 Forbidden
+
+2. TEST XSS BLOCKING
+   curl "https://drugindex.click/api/search?query=<script>alert(1)</script>"
+   Expected: 403 Forbidden
+
+3. TEST BOT BLOCKING
+   curl -H "User-Agent: python-requests/2.28.0" https://drugindex.click/
+   Expected: 403 Forbidden or Challenge
+
+4. TEST RATE LIMITING
+   for i in {1..11}; do curl https://drugindex.click/api/trpc/data.search?query=test; done
+   Expected: 11th request gets 429 Too Many Requests
+
+5. TEST /METRICS BLOCKING
+   curl https://drugindex.click/metrics
+   Expected: 403 Forbidden
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+After implementing all rules:
+
+[ ] WAF Rules 1-5 created and active
+[ ] Rate limiting rules A-D created and active
+[ ] Bot Fight Mode enabled
+[ ] Turnstile CAPTCHA configured
+[ ] Page Rules set up
+[ ] Cloudflare Access blocking /metrics
+[ ] Firewall rule requiring X-App-Version
+[ ] Security event logging enabled
+[ ] Notifications configured
+[ ] All tests passing (see Testing section)
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+ISSUE: Legitimate traffic blocked
+SOLUTION: Check WAF rules, adjust sensitivity, whitelist known IPs
+
+ISSUE: Rate limiting too aggressive
+SOLUTION: Increase thresholds in Rate Limiting rules
+
+ISSUE: Turnstile not appearing
+SOLUTION: Check site key, verify domain in Turnstile settings
+
+ISSUE: /metrics still accessible
+SOLUTION: Verify Cloudflare Access rule is active
+
+================================================================================
+SUPPORT & DOCUMENTATION
+================================================================================
+
+Cloudflare WAF Documentation:
+https://developers.cloudflare.com/waf/
+
+Cloudflare Bot Management:
+https://developers.cloudflare.com/bot-management/
+
+Cloudflare Rate Limiting:
+https://developers.cloudflare.com/rate-limiting/
+
+Cloudflare Turnstile:
+https://developers.cloudflare.com/turnstile/
+
+================================================================================

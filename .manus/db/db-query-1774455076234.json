@@ -1,0 +1,13 @@
+{
+  "query": "DELETE FROM search_analytics WHERE query LIKE '%test_analytics%' OR query LIKE '%vitest%' OR query LIKE '%test_%';\nSELECT COUNT(*) as remaining FROM search_analytics;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute DELETE FROM search_analytics WHERE query LIKE '%test_analytics%' OR query LIKE '%vitest%' OR query LIKE '%test_%';\nSELECT COUNT(*) as remaining FROM search_analytics;",
+  "rows": [
+    {
+      "remaining": "683"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining\n683\n",
+  "stderr": "",
+  "execution_time_ms": 1926
+}

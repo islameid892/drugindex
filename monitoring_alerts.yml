@@ -1,0 +1,622 @@
+################################################################################
+# MONITORING & ALERTING CONFIGURATION
+# drugindex.click - Real-time Security Monitoring
+################################################################################
+
+# This file defines alert rules, thresholds, and actions for monitoring
+# drugindex.click security events and anomalies.
+
+# Baseline Traffic (from metrics):
+# - 3,064 searches / 30 days
+# - ~100 searches / day
+# - ~4 searches / hour (normal)
+# - Peak: ~50 searches / hour
+
+################################################################################
+# SECTION 1: ALERT RULES
+################################################################################
+
+alerts:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # CRITICAL ALERTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: alert_001
+    name: "Possible Scraping Attack"
+    severity: CRITICAL
+    description: "Unusual spike in search requests from single IP"
+    condition: |
+      searches_per_hour > 200 AND
+      unique_ips == 1 AND
+      duration_minutes >= 5
+    threshold: 200 requests/hour
+    window: 60 minutes
+    actions:
+      - notify_admin_immediately
+      - block_ip_for_24_hours
+      - log_to_security_log
+      - trigger_cloudflare_ddos_mode
+    escalation:
+      - if_persists_30_min: escalate_to_ciso
+      - if_persists_1_hour: contact_hosting_provider
+
+  - id: alert_002
+    name: "DDoS Attack Detected"
+    severity: CRITICAL
+    description: "Massive spike in requests from multiple IPs"
+    condition: |
+      requests_per_minute > 1000 AND
+      unique_ips > 50
+    threshold: 1000 requests/minute
+    window: 1 minute
+    actions:
+      - activate_cloudflare_ddos_protection
+      - enable_rate_limiting_strict
+      - notify_admin_immediately
+      - log_to_security_log
+    escalation:
+      - if_persists_5_min: escalate_to_ciso
+
+  - id: alert_003
+    name: "Unauthorized API Access"
+    severity: CRITICAL
+    description: "Multiple failed API key validations from same IP"
+    condition: |
+      failed_api_auth_attempts > 10 AND
+      time_span_minutes <= 5
+    threshold: 10 failed attempts
+    window: 5 minutes
+    actions:
+      - block_ip_immediately
+      - notify_admin_immediately
+      - log_to_security_log
+      - add_to_honeypot_tracking
+
+  - id: alert_004
+    name: "Honeypot Endpoint Triggered"
+    severity: CRITICAL
+    description: "Attacker accessed honeypot endpoint"
+    condition: |
+      honeypot_endpoint_accessed == true
+    threshold: Any access
+    window: Real-time
+    actions:
+      - block_ip_permanently
+      - notify_admin_immediately
+      - log_attacker_profile
+      - save_full_request_details
+
+  - id: alert_005
+    name: "Sila AI Prompt Injection Attempt"
+    severity: CRITICAL
+    description: "Suspicious prompt detected in Sila AI chat"
+    condition: |
+      (prompt contains "ignore" OR
+       prompt contains "system prompt" OR
+       prompt contains "bypass" OR
+       prompt contains "api key") AND
+      prompt_source == "sila_chat"
+    threshold: Any match
+    window: Real-time
+    actions:
+      - block_request
+      - log_prompt_and_ip
+      - notify_admin
+      - increase_rate_limit_for_ip
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # HIGH PRIORITY ALERTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: alert_006
+    name: "High Search Rate"
+    severity: HIGH
+    description: "Search rate exceeds normal baseline by 10x"
+    condition: |
+      searches_per_hour > 50 AND
+      searches_per_hour <= 200
+    threshold: 50 requests/hour
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - log_to_security_log
+      - increase_monitoring_frequency
+      - prepare_for_escalation
+
+  - id: alert_007
+    name: "Sila AI Abuse Detected"
+    severity: HIGH
+    description: "Excessive Sila AI requests from single IP"
+    condition: |
+      sila_requests_per_hour > 30 AND
+      unique_ips == 1
+    threshold: 30 requests/hour
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - reduce_rate_limit_for_ip
+      - log_to_security_log
+      - monitor_for_escalation
+
+  - id: alert_008
+    name: "Multiple Failed Rate Limits"
+    severity: HIGH
+    description: "IP hit rate limit multiple times in short period"
+    condition: |
+      rate_limit_violations > 5 AND
+      time_span_minutes <= 10
+    threshold: 5 violations
+    window: 10 minutes
+    actions:
+      - notify_admin
+      - increase_block_duration
+      - log_to_security_log
+      - consider_permanent_block
+
+  - id: alert_009
+    name: "Unusual Export Activity"
+    severity: HIGH
+    description: "Multiple export requests from single user"
+    condition: |
+      export_requests_per_day > 5 AND
+      user_id != null
+    threshold: 5 exports/day
+    window: 24 hours
+    actions:
+      - notify_admin
+      - log_export_details
+      - monitor_user_activity
+      - consider_account_suspension
+
+  - id: alert_010
+    name: "SQL Injection Attempt"
+    severity: HIGH
+    description: "SQL injection pattern detected in query"
+    condition: |
+      query contains "' OR" OR
+      query contains "\" OR" OR
+      query contains "union select" OR
+      query contains "drop table"
+    threshold: Any match
+    window: Real-time
+    actions:
+      - block_request
+      - block_ip_for_1_hour
+      - log_attack_details
+      - notify_admin
+
+  - id: alert_011
+    name: "XSS Attempt"
+    severity: HIGH
+    description: "XSS pattern detected in query"
+    condition: |
+      query contains "<script" OR
+      query contains "javascript:" OR
+      query contains "onerror=" OR
+      query contains "alert("
+    threshold: Any match
+    window: Real-time
+    actions:
+      - block_request
+      - block_ip_for_1_hour
+      - log_attack_details
+      - notify_admin
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # MEDIUM PRIORITY ALERTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: alert_012
+    name: "Elevated Error Rate"
+    severity: MEDIUM
+    description: "Error rate exceeds normal threshold"
+    condition: |
+      error_rate_percent > 5
+    threshold: 5% errors
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - log_to_security_log
+      - investigate_error_cause
+      - monitor_system_health
+
+  - id: alert_013
+    name: "Slow Response Times"
+    severity: MEDIUM
+    description: "API response times exceed threshold"
+    condition: |
+      avg_response_time_ms > 2000
+    threshold: 2000ms average
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - check_database_performance
+      - check_server_resources
+      - log_to_monitoring_system
+
+  - id: alert_014
+    name: "Unusual Geographic Pattern"
+    severity: MEDIUM
+    description: "Requests from unusual geographic location"
+    condition: |
+      request_country NOT IN (allowed_countries) AND
+      requests_from_country > 10
+    threshold: 10 requests
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - log_geographic_data
+      - monitor_for_escalation
+      - consider_geo_blocking
+
+  - id: alert_015
+    name: "Suspicious User Agent"
+    severity: MEDIUM
+    description: "Requests with suspicious user agent"
+    condition: |
+      user_agent matches "bot|crawler|scraper|spider" AND
+      not user_agent in (allowed_bots)
+    threshold: Any match
+    window: Real-time
+    actions:
+      - log_request
+      - increase_monitoring
+      - consider_blocking
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LOW PRIORITY ALERTS
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: alert_016
+    name: "SSL Certificate Expiry Warning"
+    severity: LOW
+    description: "SSL certificate expiring soon"
+    condition: |
+      days_until_expiry < 30
+    threshold: 30 days
+    window: Daily check
+    actions:
+      - notify_admin
+      - log_to_monitoring_system
+      - prepare_renewal
+
+  - id: alert_017
+    name: "High Memory Usage"
+    severity: LOW
+    description: "Server memory usage high"
+    condition: |
+      memory_usage_percent > 80
+    threshold: 80%
+    window: 60 minutes
+    actions:
+      - notify_admin
+      - check_memory_leaks
+      - log_to_monitoring_system
+
+################################################################################
+# SECTION 2: ALERT THRESHOLDS & BASELINES
+################################################################################
+
+baselines:
+  # Normal traffic patterns
+  normal_searches_per_hour: 4
+  normal_searches_per_day: 100
+  normal_peak_searches_per_hour: 50
+  
+  # Normal error rates
+  normal_error_rate_percent: 0.5
+  
+  # Normal response times
+  normal_avg_response_time_ms: 200
+  normal_max_response_time_ms: 1000
+  
+  # Thresholds for escalation
+  warning_searches_per_hour: 20
+  alert_searches_per_hour: 50
+  critical_searches_per_hour: 200
+  
+  # Rate limit thresholds
+  warning_rate_limit_hits: 3
+  alert_rate_limit_hits: 5
+  critical_rate_limit_hits: 10
+
+################################################################################
+# SECTION 3: NOTIFICATION CHANNELS
+################################################################################
+
+notification_channels:
+  
+  - channel_id: email_admin
+    type: email
+    recipients:
+      - admin@drugindex.click
+    alert_levels: [CRITICAL, HIGH]
+    
+  - channel_id: email_security_team
+    type: email
+    recipients:
+      - security@drugindex.click
+      - ciso@drugindex.click
+    alert_levels: [CRITICAL, HIGH, MEDIUM]
+    
+  - channel_id: slack_security
+    type: slack
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+    channel: "#security-alerts"
+    alert_levels: [CRITICAL, HIGH]
+    
+  - channel_id: pagerduty_critical
+    type: pagerduty
+    api_key: "YOUR_PAGERDUTY_KEY"
+    service_id: "YOUR_SERVICE_ID"
+    alert_levels: [CRITICAL]
+    
+  - channel_id: sms_admin
+    type: sms
+    recipients:
+      - "+1234567890"
+    alert_levels: [CRITICAL]
+    
+  - channel_id: log_file
+    type: file
+    path: "/var/log/drugindex/security_alerts.log"
+    alert_levels: [CRITICAL, HIGH, MEDIUM, LOW]
+
+################################################################################
+# SECTION 4: ESCALATION PROCEDURES
+################################################################################
+
+escalation_procedures:
+  
+  - level: 1
+    name: "Initial Alert"
+    delay_minutes: 0
+    actions:
+      - log_alert
+      - notify_admin_email
+      - notify_slack
+    
+  - level: 2
+    name: "Escalation to Security Team"
+    delay_minutes: 5
+    condition: "alert_not_resolved"
+    actions:
+      - notify_security_team_email
+      - notify_slack_security_channel
+      - create_incident_ticket
+    
+  - level: 3
+    name: "Escalation to CISO"
+    delay_minutes: 15
+    condition: "alert_severity == CRITICAL"
+    actions:
+      - notify_ciso_email
+      - notify_ciso_sms
+      - create_priority_incident
+      - activate_incident_response_team
+    
+  - level: 4
+    name: "External Notification"
+    delay_minutes: 30
+    condition: "data_breach_suspected"
+    actions:
+      - notify_legal_team
+      - notify_hosting_provider
+      - prepare_public_statement
+      - contact_regulatory_authorities
+
+################################################################################
+# SECTION 5: HONEYPOT ENDPOINTS
+################################################################################
+
+honeypot_endpoints:
+  
+  - path: "/api/v1/export-all"
+    description: "Fake bulk export endpoint"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/api/v1/database-dump"
+    description: "Fake database dump endpoint"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/admin/users"
+    description: "Fake admin endpoint"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/wp-admin"
+    description: "Fake WordPress admin"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/phpmyadmin"
+    description: "Fake phpMyAdmin"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/.env"
+    description: "Fake environment file"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/.git/config"
+    description: "Fake git config"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/config.php"
+    description: "Fake PHP config"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/web.config"
+    description: "Fake IIS config"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+    
+  - path: "/backup.sql"
+    description: "Fake database backup"
+    action: "block_and_ban_ip"
+    ban_duration_hours: 24
+
+################################################################################
+# SECTION 6: MONITORING DASHBOARD METRICS
+################################################################################
+
+dashboard_metrics:
+  
+  - metric_id: requests_per_hour
+    name: "Requests per Hour"
+    unit: "requests"
+    threshold_warning: 20
+    threshold_critical: 200
+    
+  - metric_id: error_rate
+    name: "Error Rate"
+    unit: "percent"
+    threshold_warning: 2
+    threshold_critical: 5
+    
+  - metric_id: avg_response_time
+    name: "Average Response Time"
+    unit: "ms"
+    threshold_warning: 500
+    threshold_critical: 2000
+    
+  - metric_id: rate_limit_violations
+    name: "Rate Limit Violations"
+    unit: "count"
+    threshold_warning: 3
+    threshold_critical: 10
+    
+  - metric_id: blocked_ips
+    name: "Currently Blocked IPs"
+    unit: "count"
+    threshold_warning: 5
+    threshold_critical: 20
+    
+  - metric_id: honeypot_triggers
+    name: "Honeypot Triggers"
+    unit: "count"
+    threshold_warning: 1
+    threshold_critical: 5
+    
+  - metric_id: sila_requests
+    name: "Sila AI Requests per Hour"
+    unit: "requests"
+    threshold_warning: 20
+    threshold_critical: 50
+    
+  - metric_id: export_requests
+    name: "Export Requests per Day"
+    unit: "count"
+    threshold_warning: 3
+    threshold_critical: 10
+
+################################################################################
+# SECTION 7: DAILY REPORTS
+################################################################################
+
+daily_reports:
+  
+  - report_id: security_summary
+    name: "Daily Security Summary"
+    schedule: "0 9 * * *"  # 9 AM daily
+    recipients:
+      - security@drugindex.click
+    metrics:
+      - total_requests
+      - total_errors
+      - blocked_ips
+      - rate_limit_violations
+      - honeypot_triggers
+      - top_user_agents
+      - geographic_distribution
+    
+  - report_id: threat_analysis
+    name: "Weekly Threat Analysis"
+    schedule: "0 10 * * 1"  # Monday 10 AM
+    recipients:
+      - ciso@drugindex.click
+      - security@drugindex.click
+    metrics:
+      - attack_patterns
+      - top_attack_vectors
+      - compromised_ips
+      - recommendations
+
+################################################################################
+# SECTION 8: RESPONSE PROCEDURES
+################################################################################
+
+response_procedures:
+  
+  - procedure_id: ip_blocking
+    name: "IP Blocking Procedure"
+    steps:
+      - "1. Identify malicious IP from alert"
+      - "2. Add IP to Cloudflare firewall rule"
+      - "3. Add IP to local blocklist"
+      - "4. Monitor for bypass attempts"
+      - "5. Log action with timestamp"
+      - "6. Notify security team"
+    
+  - procedure_id: rate_limit_adjustment
+    name: "Rate Limit Adjustment"
+    steps:
+      - "1. Identify affected endpoint"
+      - "2. Review traffic patterns"
+      - "3. Adjust rate limit threshold"
+      - "4. Update Cloudflare rules"
+      - "5. Monitor impact"
+      - "6. Document change"
+    
+  - procedure_id: incident_response
+    name: "Incident Response"
+    steps:
+      - "1. Acknowledge alert"
+      - "2. Assess severity"
+      - "3. Isolate affected systems if needed"
+      - "4. Gather evidence"
+      - "5. Notify stakeholders"
+      - "6. Implement remediation"
+      - "7. Document incident"
+      - "8. Post-incident review"
+
+################################################################################
+# SECTION 9: TESTING & VALIDATION
+################################################################################
+
+testing:
+  
+  - test_id: alert_001_test
+    name: "Test Scraping Alert"
+    procedure: |
+      1. Simulate 200+ requests/hour from single IP
+      2. Verify alert triggers
+      3. Verify IP is blocked
+      4. Verify admin notification sent
+    frequency: "monthly"
+    
+  - test_id: alert_005_test
+    name: "Test Honeypot Alert"
+    procedure: |
+      1. Access /api/v1/export-all endpoint
+      2. Verify alert triggers
+      3. Verify IP is permanently banned
+      4. Verify admin notification sent
+    frequency: "monthly"
+    
+  - test_id: notification_test
+    name: "Test Notification Channels"
+    procedure: |
+      1. Send test alert to email
+      2. Send test alert to Slack
+      3. Send test alert to SMS
+      4. Verify all channels receive notification
+    frequency: "weekly"
+
+################################################################################
