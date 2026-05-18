@@ -36,8 +36,8 @@ export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
                 <Stethoscope className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
               </div>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground tracking-tight leading-tight">ICD-10 Search Engine</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground font-medium">Drug Reference & Medical Coding</p>
+                <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">ICD-10 Search Engine</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground font-semibold">Drug Reference & Medical Coding</p>
                 <p className="text-xs mt-0.5 sm:mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
