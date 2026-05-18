@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE drug_entries ADD FULLTEXT INDEX ft_drug_search (scientific_name, trade_name, indication, icd_codes_raw);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Lfvuvpa4KoYTbU.root --database a2JMvfTkjxD7rpSD5GgnMY --execute ALTER TABLE drug_entries ADD FULLTEXT INDEX ft_drug_search (scientific_name, trade_name, indication, icd_codes_raw);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8200 (HY000) at line 1: Unsupported FULLTEXT index"
+  ]
+}
