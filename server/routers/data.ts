@@ -16,6 +16,7 @@ import {
   browseConditionsCount,
   searchGroupedByScientificName,
   searchGroupedComprehensive,
+  type SearchGroupedResponse,
 } from "../db";
 import { searchCache, analyticsCache } from "../cache";
 import { drugEntries } from "../../drizzle/schema";
@@ -139,7 +140,7 @@ export const dataRouter = router({
       const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
       
       // Check cache first
-      const cached = searchCache.get(cacheKey) as any;
+      const cached = searchCache.get(cacheKey) as SearchGroupedResponse | null;
       if (cached && typeof cached === 'object' && 'medications' in cached) {
         // Log even cache hits
         const responseTimeMs = Date.now() - startTime;

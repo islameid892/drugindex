@@ -831,17 +831,29 @@ export async function searchGroupedComprehensive(
     );
   });
   
-  // Combine all conditions with AND (all words must match)
-  const combinedCondition = searchConditions.length > 0 
+  // Try AND first (all words must match), fallback to OR if zero results
+  let allMatches: any[];
+  
+  const andCondition = searchConditions.length > 0 
     ? and(...searchConditions) 
     : undefined;
-
-  // Step 1: Find all matching entries
-  const allMatches = await db
+  
+  allMatches = await db
     .select()
     .from(drugEntries)
-    .where(combinedCondition)
-    .limit(limit * 5); // Get more to have enough for all tabs
+    .where(andCondition)
+    .limit(limit * 5);
+  
+  if (allMatches.length === 0 && searchConditions.length > 1) {
+    const orCondition = searchConditions.length > 0 
+      ? or(...searchConditions) 
+      : undefined;
+    allMatches = await db
+      .select()
+      .from(drugEntries)
+      .where(orCondition)
+      .limit(limit * 5);
+  }
 
   if (allMatches.length === 0) return { medications: [], conditions: [], codes: [] };
 
@@ -996,19 +1008,32 @@ export async function searchGroupedByScientificName(
     );
   });
   
-  // Combine all conditions with AND (all words must match)
-  const combinedCondition = searchConditions.length > 0 
+  // Try AND first (all words must match), fallback to OR if zero results
+  const andCondition = searchConditions.length > 0 
     ? and(...searchConditions) 
     : undefined;
 
   // Step 1: Find distinct scientific names matching the query
-  const sciNames = await db
+  let sciNames = await db
     .select({ scientificName: drugEntries.scientificName })
     .from(drugEntries)
-    .where(combinedCondition)
+    .where(andCondition)
     .groupBy(drugEntries.scientificName)
     .orderBy(drugEntries.scientificName)
     .limit(limit);
+
+  if (sciNames.length === 0 && searchConditions.length > 1) {
+    const orCondition = searchConditions.length > 0 
+      ? or(...searchConditions) 
+      : undefined;
+    sciNames = await db
+      .select({ scientificName: drugEntries.scientificName })
+      .from(drugEntries)
+      .where(orCondition)
+      .groupBy(drugEntries.scientificName)
+      .orderBy(drugEntries.scientificName)
+      .limit(limit);
+  }
 
   if (sciNames.length === 0) return [];
 

@@ -1,8 +1,18 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+
+// Rate limiter for OAuth callback (prevents brute force / DoX attacks)
+const oauthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // max 20 attempts per window
+  message: { error: "Too many OAuth attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -10,7 +20,7 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+  app.get("/api/oauth/callback", oauthLimiter, async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
