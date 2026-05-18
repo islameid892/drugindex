@@ -140,7 +140,7 @@ export const dataRouter = router({
       const cacheKey = `search:${input.query}:${input.limit ?? 30}`;
       
       // Check cache first
-      const cached = await searchCache.get<SearchGroupedResponse>(cacheKey);
+      const cached = searchCache.get(cacheKey) as SearchGroupedResponse | null;
       if (cached && typeof cached === 'object' && 'medications' in cached) {
         // Log even cache hits
         const responseTimeMs = Date.now() - startTime;
@@ -161,7 +161,7 @@ export const dataRouter = router({
       const responseTimeMs = Date.now() - startTime;
       
       // Store in cache for future requests
-      await searchCache.set(cacheKey, results);
+      searchCache.set(cacheKey, results);
       
       // Track search in analytics
       const { trackSearch } = await import("../db");
@@ -183,7 +183,7 @@ export const dataRouter = router({
     const cacheKey = 'stats:all';
     
     // Check cache first
-    const cached = await analyticsCache.get<any>(cacheKey);
+    const cached = analyticsCache.get(cacheKey);
     if (cached) {
       return cached;
     }
@@ -192,7 +192,7 @@ export const dataRouter = router({
     const stats = await getStats();
     
     // Store in cache
-    await analyticsCache.set(cacheKey, stats);
+    analyticsCache.set(cacheKey, stats);
     
     return stats;
   }),
@@ -203,7 +203,7 @@ export const dataRouter = router({
     const cacheKey = 'stats:dashboard';
     
     // Check cache first
-    const cached = await analyticsCache.get<any>(cacheKey);
+    const cached = analyticsCache.get(cacheKey);
     if (cached) {
       return cached;
     }
@@ -212,7 +212,7 @@ export const dataRouter = router({
     const stats = await getDashboardStats();
     
     // Store in cache
-    await analyticsCache.set(cacheKey, stats);
+    analyticsCache.set(cacheKey, stats);
     
     return stats;
   }),

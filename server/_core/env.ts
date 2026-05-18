@@ -54,8 +54,6 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: validateEnv('BUILT_IN_FORGE_API_URL', process.env.BUILT_IN_FORGE_API_URL, true),
   forgeApiKey: validateEnv('BUILT_IN_FORGE_API_KEY', process.env.BUILT_IN_FORGE_API_KEY, true),
-  redisUrl: validateEnv('REDIS_URL', process.env.REDIS_URL, false),
-  dbConnectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
 };
 
 // Prevent accidental exposure of sensitive data
