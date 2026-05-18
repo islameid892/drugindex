@@ -25,9 +25,10 @@ export async function createContext(
     const { updateUserSession } = await import("../db");
     let sessionId = opts.req.cookies?.session_id;
     
-    // If no session cookie exists, create a new one and set it
+    // If no session cookie exists, create a secure random one
     if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const { randomBytes } = await import('crypto');
+      sessionId = `session_${randomBytes(24).toString('hex')}`;
       opts.res.cookie('session_id', sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

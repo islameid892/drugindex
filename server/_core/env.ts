@@ -23,7 +23,8 @@ function validateEnvironment() {
   const missingEnvs = requiredEnvs.filter(env => !process.env[env]);
   
   if (missingEnvs.length > 0) {
-    console.warn(`Warning: Missing environment variables: ${missingEnvs.join(', ')}`);
+    const count = missingEnvs.length;
+    console.warn(`Warning: ${count} required environment variable(s) are not set. Check server configuration.`);
   }
 
   // Validate JWT_SECRET strength

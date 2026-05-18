@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import type { RateLimitRequestHandler } from "express-rate-limit";
 import { createServer } from "http";
+import path from "path";
 import net from "net";
 import compression from "compression";
 import cookieParser from "cookie-parser";
@@ -9,7 +10,6 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
-import xss from "xss-clean";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -22,6 +22,7 @@ import { honeypotMiddleware, originValidationMiddleware, customHeaderMiddleware,
 import { exportProtectionMiddleware, getExportStats, getUserExportQuota, getExportLog, detectSuspiciousExports } from "../middleware/exportProtection";
 import { sessionSecurityMiddleware, createSession, validateSession, invalidateSession, getSessionStats, cleanupExpiredSessions } from "../middleware/sessionSecurity";
 import { httpsEnforcementMiddleware, cspMiddleware, preventSSLDowngrade, getCertificatePinningInfo } from "../middleware/httpsEnforcement";
+import crypto from "crypto";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -31,6 +32,15 @@ function isPortAvailable(port: number): Promise<boolean> {
     });
     server.on("error", () => resolve(false));
   });
+}
+
+// Timing-safe comparison to prevent timing attacks
+function timingSafeEqual(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 async function findAvailablePort(startPort: number = 3000): Promise<number> {
@@ -203,35 +213,9 @@ async function startServer() {
       action: 'deny',
     },
     noSniff: true,
-    xssFilter: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hidePoweredBy: true,
   }));
-
-  // CORS configuration
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    const allowedOrigins = [
-      'https://www.drugindex.click',
-      'https://drugindex.click',
-      'https://icd10.manus.space',
-      'https://icd10search-a2jmvftk.manus.space',
-      process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null,
-    ].filter(Boolean) as string[];
-
-    const origin = req.headers.origin as string;
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    }
-
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '3600');
-
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
 
   // Compression middleware - gzip compression for responses
   app.use(compression({
@@ -246,16 +230,10 @@ async function startServer() {
   }));
 
   // ====================================================
-  // SECURITY HEADERS (ALWAYS - dev & prod) - MUST BE FIRST
+  // EXTRA SECURITY HEADERS (Helmet doesn't cover these)
   // ====================================================
   app.use((req: Request, res: Response, next: NextFunction) => {
-    res.header('X-Frame-Options', 'DENY');
-    res.header('X-Content-Type-Options', 'nosniff');
-    res.header('X-XSS-Protection', '1; mode=block');
-    res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
-    res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    res.removeHeader('X-Powered-By');
     res.removeHeader('Server');
     next();
   });
@@ -280,16 +258,8 @@ async function startServer() {
   // BLOCK SENSITIVE ENDPOINTS (ALWAYS - dev & prod)
   // ====================================================
   
-  // Block /metrics endpoint completely
-  app.get('/metrics', (req: Request, res: Response) => {
-    return res.status(403).json({
-      error: 'Access Denied',
-      message: 'This endpoint is not publicly accessible.',
-    });
-  });
-  
-  // Block /metrics with any trailing path
-  app.use('/metrics', (req: Request, res: Response) => {
+  // Block /metrics and sub-paths completely (all HTTP methods)
+  app.all('/metrics*', (req: Request, res: Response) => {
     return res.status(403).json({
       error: 'Access Denied',
       message: 'This endpoint is not publicly accessible.',
@@ -331,8 +301,25 @@ async function startServer() {
   // Data sanitization against NoSQL injection
   app.use(mongoSanitize());
 
-  // Data sanitization against XSS
-  app.use(xss());
+  // Data sanitization against XSS (replaces deprecated xss-clean)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.body && typeof req.body === 'object') {
+      const sanitize = (val: any): any => {
+        if (typeof val === 'string') return val.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                                                .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+                                                .replace(/javascript\s*:/gi, '');
+        if (Array.isArray(val)) return val.map(sanitize);
+        if (val && typeof val === 'object') {
+          const sanitized: Record<string, any> = {};
+          for (const [k, v] of Object.entries(val)) sanitized[k] = sanitize(v);
+          return sanitized;
+        }
+        return val;
+      };
+      req.body = sanitize(req.body);
+    }
+    next();
+  });
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
@@ -401,8 +388,8 @@ async function startServer() {
   app.get('/api/security/stats', (req: Request, res: Response) => {
     // Only allow from localhost or with special header in production
     if (process.env.NODE_ENV === 'production') {
-      const adminToken = req.headers['x-admin-token'];
-      if (!adminToken || adminToken !== process.env.ADMIN_SECURITY_TOKEN) {
+      const adminToken = req.headers['x-admin-token'] as string | undefined;
+      if (typeof adminToken !== 'string' || !timingSafeEqual(adminToken, process.env.ADMIN_SECURITY_TOKEN)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
     }
@@ -420,8 +407,8 @@ async function startServer() {
   // Get security log
   app.get('/api/security/log', (req: Request, res: Response) => {
     if (process.env.NODE_ENV === 'production') {
-      const adminToken = req.headers['x-admin-token'];
-      if (!adminToken || adminToken !== process.env.ADMIN_SECURITY_TOKEN) {
+      const adminToken = req.headers['x-admin-token'] as string | undefined;
+      if (typeof adminToken !== 'string' || !timingSafeEqual(adminToken, process.env.ADMIN_SECURITY_TOKEN)) {
         return res.status(403).json({ error: 'Unauthorized' });
       }
     }
@@ -514,8 +501,8 @@ async function startServer() {
 
   // Final 404 handler for unmatched routes (after static files)
   app.use((req: Request, res: Response) => {
-    // Return 404 status with JSON response for API requests
-    if (req.accepts('json')) {
+    // API routes always get JSON response
+    if (req.path.startsWith('/api/') || req.accepts('json')) {
       return res.status(404).json({
         error: 'Not Found',
         message: 'The requested resource was not found',
@@ -524,7 +511,7 @@ async function startServer() {
       });
     }
     // For HTML requests, serve index.html (SPA routing)
-    res.status(404).sendFile(require('path').join(__dirname, '../../dist/public/index.html'));
+    res.status(404).sendFile(path.join(__dirname, '../../dist/public/index.html'));
   });
 
   // Error handler middleware (must be last)

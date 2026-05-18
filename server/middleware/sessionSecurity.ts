@@ -36,8 +36,8 @@ const CONFIG = {
   // Bind session to IP (disabled to avoid issues with mobile users switching networks)
   BIND_TO_IP: false,
   
-  // Bind session to User-Agent
-  BIND_TO_USER_AGENT: true,
+  // Bind session to User-Agent (disabled to avoid issues with browser updates)
+  BIND_TO_USER_AGENT: false,
   
   // Secure cookie options
   COOKIE_OPTIONS: {
