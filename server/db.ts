@@ -242,7 +242,11 @@ export async function searchMedications(
 
   let entries;
   if (ftCondition) {
-    entries = await db.select().from(drugEntries).where(ftCondition).limit(limit).offset(offset);
+    try {
+      entries = await db.select().from(drugEntries).where(ftCondition).limit(limit).offset(offset);
+    } catch {
+      entries = [];
+    }
     if (entries.length === 0) {
       entries = await db.select().from(drugEntries).where(buildLikeSearch(likeColumns, query)).limit(limit).offset(offset);
     }
@@ -382,15 +386,21 @@ export async function searchCodes(query: string, limit = 50): Promise<CodeResult
 
   const queryMain = ftMain
     ? async () => {
-        const r = await db.select().from(icdCodes).where(ftMain).limit(limit);
-        return r.length > 0 ? r : await db.select().from(icdCodes).where(mainLike).limit(limit);
+        try {
+          const r = await db.select().from(icdCodes).where(ftMain).limit(limit);
+          if (r.length > 0) return r;
+        } catch { /* FULLTEXT index missing, fall back to LIKE */ }
+        return await db.select().from(icdCodes).where(mainLike).limit(limit);
       }
     : () => db.select().from(icdCodes).where(mainLike).limit(limit);
 
   const queryBranch = ftBranch
     ? async () => {
-        const r = await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(ftBranch).limit(limit);
-        return r.length > 0 ? r : await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(branchLike).limit(limit);
+        try {
+          const r = await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(ftBranch).limit(limit);
+          if (r.length > 0) return r;
+        } catch { /* FULLTEXT index missing, fall back to LIKE */ }
+        return await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(branchLike).limit(limit);
       }
     : () => db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(branchLike).limit(limit);
 
@@ -706,23 +716,30 @@ export async function browseDrugsByTradeName(query: string, limit = 20, offset =
   const likeCondition = buildLikeSearch([drugEntries.tradeName], query);
 
   // Try FULLTEXT first, fallback to LIKE
-  let tradeNames = ftCondition
-    ? await db
+  let tradeNames: Array<{ tradeName: string; scientificName: string }>;
+  if (ftCondition) {
+    try {
+      tradeNames = await db
         .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
         .from(drugEntries)
         .where(ftCondition)
         .groupBy(drugEntries.tradeName, drugEntries.scientificName)
         .orderBy(drugEntries.tradeName)
         .limit(limit)
-        .offset(offset)
-    : await db
-        .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
-        .from(drugEntries)
-        .where(likeCondition)
-        .groupBy(drugEntries.tradeName, drugEntries.scientificName)
-        .orderBy(drugEntries.tradeName)
-        .limit(limit)
         .offset(offset);
+    } catch {
+      tradeNames = [];
+    }
+  } else {
+    tradeNames = await db
+      .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
+      .from(drugEntries)
+      .where(likeCondition)
+      .groupBy(drugEntries.tradeName, drugEntries.scientificName)
+      .orderBy(drugEntries.tradeName)
+      .limit(limit)
+      .offset(offset);
+  }
 
   if (tradeNames.length === 0 && ftCondition) {
     tradeNames = await db
@@ -789,15 +806,20 @@ export async function browseDrugsByTradeName(query: string, limit = 20, offset =
 
 export async function browseDrugsByTradeNameCount(query: string): Promise<number> {
   const db = await getDb();
-  const ftCondition = fulltextMatch(['trade_name'], query);
   const likeCondition = buildLikeSearch([drugEntries.tradeName], query);
-  const whereClause = ftCondition || likeCondition;
 
-  let result = ftCondition
-    ? await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(ftCondition)
-    : await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(likeCondition);
-
-  if (result[0]?.count === 0n || result[0]?.count === 0) {
+  let result: Array<{ count: number | bigint }>;
+  const ftCondition = fulltextMatch(['trade_name'], query);
+  if (ftCondition) {
+    try {
+      result = await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(ftCondition);
+    } catch {
+      result = [];
+    }
+    if (!result[0]?.count) {
+      result = await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(likeCondition);
+    }
+  } else {
     result = await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(likeCondition);
   }
 
@@ -818,11 +840,17 @@ export async function browseConditions(query: string, limit = 20, offset = 0): P
   const likeCondition = buildLikeSearch([drugEntries.indication], query);
 
   // Find distinct indications matching the query
-  let conditions = ftCondition
-    ? await db.select({ indication: drugEntries.indication }).from(drugEntries).where(ftCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset)
-    : await db.select({ indication: drugEntries.indication }).from(drugEntries).where(likeCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
-
-  if (conditions.length === 0 && ftCondition) {
+  let conditions: Array<{ indication: string }>;
+  if (ftCondition) {
+    try {
+      conditions = await db.select({ indication: drugEntries.indication }).from(drugEntries).where(ftCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
+    } catch {
+      conditions = [];
+    }
+    if (conditions.length === 0) {
+      conditions = await db.select({ indication: drugEntries.indication }).from(drugEntries).where(likeCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
+    }
+  } else {
     conditions = await db.select({ indication: drugEntries.indication }).from(drugEntries).where(likeCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
   }
 
@@ -876,14 +904,20 @@ export async function browseConditions(query: string, limit = 20, offset = 0): P
 
 export async function browseConditionsCount(query: string): Promise<number> {
   const db = await getDb();
-  const ftCondition = fulltextMatch(['indication'], query);
   const likeCondition = buildLikeSearch([drugEntries.indication], query);
 
-  let result = ftCondition
-    ? await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(ftCondition)
-    : await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(likeCondition);
-
-  if ((result[0]?.count === 0n || result[0]?.count === 0) && ftCondition) {
+  let result: Array<{ count: number | bigint }>;
+  const ftCondition = fulltextMatch(['indication'], query);
+  if (ftCondition) {
+    try {
+      result = await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(ftCondition);
+    } catch {
+      result = [];
+    }
+    if (!result[0]?.count) {
+      result = await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(likeCondition);
+    }
+  } else {
     result = await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(likeCondition);
   }
 
@@ -947,7 +981,11 @@ export async function searchGroupedComprehensive(
   const ftCondition = fulltextMatch(ftColumns, query);
 
   if (ftCondition) {
+    try {
       allMatches = await db.select().from(drugEntries).where(ftCondition).limit(limit * 2);
+    } catch {
+      allMatches = [];
+    }
     if (allMatches.length === 0) {
       allMatches = await db.select().from(drugEntries).where(andLike!).limit(limit * 2);
       if (allMatches.length === 0 && orLike !== andLike) {
@@ -1117,12 +1155,16 @@ export async function searchGroupedByScientificName(
 
   let sciNames: Array<{ scientificName: string }>;
   if (ftCondition) {
-    sciNames = await db
-      .select({ scientificName: drugEntries.scientificName })
-      .from(drugEntries).where(ftCondition)
-      .groupBy(drugEntries.scientificName)
-      .orderBy(drugEntries.scientificName)
-      .limit(limit) as any;
+    try {
+      sciNames = await db
+        .select({ scientificName: drugEntries.scientificName })
+        .from(drugEntries).where(ftCondition)
+        .groupBy(drugEntries.scientificName)
+        .orderBy(drugEntries.scientificName)
+        .limit(limit) as any;
+    } catch {
+      sciNames = [];
+    }
 
     if (sciNames.length === 0) {
       sciNames = await db
