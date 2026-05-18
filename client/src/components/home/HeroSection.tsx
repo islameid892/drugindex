@@ -82,7 +82,7 @@ export function HeroSection({
         </div>
 
         {/* Main Title */}
-        <h2 className="font-hero-title text-[2.6rem] sm:text-5xl md:text-[3.5rem] text-slate-900 dark:text-white mb-4">
+        <h2 className="font-hero-title text-[3rem] sm:text-5xl md:text-[4rem] text-slate-900 dark:text-white mb-4">
           Find{" "}
           <span
             className="relative inline-block"
@@ -110,7 +110,7 @@ export function HeroSection({
         </h2>
 
         {/* Subtitle */}
-        <p className="font-hero-body text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto mb-8">
+        <p className="font-hero-body text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-xl mx-auto mb-8">
           Search by scientific name, trade name, indication, or ICD-10 code.
           Get instant access to comprehensive medical coding information.
         </p>
