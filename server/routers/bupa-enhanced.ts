@@ -139,41 +139,60 @@ async function enrichBupaWithCodes(db: any, bupa: any) {
     .map((c: string) => c.trim())
     .filter((c: string) => c.length > 0);
 
-  // Look up each code in the icd_codes table
+  // Look up each code in both icd_codes and icd_branches tables
   const enrichedCodes = await Promise.all(
     codeStrings.map(async (codeStr: string) => {
+      // First, try to find in icd_codes table (main codes)
       const [icdCode] = await db
         .select()
         .from(icdCodes)
         .where(eq(icdCodes.code, codeStr));
 
-      if (!icdCode) {
+      if (icdCode) {
+        // Get branches for this code
+        const branches = await db
+          .select()
+          .from(icdBranches)
+          .where(eq(icdBranches.parentCodeId, icdCode.id));
+
         return {
           code: codeStr,
-          name: null,
-          description: null,
-          branches: [],
-          found: false,
+          id: icdCode.id,
+          name: icdCode.name,
+          description: icdCode.description,
+          branches: branches.map((b: any) => ({
+            id: b.id,
+            code: b.branchCode,
+            description: b.branchDescription,
+          })),
+          found: true,
         };
       }
 
-      // Get branches for this code
-      const branches = await db
+      // If not found in icd_codes, try to find in icd_branches (subcodes like I61.9)
+      const [branchCode] = await db
         .select()
         .from(icdBranches)
-        .where(eq(icdBranches.parentCodeId, icdCode.id));
+        .where(eq(icdBranches.branchCode, codeStr));
 
+      if (branchCode) {
+        return {
+          code: codeStr,
+          id: branchCode.id,
+          name: branchCode.branchDescription,
+          description: branchCode.branchDescription,
+          branches: [], // Subcodes don't have further branches
+          found: true,
+        };
+      }
+
+      // Code not found in either table
       return {
         code: codeStr,
-        id: icdCode.id,
-        name: icdCode.name,
-        description: icdCode.description,
-        branches: branches.map((b: any) => ({
-          id: b.id,
-          code: b.branchCode,
-          description: b.branchDescription,
-        })),
-        found: true,
+        name: null,
+        description: null,
+        branches: [],
+        found: false,
       };
     })
   );

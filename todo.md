@@ -606,3 +606,11 @@
 - [ ] Fix files router to accept base64 encoded file data
 - [ ] Test file upload with various file types
 - [ ] Test file download and delete functionality
+
+## Phase XX: Bupa Prerequisites Page Improvements
+- [ ] Fix subcodes display - join branch names for codes with dots (e.g., I61.9)
+- [ ] Reorganize services by category (Medical Equipment, Lab Tests, etc.)
+- [ ] Add collapsible sections for each category
+- [ ] Improve UX with better grouping and expandable/collapsible UI
+- [ ] Test all categories display correctly with branch names
+- [ ] Verify search functionality works with reorganized layout
