@@ -23,6 +23,7 @@ import {
   gte,
   desc,
   max,
+  type SQL,
 } from "drizzle-orm";
 import {
   drugEntries,
@@ -36,6 +37,7 @@ import {
   type InsertSearchAnalytic,
 } from "../drizzle/schema";
 import { checkCoverageMultiple } from "./coverage";
+import { ENV } from "./_core/env";
 
 // ─── Database Connection ────────────────────────────────────────────────────────
 
@@ -46,7 +48,7 @@ export async function getDb() {
   if (_db !== null) return _db;
   const pool = mysql.createPool({
     uri: process.env.DATABASE_URL!,
-    connectionLimit: 10,
+    connectionLimit: ENV.dbConnectionLimit,
     waitForConnections: true,
     queueLimit: 0,
   });
@@ -57,6 +59,22 @@ export async function getDb() {
 // Case-insensitive LIKE using LOWER()
 function ciLike(col: any, pattern: string) {
   return sql`LOWER(${col}) LIKE LOWER(${pattern})`;
+}
+
+function fulltextMatch(columnNames: string[], query: string): SQL | null {
+  if (query.length < 4) return null;
+  const sanitized = query.replace(/[+\-*()~><"\]\[@]/g, ' ').trim();
+  if (!sanitized) return null;
+  const words = sanitized.split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 0) return null;
+  const booleanQuery = words.map(w => `+${w}*`).join(' ');
+  const columnList = columnNames.join(', ');
+  return sql`MATCH(${sql.raw(columnList)}) AGAINST(${booleanQuery} IN BOOLEAN MODE)`;
+}
+
+function buildLikeSearch(columns: SQL[], query: string): SQL {
+  const q = `%${query}%`;
+  return or(...columns.map(col => ciLike(col, q)));
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -105,49 +123,72 @@ async function enrichDrugEntriesWithCodes(
 
   const entryIds = entries.map((e) => e.id);
 
-  // Load all code links for these entries
-  const links = await db
+  // Combined query: drug_entry_codes + icd_codes + icd_branches in a single LEFT JOIN
+  // Prevents N+1: was 2 separate queries, now 1
+  const rows = await db
     .select({
       drugEntryId: drugEntryCodes.drugEntryId,
       codeId: icdCodes.id,
       code: icdCodes.code,
       description: icdCodes.description,
       branchCount: icdCodes.branchCount,
+      parentCodeId: icdBranches.parentCodeId,
+      branchCode: icdBranches.branchCode,
+      branchDescription: icdBranches.branchDescription,
     })
     .from(drugEntryCodes)
     .innerJoin(icdCodes, eq(drugEntryCodes.codeId, icdCodes.id))
+    .leftJoin(icdBranches, eq(icdCodes.id, icdBranches.parentCodeId))
     .where(inArray(drugEntryCodes.drugEntryId, entryIds));
 
-  // Load branches for all linked codes
-  const linkedCodeIds = [...new Set((links as Array<{ drugEntryId: number; codeId: number; code: string; description: string; branchCount: number }>).map((l) => l.codeId))];
-  const linkedCodeStrings = [...new Set((links as Array<{ drugEntryId: number; codeId: number; code: string; description: string; branchCount: number }>).map((l) => l.code))];
+  // Reconstruct unique links and branches from the joined result
+  const seenLinkKeys = new Set<string>();
+  const links: Array<{ drugEntryId: number; codeId: number; code: string; description: string; branchCount: number }> = [];
+  const branchMap = new Map<number, BranchInfo[]>();
+  const linkedCodeStrings: string[] = [];
+  const seenCodeStrings = new Set<string>();
 
-  let branches: Array<{ parentCodeId: number; branchCode: string; branchDescription: string }> = [];
-  if (linkedCodeIds.length > 0) {
-    branches = await db
-      .select({
-        parentCodeId: icdBranches.parentCodeId,
-        branchCode: icdBranches.branchCode,
-        branchDescription: icdBranches.branchDescription,
-      })
-      .from(icdBranches)
-      .where(inArray(icdBranches.parentCodeId, linkedCodeIds));
+  for (const row of rows as Array<{ drugEntryId: number; codeId: number; code: string; description: string; branchCount: number; parentCodeId: number | null; branchCode: string | null; branchDescription: string | null }>) {
+    const linkKey = `${row.drugEntryId}:${row.codeId}`;
+    if (!seenLinkKeys.has(linkKey)) {
+      seenLinkKeys.add(linkKey);
+      links.push({ drugEntryId: row.drugEntryId, codeId: row.codeId, code: row.code, description: row.description, branchCount: row.branchCount });
+    }
+    if (!seenCodeStrings.has(row.code)) {
+      seenCodeStrings.add(row.code);
+      linkedCodeStrings.push(row.code);
+    }
+
+    if (row.parentCodeId !== null && row.branchCode !== null) {
+      if (!branchMap.has(row.codeId)) branchMap.set(row.codeId, []);
+      const existing = branchMap.get(row.codeId)!;
+      if (!existing.find(b => b.branchCode === row.branchCode)) {
+        existing.push({
+          branchCode: row.branchCode,
+          branchDescription: row.branchDescription,
+          isNonCovered: false, // temporary, updated after coverage check
+        });
+      }
+      if (!seenCodeStrings.has(row.branchCode)) {
+        seenCodeStrings.add(row.branchCode);
+        linkedCodeStrings.push(row.branchCode);
+      }
+    }
   }
 
-  // Use hierarchical coverage logic for all codes
-  const allBranchCodes = branches.map((b) => b.branchCode);
+  // Collect all codes needed for coverage check
+  const allBranchCodes: string[] = [];
+  for (const branches of branchMap.values()) {
+    for (const b of branches) allBranchCodes.push(b.branchCode);
+  }
   const allCodesToCheck = [...linkedCodeStrings, ...allBranchCodes];
   const coverageMap = await checkCoverageMultiple(allCodesToCheck);
 
-  // Build maps
-  const branchMap = new Map<number, BranchInfo[]>();
-  for (const b of branches) {
-    if (!branchMap.has(b.parentCodeId)) branchMap.set(b.parentCodeId, []);
-    branchMap.get(b.parentCodeId)!.push({
-      branchCode: b.branchCode,
-      branchDescription: b.branchDescription,
-      isNonCovered: !coverageMap.get(b.branchCode)!,
-    });
+  // Update branch coverage status
+  for (const branches of branchMap.values()) {
+    for (const b of branches) {
+      b.isNonCovered = !coverageMap.get(b.branchCode)!;
+    }
   }
 
   const codesByEntry = new Map<number, CodeInfo[]>();
@@ -195,21 +236,19 @@ export async function searchMedications(
   offset = 0
 ): Promise<DrugResult[]> {
   const db = await getDb();
-  const q = `%${query}%`;
+  const ftColumns = ['scientific_name', 'trade_name', 'indication', 'icd_codes_raw'];
+  const likeColumns = [drugEntries.scientificName, drugEntries.tradeName, drugEntries.indication, drugEntries.icdCodesRaw];
+  const ftCondition = fulltextMatch(ftColumns, query);
 
-  const entries = await db
-    .select()
-    .from(drugEntries)
-    .where(
-      or(
-        ciLike(drugEntries.scientificName, q),
-        ciLike(drugEntries.tradeName, q),
-        ciLike(drugEntries.indication, q),
-        ciLike(drugEntries.icdCodesRaw, q)
-      )
-    )
-    .limit(limit)
-    .offset(offset);
+  let entries;
+  if (ftCondition) {
+    entries = await db.select().from(drugEntries).where(ftCondition).limit(limit).offset(offset);
+    if (entries.length === 0) {
+      entries = await db.select().from(drugEntries).where(buildLikeSearch(likeColumns, query)).limit(limit).offset(offset);
+    }
+  } else {
+    entries = await db.select().from(drugEntries).where(buildLikeSearch(likeColumns, query)).limit(limit).offset(offset);
+  }
 
   return enrichDrugEntriesWithCodes(entries);
 }
@@ -334,17 +373,28 @@ export async function getIndicationSuggestions(
 
 export async function searchCodes(query: string, limit = 50): Promise<CodeResult[]> {
   const db = await getDb();
-  const q = `%${query}%`;
+  const likeQ = `%${query}%`;
+  const mainLike = or(ciLike(icdCodes.code, likeQ), ciLike(icdCodes.description, likeQ));
+  const branchLike = or(ciLike(icdBranches.branchCode, likeQ), ciLike(icdBranches.branchDescription, likeQ));
 
-  const [mainMatches, branchMatches] = await Promise.all([
-    db.select().from(icdCodes)
-      .where(or(ciLike(icdCodes.code, q), ciLike(icdCodes.description, q)))
-      .limit(limit),
-    db.select({ parentCodeId: icdBranches.parentCodeId })
-      .from(icdBranches)
-      .where(or(ciLike(icdBranches.branchCode, q), ciLike(icdBranches.branchDescription, q)))
-      .limit(limit),
-  ]);
+  const ftMain = fulltextMatch(['code', 'description'], query);
+  const ftBranch = fulltextMatch(['branch_code', 'branch_description'], query);
+
+  const queryMain = ftMain
+    ? async () => {
+        const r = await db.select().from(icdCodes).where(ftMain).limit(limit);
+        return r.length > 0 ? r : await db.select().from(icdCodes).where(mainLike).limit(limit);
+      }
+    : () => db.select().from(icdCodes).where(mainLike).limit(limit);
+
+  const queryBranch = ftBranch
+    ? async () => {
+        const r = await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(ftBranch).limit(limit);
+        return r.length > 0 ? r : await db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(branchLike).limit(limit);
+      }
+    : () => db.select({ parentCodeId: icdBranches.parentCodeId }).from(icdBranches).where(branchLike).limit(limit);
+
+  const [mainMatches, branchMatches] = await Promise.all([queryMain(), queryBranch()]);
 
   const branchParentIds = [...new Set((branchMatches as Array<{ parentCodeId: number }>).map((b) => b.parentCodeId))];
   let parentCodes: typeof mainMatches = [];
@@ -652,62 +702,105 @@ export async function browseDrugsByTradeName(query: string, limit = 20, offset =
   }>;
 }[]> {
   const db = await getDb();
-  const q = `%${query}%`;
+  const ftCondition = fulltextMatch(['trade_name'], query);
+  const likeCondition = buildLikeSearch([drugEntries.tradeName], query);
 
-  // Find distinct trade names matching the query
-  const tradeNames = await db
-    .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
-    .from(drugEntries)
-    .where(ciLike(drugEntries.tradeName, q))
-    .groupBy(drugEntries.tradeName, drugEntries.scientificName)
-    .orderBy(drugEntries.tradeName)
-    .limit(limit)
-    .offset(offset);
+  // Try FULLTEXT first, fallback to LIKE
+  let tradeNames = ftCondition
+    ? await db
+        .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
+        .from(drugEntries)
+        .where(ftCondition)
+        .groupBy(drugEntries.tradeName, drugEntries.scientificName)
+        .orderBy(drugEntries.tradeName)
+        .limit(limit)
+        .offset(offset)
+    : await db
+        .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
+        .from(drugEntries)
+        .where(likeCondition)
+        .groupBy(drugEntries.tradeName, drugEntries.scientificName)
+        .orderBy(drugEntries.tradeName)
+        .limit(limit)
+        .offset(offset);
+
+  if (tradeNames.length === 0 && ftCondition) {
+    tradeNames = await db
+      .select({ tradeName: drugEntries.tradeName, scientificName: drugEntries.scientificName })
+      .from(drugEntries)
+      .where(likeCondition)
+      .groupBy(drugEntries.tradeName, drugEntries.scientificName)
+      .orderBy(drugEntries.tradeName)
+      .limit(limit)
+      .offset(offset);
+  }
 
   if (tradeNames.length === 0) return [];
 
-  // For each trade name, get all indications + codes
-  const results = [];
-  for (const tn of tradeNames as Array<{ tradeName: string; scientificName: string }>) {
-    const entries = await db
-      .select()
-      .from(drugEntries)
-      .where(and(
-        ciLike(drugEntries.tradeName, tn.tradeName),
-        eq(drugEntries.scientificName, tn.scientificName)
-      ))
-      .limit(100);
+  const tnList = tradeNames as Array<{ tradeName: string; scientificName: string }>;
 
-    const enriched = await enrichDrugEntriesWithCodes(entries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>);
+  // Batch: fetch all entries for ALL matched trade names in a single query
+  // Prevents N+1: was 1 query per trade name (20 queries), now 1 query total
+  const pairConditions = tnList.map(tn =>
+    and(eq(drugEntries.tradeName, tn.tradeName), eq(drugEntries.scientificName, tn.scientificName))
+  );
+  const allEntries = await db
+    .select()
+    .from(drugEntries)
+    .where(or(...pairConditions))
+    .limit(tnList.length * 100);
 
-    const indicationMap = new Map<string, CodeInfo[]>();
-    for (const e of enriched) {
-      if (!indicationMap.has(e.indication)) indicationMap.set(e.indication, []);
-      for (const code of e.icdCodes) {
-        const existing = indicationMap.get(e.indication)!;
-        if (!existing.find(c => c.code === code.code)) {
-          existing.push(code);
-        }
-      }
+  // Single enrichment for all entries
+  const allEnriched = await enrichDrugEntriesWithCodes(
+    allEntries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>
+  );
+
+  // Group by (tradeName, scientificName) in JS
+  const grouped = new Map<string, {
+    tradeName: string;
+    scientificName: string;
+    indicationMap: Map<string, CodeInfo[]>;
+  }>();
+
+  for (const e of allEnriched) {
+    const key = `${e.tradeName}|${e.scientificName}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, { tradeName: e.tradeName, scientificName: e.scientificName, indicationMap: new Map() });
     }
-
-    results.push({
-      tradeName: tn.tradeName,
-      scientificName: tn.scientificName,
-      indications: Array.from(indicationMap.entries()).map(([indication, codes]) => ({ indication, codes })),
-    });
+    const g = grouped.get(key)!;
+    if (!g.indicationMap.has(e.indication)) g.indicationMap.set(e.indication, []);
+    for (const code of e.icdCodes) {
+      const existing = g.indicationMap.get(e.indication)!;
+      if (!existing.find(c => c.code === code.code)) existing.push(code);
+    }
   }
 
-  return results;
+  return tnList.map(tn => {
+    const key = `${tn.tradeName}|${tn.scientificName}`;
+    const g = grouped.get(key);
+    if (!g) return { tradeName: tn.tradeName, scientificName: tn.scientificName, indications: [] };
+    return {
+      tradeName: g.tradeName,
+      scientificName: g.scientificName,
+      indications: Array.from(g.indicationMap.entries()).map(([indication, codes]) => ({ indication, codes })),
+    };
+  });
 }
 
 export async function browseDrugsByTradeNameCount(query: string): Promise<number> {
   const db = await getDb();
-  const q = `%${query}%`;
-  const result = await db
-    .select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` })
-    .from(drugEntries)
-    .where(ciLike(drugEntries.tradeName, q));
+  const ftCondition = fulltextMatch(['trade_name'], query);
+  const likeCondition = buildLikeSearch([drugEntries.tradeName], query);
+  const whereClause = ftCondition || likeCondition;
+
+  let result = ftCondition
+    ? await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(ftCondition)
+    : await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(likeCondition);
+
+  if (result[0]?.count === 0n || result[0]?.count === 0) {
+    result = await db.select({ count: sql<number>`COUNT(DISTINCT CONCAT(trade_name, '|', scientific_name))` }).from(drugEntries).where(likeCondition);
+  }
+
   return Number((result as Array<{ count: number }>)[0]?.count ?? 0);
 }
 
@@ -721,59 +814,79 @@ export async function browseConditions(query: string, limit = 20, offset = 0): P
   codes: CodeInfo[];
 }[]> {
   const db = await getDb();
-  const q = `%${query}%`;
+  const ftCondition = fulltextMatch(['indication'], query);
+  const likeCondition = buildLikeSearch([drugEntries.indication], query);
 
   // Find distinct indications matching the query
-  const conditions = await db
-    .select({ indication: drugEntries.indication })
-    .from(drugEntries)
-    .where(ciLike(drugEntries.indication, q))
-    .groupBy(drugEntries.indication)
-    .orderBy(drugEntries.indication)
-    .limit(limit)
-    .offset(offset);
+  let conditions = ftCondition
+    ? await db.select({ indication: drugEntries.indication }).from(drugEntries).where(ftCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset)
+    : await db.select({ indication: drugEntries.indication }).from(drugEntries).where(likeCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
+
+  if (conditions.length === 0 && ftCondition) {
+    conditions = await db.select({ indication: drugEntries.indication }).from(drugEntries).where(likeCondition).groupBy(drugEntries.indication).orderBy(drugEntries.indication).limit(limit).offset(offset);
+  }
 
   if (conditions.length === 0) return [];
 
-  const results = [];
-  for (const cond of conditions as Array<{ indication: string }>) {
-    const entries = await db
-      .select()
-      .from(drugEntries)
-      .where(eq(drugEntries.indication, cond.indication))
-      .limit(200);
+  const condList = conditions as Array<{ indication: string }>;
 
-    const enriched = await enrichDrugEntriesWithCodes(entries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>);
+  // Batch: fetch all entries for ALL matched indications in a single query
+  // Prevents N+1: was 1 query per condition (20 queries), now 1 query total
+  const allEntries = await db
+    .select()
+    .from(drugEntries)
+    .where(inArray(drugEntries.indication, condList.map(c => c.indication)))
+    .limit(condList.length * 200);
 
-    const scientificNames = [...new Set(enriched.map(e => e.scientificName))].sort();
-    const tradeNames = [...new Set(enriched.map(e => e.tradeName))].sort();
+  // Single enrichment for all entries
+  const allEnriched = await enrichDrugEntriesWithCodes(
+    allEntries as Array<{ id: number; scientificName: string; tradeName: string; indication: string; icdCodesRaw: string }>
+  );
 
-    // Collect unique codes
-    const codeMap = new Map<string, CodeInfo>();
-    for (const e of enriched) {
-      for (const code of e.icdCodes) {
-        if (!codeMap.has(code.code)) codeMap.set(code.code, code);
-      }
+  // Group by indication in JS
+  const grouped = new Map<string, {
+    scientificNames: Set<string>;
+    tradeNames: Set<string>;
+    codeMap: Map<string, CodeInfo>;
+  }>();
+
+  for (const e of allEnriched) {
+    if (!grouped.has(e.indication)) {
+      grouped.set(e.indication, { scientificNames: new Set(), tradeNames: new Set(), codeMap: new Map() });
     }
-
-    results.push({
-      condition: cond.indication,
-      scientificNames,
-      tradeNames,
-      codes: Array.from(codeMap.values()),
-    });
+    const g = grouped.get(e.indication)!;
+    g.scientificNames.add(e.scientificName);
+    g.tradeNames.add(e.tradeName);
+    for (const code of e.icdCodes) {
+      if (!g.codeMap.has(code.code)) g.codeMap.set(code.code, code);
+    }
   }
 
-  return results;
+  return condList.map(cond => {
+    const g = grouped.get(cond.indication);
+    if (!g) return { condition: cond.indication, scientificNames: [], tradeNames: [], codes: [] };
+    return {
+      condition: cond.indication,
+      scientificNames: Array.from(g.scientificNames).sort(),
+      tradeNames: Array.from(g.tradeNames).sort(),
+      codes: Array.from(g.codeMap.values()),
+    };
+  });
 }
 
 export async function browseConditionsCount(query: string): Promise<number> {
   const db = await getDb();
-  const q = `%${query}%`;
-  const result = await db
-    .select({ count: sql<number>`COUNT(DISTINCT indication)` })
-    .from(drugEntries)
-    .where(ciLike(drugEntries.indication, q));
+  const ftCondition = fulltextMatch(['indication'], query);
+  const likeCondition = buildLikeSearch([drugEntries.indication], query);
+
+  let result = ftCondition
+    ? await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(ftCondition)
+    : await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(likeCondition);
+
+  if ((result[0]?.count === 0n || result[0]?.count === 0) && ftCondition) {
+    result = await db.select({ count: sql<number>`COUNT(DISTINCT indication)` }).from(drugEntries).where(likeCondition);
+  }
+
   return Number((result as Array<{ count: number }>)[0]?.count ?? 0);
 }
 
@@ -817,42 +930,35 @@ export async function searchGroupedComprehensive(
 ): Promise<SearchGroupedResponse> {
   const db = await getDb();
   
-  // Split query by spaces to handle multi-word searches
+  const ftColumns = ['scientific_name', 'trade_name', 'indication', 'icd_codes_raw'];
+  const likeColumns = [drugEntries.scientificName, drugEntries.tradeName, drugEntries.indication, drugEntries.icdCodesRaw];
   const words = query.trim().split(/\s+/).filter(w => w.length > 0);
   
-  // Build search conditions for each word
+  // Build LIKE-based fallback conditions (word-level AND → OR)
   const searchConditions = words.map(word => {
     const q = `%${word}%`;
-    return or(
-      ciLike(drugEntries.scientificName, q),
-      ciLike(drugEntries.tradeName, q),
-      ciLike(drugEntries.indication, q),
-      ciLike(drugEntries.icdCodesRaw, q)
-    );
+    return or(...likeColumns.map(col => ciLike(col, q)));
   });
-  
-  // Try AND first (all words must match), fallback to OR if zero results
+  const andLike = searchConditions.length > 0 ? and(...searchConditions) : undefined;
+  const orLike = searchConditions.length > 1 ? or(...searchConditions) : andLike;
+
+  // Try FULLTEXT first, fallback to LIKE with AND→OR
   let allMatches: any[];
-  
-  const andCondition = searchConditions.length > 0 
-    ? and(...searchConditions) 
-    : undefined;
-  
-  allMatches = await db
-    .select()
-    .from(drugEntries)
-    .where(andCondition)
-    .limit(limit * 5);
-  
-  if (allMatches.length === 0 && searchConditions.length > 1) {
-    const orCondition = searchConditions.length > 0 
-      ? or(...searchConditions) 
-      : undefined;
-    allMatches = await db
-      .select()
-      .from(drugEntries)
-      .where(orCondition)
-      .limit(limit * 5);
+  const ftCondition = fulltextMatch(ftColumns, query);
+
+  if (ftCondition) {
+      allMatches = await db.select().from(drugEntries).where(ftCondition).limit(limit * 2);
+    if (allMatches.length === 0) {
+      allMatches = await db.select().from(drugEntries).where(andLike!).limit(limit * 2);
+      if (allMatches.length === 0 && orLike !== andLike) {
+        allMatches = await db.select().from(drugEntries).where(orLike!).limit(limit * 2);
+      }
+    }
+  } else {
+    allMatches = await db.select().from(drugEntries).where(andLike!).limit(limit * 2);
+    if (allMatches.length === 0 && orLike !== andLike) {
+      allMatches = await db.select().from(drugEntries).where(orLike!).limit(limit * 2);
+    }
   }
 
   if (allMatches.length === 0) return { medications: [], conditions: [], codes: [] };
@@ -994,45 +1100,61 @@ export async function searchGroupedByScientificName(
 ): Promise<GroupedDrugResult[]> {
   const db = await getDb();
   
-  // Split query by spaces to handle multi-word searches
+  const ftColumns = ['scientific_name', 'trade_name', 'indication', 'icd_codes_raw'];
+  const likeColumns = [drugEntries.scientificName, drugEntries.tradeName, drugEntries.indication, drugEntries.icdCodesRaw];
   const words = query.trim().split(/\s+/).filter(w => w.length > 0);
   
-  // Build search conditions for each word
+  // Build LIKE-based fallback conditions
   const searchConditions = words.map(word => {
     const q = `%${word}%`;
-    return or(
-      ciLike(drugEntries.scientificName, q),
-      ciLike(drugEntries.tradeName, q),
-      ciLike(drugEntries.indication, q),
-      ciLike(drugEntries.icdCodesRaw, q)
-    );
+    return or(...likeColumns.map(col => ciLike(col, q)));
   });
-  
-  // Try AND first (all words must match), fallback to OR if zero results
-  const andCondition = searchConditions.length > 0 
-    ? and(...searchConditions) 
-    : undefined;
+  const andLike = searchConditions.length > 0 ? and(...searchConditions) : undefined;
+  const orLike = searchConditions.length > 1 ? or(...searchConditions) : andLike;
 
-  // Step 1: Find distinct scientific names matching the query
-  let sciNames = await db
-    .select({ scientificName: drugEntries.scientificName })
-    .from(drugEntries)
-    .where(andCondition)
-    .groupBy(drugEntries.scientificName)
-    .orderBy(drugEntries.scientificName)
-    .limit(limit);
+  // Try FULLTEXT first, fallback to LIKE with AND→OR
+  const ftCondition = fulltextMatch(ftColumns, query);
 
-  if (sciNames.length === 0 && searchConditions.length > 1) {
-    const orCondition = searchConditions.length > 0 
-      ? or(...searchConditions) 
-      : undefined;
+  let sciNames: Array<{ scientificName: string }>;
+  if (ftCondition) {
     sciNames = await db
       .select({ scientificName: drugEntries.scientificName })
-      .from(drugEntries)
-      .where(orCondition)
+      .from(drugEntries).where(ftCondition)
       .groupBy(drugEntries.scientificName)
       .orderBy(drugEntries.scientificName)
-      .limit(limit);
+      .limit(limit) as any;
+
+    if (sciNames.length === 0) {
+      sciNames = await db
+        .select({ scientificName: drugEntries.scientificName })
+        .from(drugEntries).where(andLike!)
+        .groupBy(drugEntries.scientificName)
+        .orderBy(drugEntries.scientificName)
+        .limit(limit) as any;
+      if (sciNames.length === 0 && orLike !== andLike) {
+        sciNames = await db
+          .select({ scientificName: drugEntries.scientificName })
+          .from(drugEntries).where(orLike!)
+          .groupBy(drugEntries.scientificName)
+          .orderBy(drugEntries.scientificName)
+          .limit(limit) as any;
+      }
+    }
+  } else {
+    sciNames = await db
+      .select({ scientificName: drugEntries.scientificName })
+      .from(drugEntries).where(andLike!)
+      .groupBy(drugEntries.scientificName)
+      .orderBy(drugEntries.scientificName)
+      .limit(limit) as any;
+    if (sciNames.length === 0 && orLike !== andLike) {
+      sciNames = await db
+        .select({ scientificName: drugEntries.scientificName })
+        .from(drugEntries).where(orLike!)
+        .groupBy(drugEntries.scientificName)
+        .orderBy(drugEntries.scientificName)
+        .limit(limit) as any;
+    }
   }
 
   if (sciNames.length === 0) return [];
