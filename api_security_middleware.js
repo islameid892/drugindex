@@ -18,13 +18,31 @@ const crypto = require('crypto');
 // ============================================================================
 
 /**
- * In-memory API key store (replace with database in production)
+ * In-memory API key store (loaded from environment variables in production)
+ * Format: API_KEYS_JSON environment variable containing JSON array
+ * Example: [{"key":"sk_live_xxx","name":"Web App","rateLimit":100,"active":true}]
  */
-const apiKeys = new Map([
-  ['sk_live_abc123def456', { name: 'Web App', rateLimit: 100, active: true }],
-  ['sk_live_xyz789uvw012', { name: 'Mobile App', rateLimit: 50, active: true }],
-  ['sk_live_test_key_1234', { name: 'Testing', rateLimit: 1000, active: true }],
-]);
+function loadAPIKeys() {
+  try {
+    const keysJson = process.env.API_KEYS_JSON;
+    if (!keysJson) {
+      console.warn('[WARNING] API_KEYS_JSON environment variable not set. Using empty API key store.');
+      return new Map();
+    }
+    const keysArray = JSON.parse(keysJson);
+    const keysMap = new Map();
+    keysArray.forEach(item => {
+      keysMap.set(item.key, { name: item.name, rateLimit: item.rateLimit, active: item.active });
+    });
+    console.log(`[INFO] Loaded ${keysMap.size} API keys from environment variables`);
+    return keysMap;
+  } catch (error) {
+    console.error('[ERROR] Failed to parse API_KEYS_JSON:', error.message);
+    return new Map();
+  }
+}
+
+const apiKeys = loadAPIKeys();
 
 /**
  * Validate API key middleware
