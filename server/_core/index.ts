@@ -211,8 +211,10 @@ async function startServer() {
     const allowedOrigins = [
       'https://www.drugindex.click',
       'https://drugindex.click',
+      'https://icd10.manus.space',
+      'https://icd10search-a2jmvftk.manus.space',
       process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null,
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
 
     const origin = req.headers.origin as string;
     if (allowedOrigins.includes(origin)) {
@@ -349,8 +351,13 @@ async function startServer() {
   // Ask Sila API routes
   app.use("/api/askSila", askSilaRouter);
 
-  // Apply stricter rate limiting to API endpoints (ALL environments)
-  app.use('/api/', apiLimiter);
+  // Apply stricter rate limiting to API endpoints (skip /api/trpc which has its own limiters)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api/trpc')) {
+      return next(); // Skip tRPC - it has its own rate limiters
+    }
+    return apiLimiter(req, res, next);
+  });
 
   // Apply search-specific rate limiting (stricter: 10 searches/min)
   app.use('/api/trpc/data.searchGrouped', searchRateLimiter);
@@ -380,22 +387,9 @@ async function startServer() {
     })
   );
 
-  // Security headers for additional protection
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // Prevent clickjacking
-    res.header('X-Frame-Options', 'SAMEORIGIN');
-    // Prevent MIME type sniffing
-    res.header('X-Content-Type-Options', 'nosniff');
-    // Enable XSS protection
-    res.header('X-XSS-Protection', '1; mode=block');
-    // Referrer Policy
-    res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-    // Permissions Policy
-    res.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    // Vary header for cache
-    res.header('Vary', 'Accept-Encoding');
-    next();
-  });
+  // Security headers already set by Helmet middleware above (line 198)
+  // No need to duplicate here - Helmet handles all security headers
+  // If additional headers needed, add them to Helmet config instead
 
 
 

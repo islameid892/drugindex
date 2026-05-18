@@ -528,14 +528,11 @@ export async function getDashboardStats() {
 
 export async function recordSearch(data: InsertSearchAnalytic) {
   const db = await getDb();
-  console.log('[recordSearch] Attempting to insert:', JSON.stringify(data));
   try {
     const result = await db.insert(searchAnalytics).values(data);
-    console.log('[recordSearch] Insert result:', JSON.stringify(result));
     return result;
   } catch (error: any) {
     console.error('[recordSearch] FAILED:', error?.message || error);
-    console.error('[recordSearch] Full error:', JSON.stringify(error, null, 2));
     throw error;
   }
 }
@@ -1201,10 +1198,7 @@ export async function getSearchMetrics(hoursAgo = 24) {
   const db = await getDb();
   
   const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  console.log('[Metrics] Fetching search metrics for last', hoursAgo, 'hours');
-  console.log('[Metrics] Cutoff time:', cutoffTime.toISOString());
-  
-  console.log('[Metrics] Query params - hoursAgo:', hoursAgo, 'cutoffTime:', cutoffTime);
+  // Metrics logging removed for security
   const result = await db
     .select({
       totalSearches: count().as("totalSearches"),
@@ -1215,17 +1209,13 @@ export async function getSearchMetrics(hoursAgo = 24) {
     .from(searchAnalytics)
     .where(gte(searchAnalytics.createdAt, cutoffTime));
 
-  console.log('[Metrics] Raw query result:', result);
   const row = result[0];
-  console.log('[Metrics] First row:', row);
   const metrics = {
     totalSearches: Number(row?.totalSearches ?? 0),
     avgResponseTime: Number(row?.avgResponseTime ?? 0),
     minResponseTime: Number(row?.minResponseTime ?? 0),
     maxResponseTime: Number(row?.maxResponseTime ?? 0),
   };
-  console.log('[Metrics] Final metrics:', metrics);
-  console.log('[Metrics] totalSearches type:', typeof metrics.totalSearches, 'value:', metrics.totalSearches);
   return metrics;
 }
 

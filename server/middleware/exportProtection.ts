@@ -93,8 +93,15 @@ function getOrCreateUserQuota(userId: string): UserExportQuota {
  * Main export protection middleware
  */
 export function exportProtectionMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Only apply to export endpoints
-  if (!req.path.includes('export') && !req.path.includes('download')) {
+  // Only apply to specific export endpoints (not any path containing 'export')
+  const protectedExportEndpoints = [
+    '/api/trpc/files.download',
+    '/api/export',
+    '/api/data/export',
+  ];
+  
+  const isProtectedEndpoint = protectedExportEndpoints.some(endpoint => req.path.startsWith(endpoint));
+  if (!isProtectedEndpoint) {
     return next();
   }
   

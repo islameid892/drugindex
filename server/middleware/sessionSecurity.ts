@@ -33,8 +33,8 @@ const CONFIG = {
   // Maximum session duration (8 hours)
   MAX_SESSION_DURATION_MS: 8 * 60 * 60 * 1000,
   
-  // Bind session to IP
-  BIND_TO_IP: true,
+  // Bind session to IP (disabled to avoid issues with mobile users switching networks)
+  BIND_TO_IP: false,
   
   // Bind session to User-Agent
   BIND_TO_USER_AGENT: true,
