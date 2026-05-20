@@ -1,4 +1,4 @@
-import { FileDown, Stethoscope, Download, Upload, Trash2, Loader2, AlertCircle, Lock, Eye, EyeOff } from "lucide-react";
+import { FileDown, Stethoscope, Download, Upload, Trash2, Loader2, AlertCircle, Lock, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
@@ -17,6 +17,9 @@ interface UploadedFile {
   description: string | null;
 }
 
+// Maximum file size: 100MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+
 export default function Files() {
   const { user } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,6 +32,7 @@ export default function Files() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Check if user has files_auth cookie
   useEffect(() => {
@@ -94,22 +98,51 @@ export default function Files() {
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      handleFileSelect(files[0]);
+      Array.from(files).forEach((file) => {
+        handleFileSelect(file);
+      });
     }
   };
 
   const handleFileSelect = async (file: File) => {
-    if (file.size > 50 * 1024 * 1024) {
-      setError("File size exceeds 50MB limit");
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File "${file.name}" exceeds 100MB limit`);
       return;
     }
 
     const reader = new FileReader();
+    reader.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        setUploadProgress((prev) => ({
+          ...prev,
+          [file.name]: Math.round(percentComplete),
+        }));
+      }
+    };
+
     reader.onload = async (e) => {
       const fileData = e.target?.result as string;
       const base64Data = fileData.split(",")[1];
 
-      setUploadProgress({ [file.name]: 0 });
+      setUploadProgress((prev) => ({
+        ...prev,
+        [file.name]: 0,
+      }));
+      setIsUploading(true);
+
+      // Optimistic update - add file to list immediately
+      const newFile: UploadedFile = {
+        id: Date.now() + Math.random(),
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        s3Url: "",
+        uploadedAt: new Date(),
+        downloads: 0,
+        description: null,
+      };
+      setUploadedFiles((prev) => [newFile, ...prev]);
 
       try {
         const result = await uploadMutation.mutateAsync({
@@ -119,34 +152,48 @@ export default function Files() {
           description: "",
         });
 
-        setUploadProgress((prev) => {
-          const newProgress = { ...prev };
-          delete newProgress[file.name];
-          return newProgress;
-        });
-
-        // Refetch files
-        utils.files.getAll.invalidate();
+        // Update the optimistic file with real data from server
+        setUploadedFiles((prev) =>
+          prev.map((f) =>
+            f.id === newFile.id
+              ? { ...result, id: result.id }
+              : f
+          )
+        );
         setError(null);
       } catch (err: any) {
+        // Remove the optimistic file if upload failed
+        setUploadedFiles((prev) => prev.filter((f) => f.id !== newFile.id));
         setError(err.message || "Failed to upload file");
+      } finally {
         setUploadProgress((prev) => {
           const newProgress = { ...prev };
           delete newProgress[file.name];
           return newProgress;
         });
+        setIsUploading(false);
       }
     };
+
+    reader.onerror = () => {
+      setError(`Failed to read file "${file.name}"`);
+      setIsUploading(false);
+    };
+
     reader.readAsDataURL(file);
   };
 
   const handleDelete = async (fileId: number, fileName: string) => {
     if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+      // Optimistic update - remove file immediately
+      setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+
       try {
         await deleteMutation.mutateAsync({ fileId });
-        utils.files.getAll.invalidate();
         setError(null);
       } catch (err: any) {
+        // Refetch files if delete failed
+        utils.files.getAll.invalidate();
         setError(err.message || "Failed to delete file");
       }
     }
@@ -250,12 +297,12 @@ export default function Files() {
         {error && (
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700 flex-1">{error}</p>
             <button
               onClick={() => setError(null)}
-              className="ml-auto text-red-600 hover:text-red-700 font-medium"
+              className="text-red-600 hover:text-red-700"
             >
-              Dismiss
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}
@@ -277,36 +324,48 @@ export default function Files() {
           <input
             type="file"
             onChange={(e) => {
-              if (e.target.files?.[0]) {
-                handleFileSelect(e.target.files[0]);
+              const files = e.target.files;
+              if (files) {
+                Array.from(files).forEach((file) => {
+                  handleFileSelect(file);
+                });
               }
             }}
             className="hidden"
             id="file-input"
+            multiple
+            disabled={isUploading}
           />
           <label htmlFor="file-input">
-            <Button asChild variant="outline">
-              <span>Choose File</span>
+            <Button asChild variant="outline" disabled={isUploading}>
+              <span>{isUploading ? "Uploading..." : "Choose Files"}</span>
             </Button>
           </label>
-          <p className="text-xs text-gray-500 mt-4">Maximum file size: 50MB</p>
+          <p className="text-xs text-gray-500 mt-4">
+            Maximum file size: 100MB per file. Supports all file types including .zip, .rar, .7z, and more
+          </p>
         </div>
 
         {/* Upload Progress */}
-        {Object.entries(uploadProgress).map(([fileName, progress]) => (
-          <div key={fileName} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">{fileName}</span>
-              <span className="text-sm text-gray-500">{progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
+        {Object.entries(uploadProgress).length > 0 && (
+          <div className="space-y-4 bg-white rounded-lg p-6 border border-gray-200">
+            <h3 className="font-semibold text-gray-900">Uploading Files</h3>
+            {Object.entries(uploadProgress).map(([fileName, progress]) => (
+              <div key={fileName} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700 truncate">{fileName}</span>
+                  <span className="text-sm text-gray-500 font-semibold">{progress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
 
         {/* Files List */}
         <div className="space-y-4">
@@ -331,11 +390,11 @@ export default function Files() {
                   className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 break-words">
                         {file.fileName}
                       </h3>
-                      <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                      <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
                         <span>{formatFileSize(file.fileSize)}</span>
                         <span>
                           {file.uploadedAt
@@ -348,11 +407,12 @@ export default function Files() {
                         <p className="text-sm text-gray-600 mt-2">{file.description}</p>
                       )}
                     </div>
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 ml-4 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleDownload(file)}
+                        disabled={!file.s3Url}
                       >
                         <Download className="h-4 w-4" />
                       </Button>

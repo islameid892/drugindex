@@ -7,8 +7,8 @@ import { storagePut } from "../storage";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "../../shared/const";
 
-// Maximum file size: 50MB
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+// Maximum file size: 100MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 
 const FILES_PAGE_PASSWORD = process.env.FILES_PAGE_PASSWORD;
 

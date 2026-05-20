@@ -614,3 +614,12 @@
 - [ ] Improve UX with better grouping and expandable/collapsible UI
 - [ ] Test all categories display correctly with branch names
 - [ ] Verify search functionality works with reorganized layout
+
+
+## Phase XX: Files Page Upload Enhancements
+- [ ] Increase file size limit from 50MB to 100MB
+- [ ] Support all file types including compressed files (.zip, .rar, .7z, etc.)
+- [ ] Show real-time upload progress percentage for each file
+- [ ] Enable multiple file uploads simultaneously
+- [ ] Implement optimistic UI updates for instant file list feedback
+- [ ] Fix upload delay - show files immediately after upload/delete
