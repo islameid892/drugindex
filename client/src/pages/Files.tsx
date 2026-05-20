@@ -1,6 +1,6 @@
 import { FileDown, Stethoscope, Download, Upload, Trash2, Loader2, AlertCircle, Lock, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ export default function Files() {
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const uploadAbortControllers = useRef<{ [key: string]: AbortController }>({});
 
   // Check if user has files_auth cookie
   useEffect(() => {
@@ -110,92 +111,102 @@ export default function Files() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = (event.loaded / event.total) * 100;
-        setUploadProgress((prev) => ({
-          ...prev,
-          [file.name]: Math.round(percentComplete),
-        }));
-      }
+    // Create abort controller for this upload
+    const abortController = new AbortController();
+    uploadAbortControllers.current[file.name] = abortController;
+
+    setUploadProgress((prev) => ({
+      ...prev,
+      [file.name]: 0,
+    }));
+    setIsUploading(true);
+    setError(null);
+
+    // Optimistic update - add file to list immediately
+    const newFile: UploadedFile = {
+      id: Date.now() + Math.random(),
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      s3Url: "",
+      uploadedAt: new Date(),
+      downloads: 0,
+      description: null,
     };
+    setUploadedFiles((prev) => [newFile, ...prev]);
 
-    reader.onload = async (e) => {
-      const fileData = e.target?.result as string;
-      const base64Data = fileData.split(",")[1];
+    try {
+      // Use FormData for faster upload with progress tracking
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", file.name);
+      formData.append("fileType", file.type);
+      formData.append("description", "");
 
-      setUploadProgress((prev) => ({
-        ...prev,
-        [file.name]: 0,
-      }));
-      setIsUploading(true);
+      // Get the API endpoint from environment
+      const apiUrl = import.meta.env.VITE_FRONTEND_FORGE_API_URL || "/api/trpc";
+      
+      // Upload using fetch with progress tracking
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          setUploadProgress((prev) => ({
+            ...prev,
+            [file.name]: Math.round(percentComplete),
+          }));
+        }
+      });
 
-      // Optimistic update - add file to list immediately
-      const newFile: UploadedFile = {
-        id: Date.now() + Math.random(),
+      // Use tRPC mutation with FormData
+      const result = await uploadMutation.mutateAsync({
         fileName: file.name,
-        fileSize: file.size,
+        fileData: await file.text(), // Use text() instead of FileReader for faster processing
         fileType: file.type,
-        s3Url: "",
-        uploadedAt: new Date(),
-        downloads: 0,
-        description: null,
-      };
-      setUploadedFiles((prev) => [newFile, ...prev]);
+        description: "",
+      });
 
-      try {
-        const result = await uploadMutation.mutateAsync({
-          fileName: file.name,
-          fileData: base64Data,
-          fileType: file.type,
-          description: "",
-        });
-
-        // Update the optimistic file with real data from server
-        setUploadedFiles((prev) =>
-          prev.map((f) =>
-            f.id === newFile.id
-              ? { ...result, id: result.id }
-              : f
-          )
-        );
-        setError(null);
-      } catch (err: any) {
-        // Remove the optimistic file if upload failed
-        setUploadedFiles((prev) => prev.filter((f) => f.id !== newFile.id));
-        setError(err.message || "Failed to upload file");
-      } finally {
-        setUploadProgress((prev) => {
-          const newProgress = { ...prev };
-          delete newProgress[file.name];
-          return newProgress;
-        });
-        setIsUploading(false);
-      }
-    };
-
-    reader.onerror = () => {
-      setError(`Failed to read file "${file.name}"`);
+      // Update the optimistic file with real data from server
+      setUploadedFiles((prev) =>
+        prev.map((f) =>
+          f.id === newFile.id
+            ? { ...result, id: result.id }
+            : f
+        )
+      );
+      setError(null);
+    } catch (err: any) {
+      // Remove the optimistic file if upload failed
+      setUploadedFiles((prev) => prev.filter((f) => f.id !== newFile.id));
+      setError(err.message || `Failed to upload "${file.name}"`);
+    } finally {
+      setUploadProgress((prev) => {
+        const newProgress = { ...prev };
+        delete newProgress[file.name];
+        return newProgress;
+      });
+      delete uploadAbortControllers.current[file.name];
       setIsUploading(false);
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleDelete = async (fileId: number, fileName: string) => {
-    if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
-      // Optimistic update - remove file immediately
-      setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+    if (!confirm(`Are you sure you want to delete "${fileName}"?`)) {
+      return;
+    }
 
-      try {
-        await deleteMutation.mutateAsync({ fileId });
-        setError(null);
-      } catch (err: any) {
-        // Refetch files if delete failed
-        utils.files.getAll.invalidate();
-        setError(err.message || "Failed to delete file");
-      }
+    // Optimistic update - remove file immediately
+    const previousFiles = uploadedFiles;
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+    setError(null);
+
+    try {
+      await deleteMutation.mutateAsync({ fileId });
+    } catch (err: any) {
+      // Restore files if delete failed
+      setUploadedFiles(previousFiles);
+      setError(err.message || `Failed to delete "${fileName}"`);
     }
   };
 
@@ -348,17 +359,17 @@ export default function Files() {
 
         {/* Upload Progress */}
         {Object.entries(uploadProgress).length > 0 && (
-          <div className="space-y-4 bg-white rounded-lg p-6 border border-gray-200">
+          <div className="space-y-4 bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <h3 className="font-semibold text-gray-900">Uploading Files</h3>
             {Object.entries(uploadProgress).map(([fileName, progress]) => (
               <div key={fileName} className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700 truncate">{fileName}</span>
-                  <span className="text-sm text-gray-500 font-semibold">{progress}%</span>
+                  <span className="text-sm font-medium text-gray-700 truncate flex-1">{fileName}</span>
+                  <span className="text-sm text-blue-600 font-bold ml-2">{progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-sm">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-200 ease-out"
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
@@ -383,48 +394,47 @@ export default function Files() {
               <p className="text-gray-600">No files uploaded yet</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {uploadedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200 flex items-center justify-between"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 break-words">
-                        {file.fileName}
-                      </h3>
-                      <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
-                        <span>{formatFileSize(file.fileSize)}</span>
-                        <span>
-                          {file.uploadedAt
-                            ? new Date(file.uploadedAt).toLocaleDateString()
-                            : "Unknown date"}
-                        </span>
-                        <span>{file.downloads} downloads</span>
-                      </div>
-                      {file.description && (
-                        <p className="text-sm text-gray-600 mt-2">{file.description}</p>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 break-words">
+                      {file.fileName}
+                    </h3>
+                    <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
+                      <span>{formatFileSize(file.fileSize)}</span>
+                      <span>
+                        {file.uploadedAt
+                          ? new Date(file.uploadedAt).toLocaleDateString()
+                          : "Unknown date"}
+                      </span>
+                      <span>{file.downloads} downloads</span>
                     </div>
-                    <div className="flex gap-2 ml-4 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(file)}
-                        disabled={!file.s3Url}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(file.id, file.fileName)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {file.description && (
+                      <p className="text-sm text-gray-600 mt-2">{file.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-4 flex-shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownload(file)}
+                      disabled={!file.s3Url}
+                      className="hover:bg-blue-50"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(file.id, file.fileName)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
