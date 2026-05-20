@@ -5,11 +5,46 @@ import { getDb } from "../db";
 import { eq, desc, and } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { TRPCError } from "@trpc/server";
+import { COOKIE_NAME } from "../../shared/const";
 
 // Maximum file size: 50MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
+const FILES_PAGE_PASSWORD = process.env.FILES_PAGE_PASSWORD;
+
 export const filesRouter = {
+  /**
+   * Authenticate with Files page password
+   */
+  authenticate: publicProcedure
+    .input(z.object({ password: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      if (!FILES_PAGE_PASSWORD) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Files page password not configured",
+        });
+      }
+
+      if (input.password !== FILES_PAGE_PASSWORD) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid password",
+        });
+      }
+
+      // Set authentication cookie
+      ctx.res.cookie("files_auth", "authenticated", {
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: true,
+        sameSite: "none",
+        httpOnly: true,
+        path: "/",
+      });
+
+      return { success: true };
+    }),
+
   /**
    * Get all uploaded files (public access)
    */
