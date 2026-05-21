@@ -32,13 +32,11 @@ export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
         <div className="container py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl shadow-lg shadow-sky-500/40 flex-shrink-0">
-                <Stethoscope className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-              </div>
+              <img src="/drugindex-logo.png" alt="Drugindex.click" className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 object-contain" />
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">ICD-10 Search Engine</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">Drugindex.click</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground font-semibold">Drug Reference & Medical Coding</p>
-                <p className="text-xs mt-0.5 sm:mt-1 font-semibold bg-gradient-to-r from-sky-600 via-emerald-600 to-sky-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
+                <p className="text-xs mt-0.5 sm:mt-1 font-semibold bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">Created By Pharmacist: Islam Mostafa Eid</p>
               </div>
             </div>
             
@@ -137,9 +135,7 @@ export function HomeHeader({ stats, isStale = false }: HomeHeaderProps) {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-sky-500 to-sky-600 p-2 rounded-lg">
-              <Stethoscope className="h-5 w-5 text-white" />
-            </div>
+            <img src="/drugindex-logo.png" alt="Drugindex.click" className="h-8 w-8 object-contain" />
             <span className="font-bold text-foreground text-sm">Navigation</span>
           </div>
           <Button
