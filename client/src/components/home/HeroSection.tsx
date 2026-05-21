@@ -67,8 +67,8 @@ export function HeroSection({
         }}
       />
 
-      {/* Soft radial glow top-center */}
-      <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-sky-300/20 dark:bg-sky-500/10 blur-3xl pointer-events-none" />
+      {/* Soft radial glow top-center - hidden on mobile */}
+      <div className="hidden md:block absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-sky-300/20 dark:bg-sky-500/10 blur-3xl pointer-events-none" />
 
       {/* Content */}
       <div className="relative px-6 pt-12 pb-6 md:px-14 md:pt-16 md:pb-6 text-center">
