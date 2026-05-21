@@ -286,12 +286,12 @@ export const featureUsageTracking = mysqlTable(
   "feature_usage_tracking",
   {
     id: int("id").autoincrement().primaryKey(),
-    featureName: varchar("feature_name", { length: 100 }).notNull(),
-    sessionId: varchar("session_id", { length: 128 }),
-    userId: int("user_id").references(() => users.id, { onDelete: "set null" }),
-    ipAddress: varchar("ip_address", { length: 45 }),
-    userAgent: text("user_agent"),
-    referrer: varchar("referrer", { length: 500 }),
+    featureName: varchar("featureName", { length: 255 }).notNull(),
+    sessionId: varchar("sessionId", { length: 255 }),
+    userId: int("userId").references(() => users.id, { onDelete: "set null" }),
+    ipAddress: varchar("ipAddress", { length: 45 }),
+    userAgent: text("userAgent"),
+    referrer: text("referrer"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => ({

@@ -16,6 +16,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import superjson from "superjson";
 import askSilaRouter from "../api/askSila";
+import fileUploadRouter from "../api/fileUpload";
 import { initializeJobs, shutdownJobs } from "../jobs";
 import { advancedRateLimiter, searchRateLimiter, getSecurityStats, getSecurityLog } from "../middleware/advancedRateLimiter";
 import { honeypotMiddleware, originValidationMiddleware, customHeaderMiddleware, strictCorsMiddleware, getHoneypotStats } from "../middleware/apiSecurity";
@@ -322,8 +323,8 @@ async function startServer() {
   });
 
   // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(express.json({ limit: "110mb" }));
+  app.use(express.urlencoded({ limit: "110mb", extended: true }));
 
   // Parse cookies
   app.use(cookieParser());
@@ -337,6 +338,9 @@ async function startServer() {
 
   // Ask Sila API routes
   app.use("/api/askSila", askSilaRouter);
+
+  // File upload REST endpoint (supports real progress tracking)
+  app.use("/api/files", fileUploadRouter);
 
   // Apply stricter rate limiting to API endpoints (skip /api/trpc which has its own limiters)
   app.use((req: Request, res: Response, next: NextFunction) => {
