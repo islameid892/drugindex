@@ -34,11 +34,12 @@ export const filesRouter = {
       }
 
       // Set authentication cookie
+      // Note: NOT httpOnly so frontend JS can read it for auth state detection
       ctx.res.cookie("files_auth", "authenticated", {
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        secure: true,
-        sameSite: "none",
-        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        httpOnly: false, // Must be readable by JS for auth state check
         path: "/",
       });
 

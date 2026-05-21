@@ -33,13 +33,10 @@ function timingSafeEqual(a: string, b: string): boolean {
 function filesAuthMiddleware(req: Request, res: Response, next: Function) {
   const cookies = cookie.parse(req.headers.cookie || "");
   
-  // Check files_auth cookie
+  // Check files_auth cookie - value is 'authenticated' (set by tRPC authenticate mutation)
   const filesAuth = cookies.files_auth;
-  if (filesAuth) {
-    const filesPassword = process.env.FILES_PAGE_PASSWORD || "Islameid992@";
-    if (timingSafeEqual(filesAuth, filesPassword)) {
-      return next();
-    }
+  if (filesAuth && filesAuth === "authenticated") {
+    return next();
   }
   
   return res.status(401).json({ error: "Unauthorized" });
