@@ -62,7 +62,9 @@ router.post("/upload", filesAuthMiddleware, upload.single("file"), async (req: R
 
     // Save to database
     const db = await getDb();
-    const [newFile] = await db
+    const now = new Date();
+    
+    const [result] = await db
       .insert(uploadedFiles)
       .values({
         fileName: originalname,
@@ -72,11 +74,11 @@ router.post("/upload", filesAuthMiddleware, upload.single("file"), async (req: R
         s3Url: url,
         description: description || null,
         downloads: 0,
-        uploadedAt: new Date(),
-      })
-      .$returningId();
+        uploadedAt: now,
+      });
 
-    const insertedId = (newFile as any).id;
+    // Get the inserted ID from the result
+    const insertedId = (result as any).insertId as number;
 
     return res.status(200).json({
       id: insertedId,
