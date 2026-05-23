@@ -36,9 +36,11 @@ export function HeroSection({
   );
 
   useEffect(() => {
-    if (featureStats && Array.isArray(featureStats)) {
-      const advCount = featureStats.find((s: any) => s.feature === "advanced_search")?.count || 0;
-      const drugCount = featureStats.find((s: any) => s.feature === "drug_lens")?.count || 0;
+    if (featureStats && Array.isArray(featureStats) && featureStats.length > 0) {
+      const advStat = featureStats.find((s: any) => s.feature === "advanced_search");
+      const drugStat = featureStats.find((s: any) => s.feature === "drug_lens");
+      const advCount = (advStat as any)?.count || 0;
+      const drugCount = (drugStat as any)?.count || 0;
       setAdvancedSearchCount(advCount);
       setDrugLensCount(drugCount);
     }

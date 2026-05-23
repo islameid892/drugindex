@@ -35,7 +35,8 @@ function FeatureUsageStats({ timeFilter }: { timeFilter: TimeFilter }) {
   return (
     <div className="space-y-2">
       {features.map((feature) => {
-        const count = featureStats?.find((s: any) => s.feature === feature.name)?.count || 0;
+        const stat = featureStats && featureStats.length > 0 ? featureStats.find((s: any) => s.feature === feature.name) : null;
+        const count = (stat as any)?.count || 0;
         return (
           <div key={feature.name} className="flex items-center justify-between py-2 border-b last:border-0">
             <div className="flex items-center gap-2">

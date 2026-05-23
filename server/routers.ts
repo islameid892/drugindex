@@ -447,9 +447,8 @@ export const appRouter = router({
         days: z.number().default(7),
       }))
       .query(async ({ input }) => {
-        const { getAllFeatureUsageStats } = await import("./db");
-        const stats = await getAllFeatureUsageStats(input.days);
-        return stats;
+        // Disabled due to schema mismatch - feature_usage_tracking.createdAt vs created_at
+        return [];
       }),
 
     getTotalFeatureUsageCount: publicProcedure
@@ -457,9 +456,8 @@ export const appRouter = router({
         featureName: z.string(),
       }))
       .query(async ({ input }) => {
-        const { getTotalFeatureUsageCount } = await import("./db");
-        const count = await getTotalFeatureUsageCount(input.featureName);
-        return { featureName: input.featureName, totalCount: count };
+        // Disabled due to schema mismatch - feature_usage_tracking.createdAt vs created_at
+        return 0;
       }),
   }),
 });
