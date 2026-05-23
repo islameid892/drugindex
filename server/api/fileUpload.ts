@@ -60,22 +60,25 @@ router.post("/upload", filesAuthMiddleware, upload.single("file"), async (req: R
     // Upload to S3
     const { url } = await storagePut(fileKey, buffer, mimetype);
 
-    // Save to database
+    // Save to database using raw SQL
     const db = await getDb();
     const now = new Date();
     
-    const [result] = await db
-      .insert(uploadedFiles)
-      .values({
-        fileName: originalname,
-        fileSize: size,
-        fileType: mimetype,
-        s3Key: fileKey,
-        s3Url: url,
-        description: description || null,
-        downloads: 0,
-        uploadedAt: now,
-      });
+    const query = `
+      INSERT INTO uploaded_files 
+      (file_name, file_size, file_type, s3_key, s3_url, uploaded_at, downloads, description, is_deleted)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, 0)
+    `;
+    
+    const [result] = await db.execute(query, [
+      originalname,
+      size,
+      mimetype,
+      fileKey,
+      url,
+      now,
+      description || null,
+    ]);
 
     // Get the inserted ID from the result
     const insertedId = (result as any).insertId as number;
